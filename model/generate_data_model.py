@@ -2,9 +2,14 @@ from typing import Union, List, Dict, Any
 import json
 import os
 
-# Directory where enum JSON files are stored
-enum_folder_path = "enums"
+# Directory of the script
+script_dir = os.path.dirname(__file__)
 
+# Directory where JSON files are stored
+struct_dir_path = os.path.join(script_dir, "struct")
+enum_dir_path = os.path.join(script_dir, "enum")
+
+# Enum reference string and separator
 enum_replacement_string = "REF_ENUM"
 enum_replacement_separator = ";"
 
@@ -23,12 +28,13 @@ def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:
             if isinstance(value, str) and value.startswith(enum_replacement_string):
                 # Enum filename without prefix
                 enum_name = value.split(enum_replacement_separator)[1]
-                enum_file = os.path.join(enum_folder_path, f"{enum_name}.json")
+                enum_file = os.path.join(enum_dir_path, f"{enum_name}.json")
                 
                 if os.path.exists(enum_file):
                     enum_values = load_json_file(enum_file)
 
                     # Extract the value field if available, else name field from each enum object
+                    # Can be changed to just "enum" for whole enum object 
                     data[key] = [enum.get("value", enum.get("name")) for enum in enum_values]
                 else:
                     print(f"Warning: Enum file {enum_file} not found. Keeping original value.")
@@ -48,7 +54,12 @@ def main(input_json_file : str, output_json_file : str) -> None:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 if __name__ == "__main__":
-    input_json_file = "klinisk.json"      # Change this to your input JSON file
-    output_json_file = f"out/generated-{input_json_file}"      # Output file for the modified JSON
+    # Generate data model for all JSON files in struct directory
+    files = os.listdir(struct_dir_path)
+    for file in files:
+        if file.endswith(".json"):
+            input_json_file = f"{struct_dir_path}\\{file}"
+            output_json_file = f"{script_dir}\\out\\generated-{file}"
 
-    main(input_json_file, output_json_file)
+            # Generate data model
+            main(input_json_file, output_json_file)

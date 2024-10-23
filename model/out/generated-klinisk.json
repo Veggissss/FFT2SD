@@ -11,83 +11,28 @@
         "required": true,
         "type": "enum",
         "enum": [
-            {
-                "id": 1,
-                "name": "tarmscreening",
-                "value": "P06020"
-            }
+            "P06020"
         ]
     },
     {
         "id": 101,
         "field": "Lokasjon klinikk",
         "required": true,
+        "type": "enum",
         "enum": [
-            {
-                "id": 1,
-                "name": "terminale ileum",
-                "value": "T65520"
-            },
-            {
-                "id": 2,
-                "name": "coecum",
-                "value": "T67100"
-            },
-            {
-                "id": 3,
-                "name": "colon ascendens",
-                "value": "T67200"
-            },
-            {
-                "id": 4,
-                "name": "høyre colonfleksur",
-                "value": "T67300"
-            },
-            {
-                "id": 5,
-                "name": "colon transversum",
-                "value": "T67400"
-            },
-            {
-                "id": 6,
-                "name": "venstre colonfleksur",
-                "value": "T67500"
-            },
-            {
-                "id": 7,
-                "name": "colon descendens",
-                "value": "T67600"
-            },
-            {
-                "id": 8,
-                "name": "colon sigmoideum",
-                "value": "T67700"
-            },
-            {
-                "id": 9,
-                "name": "rectosigmoid",
-                "value": "T68200"
-            },
-            {
-                "id": 10,
-                "name": "rectum",
-                "value": "T68000"
-            },
-            {
-                "id": 11,
-                "name": "anus",
-                "value": "T69000"
-            },
-            {
-                "id": 12,
-                "name": "colon",
-                "value": "T67000"
-            },
-            {
-                "id": 13,
-                "name": "colon og rectum",
-                "value": "T67920"
-            }
+            "T65520",
+            "T67100",
+            "T67200",
+            "T67300",
+            "T67400",
+            "T67500",
+            "T67600",
+            "T67700",
+            "T68200",
+            "T68000",
+            "T69000",
+            "T67000",
+            "T67920"
         ]
     },
     {
@@ -103,38 +48,14 @@
         "required": true,
         "type": "enum",
         "enum": [
-            {
-                "id": "1",
-                "name": "Biopsitang"
-            },
-            {
-                "id": "2",
-                "name": "Kald slynge in toto"
-            },
-            {
-                "id": "3",
-                "name": "Kald slynge piecemeal"
-            },
-            {
-                "id": "4",
-                "name": "Diatermislynge in toto"
-            },
-            {
-                "id": "5",
-                "name": "Diatermislynge piecemeal"
-            },
-            {
-                "id": "6",
-                "name": "Endoskopisk submucosal disseksjon (ESD)"
-            },
-            {
-                "id": "7",
-                "name": "Endoskopisk mucosal reseksjon (EMR)"
-            },
-            {
-                "id": "8",
-                "name": "Annen metode"
-            }
+            "Biopsitang",
+            "Kald slynge in toto",
+            "Kald slynge piecemeal",
+            "Diatermislynge in toto",
+            "Diatermislynge piecemeal",
+            "Endoskopisk submucosal disseksjon (ESD)",
+            "Endoskopisk mucosal reseksjon (EMR)",
+            "Annen metode"
         ]
     },
     {
@@ -143,41 +64,13 @@
         "required": true,
         "type": "enum",
         "enum": [
-            {
-                "id": 1,
-                "name": "Stilket",
-                "value": "Is"
-            },
-            {
-                "id": 2,
-                "name": "Høy bredbaset",
-                "value": "Ip"
-            },
-            {
-                "id": 3,
-                "name": "Lav bredbaset",
-                "value": "IIa"
-            },
-            {
-                "id": 4,
-                "name": "Flat",
-                "value": "IIb"
-            },
-            {
-                "id": 5,
-                "name": "Nedsunket",
-                "value": "IIc"
-            },
-            {
-                "id": 6,
-                "name": "Nedsunket ulcerert",
-                "value": "III"
-            },
-            {
-                "id": 7,
-                "name": "Ikke relevant",
-                "value": null
-            }
+            "Is",
+            "Ip",
+            "IIa",
+            "IIb",
+            "IIc",
+            "III",
+            null
         ]
     },
     {
