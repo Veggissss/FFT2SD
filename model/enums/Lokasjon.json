@@ -1,0 +1,67 @@
+[
+  {
+    "id": 1,
+    "name": "terminale ileum",
+    "value": "T65520"
+  },
+  {
+    "id": 2,
+    "name": "coecum",
+    "value": "T67100"
+  },
+  {
+    "id": 3,
+    "name": "colon ascendens",
+    "value": "T67200"
+  },
+  {
+    "id": 4,
+    "name": "høyre colonfleksur",
+    "value": "T67300"
+  },
+  {
+    "id": 5,
+    "name": "colon transversum",
+    "value": "T67400"
+  },
+  {
+    "id": 6,
+    "name": "venstre colonfleksur",
+    "value": "T67500"
+  },
+  {
+    "id": 7,
+    "name": "colon descendens",
+    "value": "T67600"
+  },
+  {
+    "id": 8,
+    "name": "colon sigmoideum",
+    "value": "T67700"
+  },
+  {
+    "id": 9,
+    "name": "rectosigmoid",
+    "value": "T68200"
+  },
+  {
+    "id": 10,
+    "name": "rectum",
+    "value": "T68000"
+  },
+  {
+    "id": 11,
+    "name": "anus",
+    "value": "T69000"
+  },
+  {
+    "id": 12,
+    "name": "colon",
+    "value": "T67000"
+  },
+  {
+    "id": 13,
+    "name": "colon og rectum",
+    "value": "T67920"
+  }
+]

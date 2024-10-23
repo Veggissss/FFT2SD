@@ -1,0 +1,34 @@
+[
+    {
+        "id": "1",
+        "name": "Biopsitang"
+    },
+    {
+        "id": "2",
+        "name": "Kald slynge in toto"
+    },
+    {
+        "id": "3",
+        "name": "Kald slynge piecemeal"
+    },
+    {
+        "id": "4",
+        "name": "Diatermislynge in toto"
+    },
+    {
+        "id": "5",
+        "name": "Diatermislynge piecemeal"
+    },
+    {
+        "id": "6",
+        "name": "Endoskopisk submucosal disseksjon (ESD)"
+    },
+    {
+        "id": "7",
+        "name": "Endoskopisk mucosal reseksjon (EMR)"
+    },
+    {
+        "id": "8",
+        "name": "Annen metode"
+    }
+]

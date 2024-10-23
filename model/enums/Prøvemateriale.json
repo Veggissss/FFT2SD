@@ -1,0 +1,33 @@
+[
+    {
+      "id": 1,
+      "name": "endoskopisk biopsi",
+      "value": "P13400"
+    },
+    {
+      "id": 2,
+      "name": "endoskopisk slyngereseksjon",
+      "value": "P13402"
+    },
+    {
+      "id": 3,
+      "name": "endoskopisk slyngereseksjon piecemeal",
+      "value": "P13403"
+    },
+    {
+      "id": 4,
+      "name": "endoskopisk submucosal disseksjon",
+      "value": "P13405"
+    },
+    {
+      "id": 5,
+      "name": "endoskopisk materiale, prosedyre ukjent",
+      "value": "P13409"
+    },
+    {
+      "id": 6,
+      "name": "konsultasjonspreparat",
+      "value": "P2070A"
+    }
+  ]
+  
