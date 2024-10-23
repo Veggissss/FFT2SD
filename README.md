@@ -9,3 +9,11 @@ The data model is based upon the [strukturert-rekvisisjon-og-svarrapport-for-pat
 
 Since many of these required fields use predefined enum values they are being defined globally and by using "references" inside the json the python script replaces the enum with the possible values. This allows for reuse as well as more readability.
 
+
+## Data Collection Process
+![Data Collection](figures/LLM.Overview.drawio.svg)
+
+## Training / Fine-tuning process
+
+![Training overview](figures/LLM.DataFlow.drawio.svg)
+
