@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "name": "frie reseksjonsrender",
+        "value": "M09400"
+    },
+    {
+        "id": 2,
+        "name": "ikke frie reseksjonsrender",
+        "value": "M09401"
+    },
+    {
+        "id": 3,
+        "name": "reseksjonsrender kan ikke vurderes",
+        "value": "M09402"
+    },
+    {
+        "id": 4,
+        "name": "reseksjonsrender ikke relevant å vurdere",
+        "value": null
+    }
+]

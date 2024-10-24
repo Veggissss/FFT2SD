@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "name": "Infiltrasjon i polypphode",
+        "value": "Nivå 1"
+    },
+    {
+        "id": 2,
+        "name": "Infiltrasjon i polypphals",
+        "value": "Nivå 2"
+    },
+    {
+        "id": 3,
+        "name": "Infiltrasjon i polypstilk",
+        "value": "Nivå 3"
+    },
+    {
+        "id": 4,
+        "name": "Infiltrasjon i submukosa nedenfor polyppstilken",
+        "value": "Nivå 4"
+    },
+    {
+        "id": 5,
+        "name": "Haggitt-nivå kan ikke vurderes",
+        "value": null
+    },
+    {
+        "id": 6,
+        "name": "Haggitt-nivå ikke relevant å vurdere",
+        "value": null
+    }
+]

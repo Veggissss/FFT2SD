@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "name": "Tumor vokser inn i submucosa",
+        "value": "pT1"
+    },
+    {
+        "id": 2,
+        "name": "Tumor vokser inn i muscularis propria",
+        "value": "pT2"
+    },
+    {
+        "id": 3,
+        "name": "Tumor vokser inn i subserosa eller ikke-peritonealisert perikolisk/perirektalt vev",
+        "value": "pT3"
+    },
+    {
+        "id": 4,
+        "name": "Tumor perforerer viscerale peritoneum (involverer overflaten)",
+        "value": "pT4a"
+    },
+    {
+        "id": 5,
+        "name": "Tumor invaderer andre organer eller strukturer",
+        "value": "pT4b"
+    },
+    {
+        "id": 6,
+        "name": "pT kan ikke vurderes",
+        "value": null
+    }
+]

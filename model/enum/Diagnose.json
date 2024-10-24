@@ -1,0 +1,278 @@
+[
+    {
+        "id": 1,
+        "name": "tubulært adenom med lavgradig dysplasi",
+        "group": "Adenom",
+        "value": "M82111"
+    },
+    {
+        "id": 2,
+        "name": "tubulært adenom med høygradig dysplasi",
+        "group": "Adenom",
+        "value": "M82112"
+    },
+    {
+        "id": 3,
+        "name": "tubulovilløst adenom med lavgradig dysplasi",
+        "group": "Adenom",
+        "value": "M82631"
+    },
+    {
+        "id": 4,
+        "name": "tubulovilløst adenom med høygradig dysplasi",
+        "group": "Adenom",
+        "value": "M82632"
+    },
+    {
+        "id": 5,
+        "name": "villøst adenom med lavgradig dysplasi",
+        "group": "Adenom",
+        "value": "M82611"
+    },
+    {
+        "id": 6,
+        "name": "villøst adenom med høygradig dysplasi",
+        "group": "Adenom",
+        "value": "M82612"
+    },
+    {
+        "id": 7,
+        "name": "uklassifiserbart adenom med lavgradig dysplasi",
+        "group": "Adenom",
+        "value": "M82101"
+    },
+    {
+        "id": 8,
+        "name": "uklassifiserbart adenom med høygradig dysplasi",
+        "group": "Adenom",
+        "value": "M82102"
+    },
+    {
+        "id": 9,
+        "name": "hyperplastisk polypp",
+        "group": "Sagtakkete lesjoner",
+        "value": "M72040"
+    },
+    {
+        "id": 10,
+        "name": "bredbaset sagtakket lesjon uten dysplasi",
+        "group": "Sagtakkete lesjoner",
+        "value": "M82140"
+    },
+    {
+        "id": 11,
+        "name": "bredbaset sagtakket lesjon med dysplasi",
+        "group": "Sagtakkete lesjoner",
+        "value": "M82142"
+    },
+    {
+        "id": 12,
+        "name": "tradisjonelt sagtakket adenom med lavgradig dysplasi",
+        "group": "Sagtakkete lesjoner",
+        "value": "M82131"
+    },
+    {
+        "id": 13,
+        "name": "tradisjonelt sagtakket adenom med høygradig dysplasi",
+        "group": "Sagtakkete lesjoner",
+        "value": "M82132"
+    },
+    {
+        "id": 14,
+        "name": "uklassifiserbar sagtakket polypp uten dysplasi",
+        "group": "Sagtakkete lesjoner",
+        "value": "M72004"
+    },
+    {
+        "id": 15,
+        "name": "betennelsespolypp",
+        "group": "Andre polypper",
+        "value": "M76820"
+    },
+    {
+        "id": 16,
+        "name": "granulasjonspolypp",
+        "group": "Andre polypper",
+        "value": "M44440"
+    },
+    {
+        "id": 17,
+        "name": "lymfoid polypp",
+        "group": "Andre polypper",
+        "value": "M76880"
+    },
+    {
+        "id": 18,
+        "name": "inflammatorisk fibroid polypp",
+        "group": "Andre polypper",
+        "value": "M76830"
+    },
+    {
+        "id": 19,
+        "name": "inflammatorisk kloakogen polypp",
+        "group": "Andre polypper",
+        "value": "M76835"
+    },
+    {
+        "id": 20,
+        "name": "mukosalt prolaps",
+        "group": "Andre polypper",
+        "value": "M76834"
+    },
+    {
+        "id": 21,
+        "name": "hamartomatøs polypp",
+        "group": "Andre polypper",
+        "value": "M75630"
+    },
+    {
+        "id": 22,
+        "name": "juvenil polypp",
+        "group": "Andre polypper",
+        "value": "M75640"
+    },
+    {
+        "id": 23,
+        "name": "lipom",
+        "group": "Andre polypper",
+        "value": "M88500"
+    },
+    {
+        "id": 24,
+        "name": "leiomyom",
+        "group": "Andre polypper",
+        "value": "M88900"
+    },
+    {
+        "id": 25,
+        "name": "ganglionevrom",
+        "group": "Andre polypper",
+        "value": "M94900"
+    },
+    {
+        "id": 26,
+        "name": "nevrofibrom",
+        "group": "Andre polypper",
+        "value": "M95400"
+    },
+    {
+        "id": 27,
+        "name": "nevrilemmom",
+        "group": "Andre polypper",
+        "value": "M95600"
+    },
+    {
+        "id": 28,
+        "name": "gastrointestinal stromal tumor",
+        "group": "Andre polypper",
+        "value": "M89363"
+    },
+    {
+        "id": 29,
+        "name": "normal morfologi",
+        "group": "Annet",
+        "value": "M00100"
+    },
+    {
+        "id": 30,
+        "name": "for sparsomt materiale",
+        "group": "Annet",
+        "value": "M09000"
+    },
+    {
+        "id": 31,
+        "name": "materialet uegnet til diagnostikk",
+        "group": "Annet",
+        "value": "M09010"
+    },
+    {
+        "id": 32,
+        "name": "intet materiale mottatt",
+        "group": "Annet",
+        "value": "P00308"
+    },
+    {
+        "id": 33,
+        "name": "materialet forsvunnet under preparering",
+        "group": "Annet",
+        "value": "P00311"
+    },
+    {
+        "id": 34,
+        "name": "irregulær kjertelproliferasjon, usikker reaktiv/neoplastisk",
+        "group": "Dysplasi ved IBD/ «Flat» dysplasi",
+        "value": "M76055"
+    },
+    {
+        "id": 35,
+        "name": "lett/moderat dysplasi i sylinderepitel",
+        "group": "Dysplasi ved IBD/ «Flat» dysplasi",
+        "value": "M76086"
+    },
+    {
+        "id": 36,
+        "name": "grov dysplasi i sylinderepitel / adenokarsinom in situ",
+        "group": "Dysplasi ved IBD/ «Flat» dysplasi",
+        "value": "M81402"
+    },
+    {
+        "id": 37,
+        "name": "familiær adenomatøs polypose",
+        "group": "Polypose",
+        "value": "S29350"
+    },
+    {
+        "id": 38,
+        "name": "sagtakket polypose",
+        "group": "Polypose",
+        "value": "M8213P"
+    },
+    {
+        "id": 39,
+        "name": "juvenil polypose",
+        "group": "Polypose",
+        "value": "M76910"
+    },
+    {
+        "id": 40,
+        "name": "Cowdens syndrom",
+        "group": "Polypose",
+        "value": "S50020"
+    },
+    {
+        "id": 41,
+        "name": "diffus gastrointestinal polyppose, Cronkhite-Canada",
+        "group": "Polypose",
+        "value": "S61630"
+    },
+    {
+        "id": 42,
+        "name": "adenokarsinom i adenomatøs polypp",
+        "group": "Adenokarsinom",
+        "value": "M82103"
+    },
+    {
+        "id": 43,
+        "name": "adenokarsinom i villøst adenom",
+        "group": "Adenokarsinom",
+        "value": "M82613"
+    },
+    {
+        "id": 44,
+        "name": "adenokarsinom i bredbaset sagtakket lesjon",
+        "group": "Adenokarsinom",
+        "value": "M82143"
+    },
+    {
+        "id": 45,
+        "name": "adenokarsinom i tradisjonelt sagtakket adenom",
+        "group": "Adenokarsinom",
+        "value": "M82153"
+    },
+    {
+        "id": 46,
+        "name": "adenokarsinom",
+        "group": "Adenokarsinom",
+        "value": "M81403"
+    }
+]

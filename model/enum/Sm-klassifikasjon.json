@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "name": "øvre tredjedel av submucosa",
+        "value": "sm1"
+    },
+    {
+        "id": 2,
+        "name": "midtre tredjedel av submucosa",
+        "value": "sm2"
+    },
+    {
+        "id": 3,
+        "name": "nedre tredjedel av submucosa",
+        "value": "sm3"
+    },
+    {
+        "id": 4,
+        "name": "Infiltrasjonsdybde kan ikke vurderes",
+        "value": null
+    }
+]

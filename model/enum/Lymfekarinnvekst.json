@@ -1,0 +1,14 @@
+[
+    {
+        "id": 1,
+        "name": "Lymfekarinnvekst ikke påvist"
+    },
+    {
+        "id": 2,
+        "name": "Lymfekarinnvekst påvist"
+    },
+    {
+        "id": 3,
+        "name": "Lymfekarinnvekst kan ikke vurderes"
+    }
+]

@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "name": "lav grad av budding (0-4 buds)",
+        "value": "Bd1"
+    },
+    {
+        "id": 2,
+        "name": "intermediær grad av budding (5-9 buds)",
+        "value": "Bd2"
+    },
+    {
+        "id": 3,
+        "name": "høy grad av budding (>10 buds)",
+        "value": "Bd3"
+    },
+    {
+        "id": 4,
+        "name": "budding kan ikke vurderes",
+        "value": null
+    }
+]

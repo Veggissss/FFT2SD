@@ -1,0 +1,14 @@
+[
+    {
+        "id": 1,
+        "name": "Venekarinnvekst ikke påvist"
+    },
+    {
+        "id": 2,
+        "name": "Venekarinnvekst påvist intramural"
+    },
+    {
+        "id": 3,
+        "name": "Venekarinnvekst kan ikke vurderes"
+    }
+]

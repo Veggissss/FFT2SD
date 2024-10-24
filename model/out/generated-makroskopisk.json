@@ -1,3 +1,43 @@
 [
-    {}
+    {
+        "id": 107,
+        "field": "Lokasjon patologi",
+        "required": true,
+        "type": "enum",
+        "enum": [
+            "T65520",
+            "T67100",
+            "T67200",
+            "T67300",
+            "T67400",
+            "T67500",
+            "T67600",
+            "T67700",
+            "T68200",
+            "T68000",
+            "T69000",
+            "T67000",
+            "T67920"
+        ]
+    },
+    {
+        "id": 108,
+        "field": "Prøvemateriale",
+        "required": true,
+        "type": "enum",
+        "enum": [
+            "P13400",
+            "P13402",
+            "P13403",
+            "P13405",
+            "P13409",
+            "P2070A"
+        ]
+    },
+    {
+        "id": 109,
+        "field": "Makroskopisk beskrivelse",
+        "required": false,
+        "type": "string"
+    }
 ]
