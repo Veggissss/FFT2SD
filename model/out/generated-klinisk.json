@@ -3,7 +3,8 @@
         "id": 128,
         "field": "Beholder-ID",
         "required": true,
-        "type": "string"
+        "type": "string",
+        "value": null
     },
     {
         "id": 100,
@@ -12,7 +13,8 @@
         "type": "enum",
         "enum": [
             "P06020"
-        ]
+        ],
+        "value": null
     },
     {
         "id": 101,
@@ -33,14 +35,16 @@
             "T69000",
             "T67000",
             "T67920"
-        ]
+        ],
+        "value": null
     },
     {
         "id": 102,
         "field": "Diameter av lesjon",
         "required": true,
         "type": "float",
-        "unit": "mm"
+        "unit": "mm",
+        "value": null
     },
     {
         "id": 103,
@@ -56,7 +60,8 @@
             "Endoskopisk submucosal disseksjon (ESD)",
             "Endoskopisk mucosal reseksjon (EMR)",
             "Annen metode"
-        ]
+        ],
+        "value": null
     },
     {
         "id": 104,
@@ -71,24 +76,28 @@
             "IIc",
             "III",
             null
-        ]
+        ],
+        "value": null
     },
     {
         "id": 105,
         "field": "Vurdert komplett fjernet",
         "required": true,
-        "type": "boolean"
+        "type": "boolean",
+        "value": null
     },
     {
         "id": 130,
         "field": "Mistanke om kreft",
         "required": true,
-        "type": "boolean"
+        "type": "boolean",
+        "value": null
     },
     {
         "id": 106,
         "field": "Klinisk diagnose/problemstilling",
         "required": false,
-        "type": "string"
+        "type": "string",
+        "value": null
     }
 ]

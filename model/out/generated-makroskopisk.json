@@ -18,7 +18,8 @@
             "T69000",
             "T67000",
             "T67920"
-        ]
+        ],
+        "value": null
     },
     {
         "id": 108,
@@ -32,12 +33,14 @@
             "P13405",
             "P13409",
             "P2070A"
-        ]
+        ],
+        "value": null
     },
     {
         "id": 109,
         "field": "Makroskopisk beskrivelse",
         "required": false,
-        "type": "string"
+        "type": "string",
+        "value": null
     }
 ]

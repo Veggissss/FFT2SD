@@ -51,13 +51,15 @@
             "M82143",
             "M82153",
             "M81403"
-        ]
+        ],
+        "value": null
     },
     {
         "id": 117,
         "field": "Kommentar",
         "required": false,
-        "type": "string"
+        "type": "string",
+        "value": null
     },
     {
         "id": 110,
@@ -68,14 +70,16 @@
             "Lavgradig histologisk differensiering",
             "Høygradig histologisk differensiering",
             "Differensieringsgrad kan ikke vurderes"
-        ]
+        ],
+        "value": null
     },
     {
         "id": 111,
         "field": "Karsinomets største diameter",
         "required": true,
         "type": "float",
-        "unit": "mm"
+        "unit": "mm",
+        "value": null
     },
     {
         "id": 112,
@@ -86,7 +90,8 @@
             "Lymfekarinnvekst ikke påvist",
             "Lymfekarinnvekst påvist",
             "Lymfekarinnvekst kan ikke vurderes"
-        ]
+        ],
+        "value": null
     },
     {
         "id": 118,
@@ -97,7 +102,8 @@
             "Venekarinnvekst ikke påvist",
             "Venekarinnvekst påvist intramural",
             "Venekarinnvekst kan ikke vurderes"
-        ]
+        ],
+        "value": null
     },
     {
         "id": 113,
@@ -111,7 +117,8 @@
             "pT4a",
             "pT4b",
             null
-        ]
+        ],
+        "value": null
     },
     {
         "id": 114,
@@ -125,7 +132,8 @@
             "Nivå 4",
             null,
             null
-        ]
+        ],
+        "value": null
     },
     {
         "id": 120,
@@ -137,14 +145,16 @@
             "sm2",
             "sm3",
             null
-        ]
+        ],
+        "value": null
     },
     {
         "id": 127,
         "field": "Dybde submukosal infiltrasjon",
         "required": true,
         "type": "float",
-        "unit": "mm"
+        "unit": "mm",
+        "value": null
     },
     {
         "id": 116,
@@ -156,34 +166,39 @@
             "M09401",
             "M09402",
             null
-        ]
+        ],
+        "value": null
     },
     {
         "id": 122,
         "field": "Korteste avstand til reseksjonsrand",
         "required": true,
         "type": "float",
-        "unit": "mm"
+        "unit": "mm",
+        "value": null
     },
     {
         "id": 115,
         "field": "Korteste avstand til nærmeste sidereseksjonsrand",
         "required": true,
         "type": "float",
-        "unit": "mm"
+        "unit": "mm",
+        "value": null
     },
     {
         "id": 121,
         "field": "Korteste avstand til dyp reseksjonsrand",
         "required": true,
         "type": "float",
-        "unit": "mm"
+        "unit": "mm",
+        "value": null
     },
     {
         "id": 125,
         "field": "Antall tumor 'buds'",
         "required": false,
-        "type": "int"
+        "type": "int",
+        "value": null
     },
     {
         "id": 126,
@@ -195,6 +210,7 @@
             "Bd2",
             "Bd3",
             null
-        ]
+        ],
+        "value": null
     }
 ]
