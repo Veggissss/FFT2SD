@@ -8,10 +8,14 @@ script_dir = os.path.dirname(__file__)
 # Directory where JSON files are stored
 struct_dir_path = os.path.join(script_dir, "struct")
 enum_dir_path = os.path.join(script_dir, "enum")
+out_dir_path = os.path.join(script_dir, "out")
 
 # Enum reference string and separator
 enum_replacement_string = "REF_ENUM"
 enum_replacement_separator = ";"
+
+# TODO: Change to special LLM token: <TOKEN> etc?
+value_placeholder = None
 
 
 def load_json_file(path: str) -> List[Dict[str, Any]]:
@@ -20,13 +24,19 @@ def load_json_file(path: str) -> List[Dict[str, Any]]:
         return json.load(f)
 
 
+def save_json_file(path: str, data: List[Dict[str, Any]]) -> None:
+    """Save enum values to a JSON file."""
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+
 def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:
     """Recursively replace enum references in the data."""
     if isinstance(data, list):
         for item in data:
             replace_enum_references(item)
     elif isinstance(data, dict):
-        data["value"] = None
+        data["value"] = value_placeholder
         for key, value in data.items():
             if isinstance(value, str) and value.startswith(enum_replacement_string):
                 # Enum filename without prefix
@@ -37,15 +47,12 @@ def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:
                     enum_values = load_json_file(enum_file)
 
                     # Replace enum reference with enum values
+                    # TODO: Optimize enum output while being within LLM token limits?
                     data[key] = [
                         enum.get("value", enum.get("name")) for enum in enum_values
                     ]
                 else:
-                    print(
-                        f"Warning: Enum file {enum_file} not found. Keeping original value."
-                    )
-            else:
-                replace_enum_references(value)
+                    print(f"Warning: Enum file {enum_file} not found!")
 
 
 def main(input_json_file: str, output_json_file: str) -> None:
@@ -57,17 +64,15 @@ def main(input_json_file: str, output_json_file: str) -> None:
     replace_enum_references(data)
 
     # Save the modified JSON data
-    with open(output_json_file, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    save_json_file(output_json_file, data)
 
 
 if __name__ == "__main__":
     # Generate data model for all JSON files in struct directory
-    files = os.listdir(struct_dir_path)
-    for file in files:
+    for file in os.listdir(struct_dir_path):
         if file.endswith(".json"):
             input_json_file = f"{struct_dir_path}\\{file}"
-            output_json_file = f"{script_dir}\\out\\generated-{file}"
+            output_json_file = f"{out_dir_path}\\generated-{file}"
 
             # Generate data model
             main(input_json_file, output_json_file)
