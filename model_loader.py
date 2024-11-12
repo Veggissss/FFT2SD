@@ -4,7 +4,9 @@ from transformers import (
     AutoModelForSeq2SeqLM,
     AutoModelForCausalLM,
     AutoModel,
+    BitsAndBytesConfig,
 )
+import torch
 import json
 
 
@@ -16,6 +18,7 @@ class ModelLoader:
     ):
         self.model_name = model_name
         self.model_type = model_type
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model, self.tokenizer = self.load_model(model_name, model_type)
 
     def load_model(self, model_name: str, model_type: str):
@@ -25,12 +28,20 @@ class ModelLoader:
         :param model_type: Type of model - 'encoder', 'encoder-decoder', or 'decoder'.
         :return: model and tokenizer.
         """
+        config = BitsAndBytesConfig(load_in_8bit=True)
+
+        # TODO: Load trained model from a custom local path!
         if model_type == "encoder-decoder":
             model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+            model.to(self.device)
         elif model_type == "decoder":
-            model = AutoModelForCausalLM.from_pretrained(model_name)
+            # .to(self.device) is not used when using quantization
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name, quantization_config=config
+            )
         else:
             model = AutoModel.from_pretrained(model_name)
+            model.to(self.device)
 
         # Load corresponding tokenizer
         tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -44,12 +55,13 @@ class ModelLoader:
         """
         inputs = self.tokenizer(
             prompt, return_tensors="pt", max_length=max_length, truncation=True
-        )
+        ).to(self.device)
 
         if self.model_type == "encoder":
             output = self.model(**inputs)
             # TODO: Extract embeddings and map them to values
             print("TODO: Custom extraction needed for encoder models!")
+            output_text = "WIP"
             return output_text
         else:
             # Generate decoder/encoder-decoder output
@@ -68,17 +80,17 @@ class ModelLoader:
 
         # Convert JSON template to a string to include in the prompt.
         template_str = json.dumps(json_template, indent=2)
+        prompt_separator = " END_OF_PROMPT "
 
         # TODO: Extract 'system prompt' generation to a separate function/class var.
-        prompt = f"Extract information:\n{input_text}\nUse the information extracted from above to replace the 'value': null values in the json:\n{template_str}\n"
+        prompt = f"'{input_text}'\nUse this information to replace the FILL_VALUE values in the json:\n{template_str}{prompt_separator}"
         # print(prompt)
 
-        output_text = self.generate(prompt, max_length=1024)
-        print(f"Model output:\n{output_text}")
+        output_text = self.generate(prompt)
 
         try:
             # Attempt to parse the output text back into a JSON object.
-            filled_json = json.loads(output_text)
+            filled_json = json.loads(output_text.split(prompt_separator)[-1])
         except json.JSONDecodeError:
             print("Failed to parse model output into JSON. Raw output:", output_text)
             filled_json = {}
