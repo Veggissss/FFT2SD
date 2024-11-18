@@ -5,3 +5,6 @@ MODELS_DICT: dict[str, str] = {
     "decoder": "mistralai/Mistral-7B-Instruct-v0.3",
     "encoder": "google-bert/bert-base-uncased",
 }
+
+# Prompt for filling in the null JSON values. Used in training and evaluation.
+SYSTEM_PROMPT = "Input Text: '{input_text}'\nFill in the null JSON values:\n{template_str}\n{prompt_separator}"

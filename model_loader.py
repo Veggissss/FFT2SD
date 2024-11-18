@@ -8,6 +8,7 @@ from transformers import (
 )
 import torch
 import json
+from config import SYSTEM_PROMPT
 
 
 class ModelLoader:
@@ -71,7 +72,9 @@ class ModelLoader:
         else:
             # Generate decoder/encoder-decoder output
             output_ids = self.model.generate(**inputs, max_length=max_length)
-            output_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+            output_text = self.tokenizer.decode(
+                output_ids[0]
+            )  # skip_special_tokens=True
             return output_text
 
     def generate_filled_json(self, input_text: str, json_template: dict) -> dict:
@@ -85,19 +88,33 @@ class ModelLoader:
 
         # Convert JSON template to a string to include in the prompt.
         template_str = json.dumps(json_template, indent=2)
-        prompt_separator = " END_OF_PROMPT "
+        prompt_separator = "<END_OF_PROMPT>"
 
-        # TODO: Extract 'system prompt' generation to a separate function/class var. Must be consistent with the model's training data.
-        prompt = f"'{input_text}'\nUse this information to replace the 'None' values in the json:\n{template_str}{prompt_separator}"
+        prompt = SYSTEM_PROMPT.format(
+            input_text=input_text,
+            template_str=template_str,
+            prompt_separator=prompt_separator,
+        )
         # print(prompt)
 
         output_text = self.generate(prompt)
 
-        # TODO T5 have problem with json formatting (add { and } to tokenizer or convert input?)
-
         try:
+            # Decoder models
+            if prompt_separator in output_text:
+                filled_json = json.loads(output_text.split(prompt_separator)[-1])
+            else:
+                # TODO Improve: T5 have problem with json formatting, maybe add { and } to its tokenizer?
+                unk_token = "<unk>"
+                is_alternate = False
+                while unk_token in output_text:
+                    symbol = "}" if is_alternate else "{"
+                    output_text = output_text.replace(unk_token, symbol, 1)
+                    is_alternate = not is_alternate
+
+                output_text = output_text.replace("</s>", "").replace("<pad>", "")
+                filled_json = json.loads(output_text)
             # Attempt to parse the output text back into a JSON object.
-            filled_json = json.loads(output_text.split(prompt_separator)[-1])
         except json.JSONDecodeError:
             print("Failed to parse model output into JSON. Raw output:", output_text)
             filled_json = {}

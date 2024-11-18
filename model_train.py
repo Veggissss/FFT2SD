@@ -6,7 +6,7 @@ from datasets import Dataset
 import json
 
 from model_loader import ModelLoader
-from config import MODELS_DICT
+from config import MODELS_DICT, SYSTEM_PROMPT
 
 
 def preprocess_function(examples: dict, model_loader: ModelLoader, max_length=512):
@@ -22,17 +22,18 @@ def preprocess_function(examples: dict, model_loader: ModelLoader, max_length=51
     for text, json_template, target_json in zip(
         examples["input_text"], examples["json_template"], examples["target_json"]
     ):
-        # json_template_str = json.dumps(json_template, indent=2)
-        # target_json_str = json.dumps(target_json, indent=2)
-
         if model_type in ["encoder-decoder", "decoder"]:
             # Combine text and JSON template into a prompt.
-            input_text = f"Text: {text}\nFill in the JSON values:\n{json_template}\n"
+            input_text = SYSTEM_PROMPT.format(
+                input_text=text,
+                template_str=json_template,
+                prompt_separator="<END_OF_PROMPT>",
+            )
             target_text = target_json
         elif model_type == "encoder":
             # Input is just the text, target might need to be custom-processed for training.
             input_text = text
-            target_text = target_json  # Use target JSON as a reference.
+            target_text = target_json
 
         inputs.append(input_text)
         targets.append(target_text)
@@ -106,7 +107,7 @@ def train_model(
         eval_strategy="no",  # TODO: Set to "epoch"
         learning_rate=2e-5,
         # per_device_train_batch_size=4,
-        num_train_epochs=100,  # TODO Make selectable along with other training params
+        num_train_epochs=50,  # TODO Make selectable along with other training params
         weight_decay=0.01,
         logging_dir="./logs",
         logging_steps=10,
@@ -139,10 +140,5 @@ if __name__ == "__main__":
     # Load and preprocess the dataset.
     dataset = load_and_prepare_data(model_loader)
 
-    print(dataset)
-    print(dataset.shape)
-    print(dataset.column_names)
-
-    print(dataset["labels"])
     # Fine-tune the model.
     train_model(model_loader, dataset)
