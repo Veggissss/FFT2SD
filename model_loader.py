@@ -19,9 +19,9 @@ class ModelLoader:
         self.model_name = model_name
         self.model_type = model_type
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model, self.tokenizer = self.load_model(model_name, model_type)
+        self.model, self.tokenizer = self.__load_model(model_name, model_type)
 
-    def load_model(self, model_name: str, model_type: str):
+    def __load_model(self, model_name: str, model_type: str) -> tuple:
         """
         Load a model based on the specified type.
         :param model_name: The Hugging Face model name.
@@ -32,6 +32,7 @@ class ModelLoader:
 
         # TODO: Load trained model from a custom local path!
         if model_type == "encoder-decoder":
+            # model = AutoModelForSeq2SeqLM.from_pretrained("/path/to/local")
             model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
             model.to(self.device)
         elif model_type == "decoder":
@@ -54,7 +55,11 @@ class ModelLoader:
         :return: Generated output text.
         """
         inputs = self.tokenizer(
-            prompt, return_tensors="pt", max_length=max_length, truncation=True
+            prompt,
+            return_tensors="pt",
+            max_length=max_length,
+            truncation=True,
+            # padding=True
         ).to(self.device)
 
         if self.model_type == "encoder":
@@ -82,11 +87,13 @@ class ModelLoader:
         template_str = json.dumps(json_template, indent=2)
         prompt_separator = " END_OF_PROMPT "
 
-        # TODO: Extract 'system prompt' generation to a separate function/class var.
-        prompt = f"'{input_text}'\nUse this information to replace the FILL_VALUE values in the json:\n{template_str}{prompt_separator}"
+        # TODO: Extract 'system prompt' generation to a separate function/class var. Must be consistent with the model's training data.
+        prompt = f"'{input_text}'\nUse this information to replace the 'None' values in the json:\n{template_str}{prompt_separator}"
         # print(prompt)
 
         output_text = self.generate(prompt)
+
+        # TODO T5 have problem with json formatting (add { and } to tokenizer or convert input?)
 
         try:
             # Attempt to parse the output text back into a JSON object.
