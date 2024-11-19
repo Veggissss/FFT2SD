@@ -12,7 +12,7 @@ Resulting in datamodels for clinical, macroscopic and microscopic analysis repor
 
 The generated datamodels have a "value" field which is set to null. This is going to be given to the LLM along with the prose text for each reporting step (clinical, macroscopic, microscopic).
 
-**One thing in mind is that the LLM have different and a limited context window and max length. Since some of the datamodels have a lot of enum values and/or fields that are required. Strategies to midigate this might include splitting up into multiple prompts/evals. Further investigation will occur once the extraction prosess of real data starts.**
+**One thing to keep in mind is that the LLMs have different and a limited context window sizes and max lengths. Since some of the datamodels contain a lot of different enum values and/or fields that are required. Strategies to midigate this might include splitting up into multiple prompts/evals. Further investigation will occur once the extraction prosess of real data starts.**
 
 
 ## Data Collection Process
