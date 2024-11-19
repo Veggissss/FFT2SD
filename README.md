@@ -22,7 +22,7 @@ Data extraction will start after approval, early 2025.
 
 
 ## Training / Fine-tuning process
-The project will focus on using open source models that already have been trained to understand natural language. Since this project involves analyzing medical journal texts which contains prose written in norwegian, more specialiced trained models will be used. Namely some of the norwegian trained models by the (Language Technology Group (University of Oslo))[https://huggingface.co/ltg] on HuggingFace.
+The project will focus on using open source models that already have been trained to understand natural language. Since this project involves analyzing medical journal texts which contains prose written in norwegian, more specialiced trained models will be used. Namely some of the norwegian trained models by the [Language Technology Group (University of Oslo) on HuggingFace](https://huggingface.co/ltg).
 
 These models will be fine-tuned to extract medical information from the medical prose text and fill out the `null` fields from a json formatted datamodel. The models result will be compared with a pre-filled correct labeled datamodel corresponding to the given input.
 The model will then use backpropegation to adjust its weights by using a loss function.
