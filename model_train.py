@@ -1,15 +1,15 @@
 from transformers import (
     Trainer,
     TrainingArguments,
+    DataCollatorForLanguageModeling,
 )
 from datasets import Dataset
 import json
-
 from model_loader import ModelLoader
 from config import MODELS_DICT, SYSTEM_PROMPT
 
 
-def preprocess_function(examples: dict, model_loader: ModelLoader, max_length=512):
+def preprocess_dataset(examples: dict, model_loader: ModelLoader, max_length=512):
     """
     Prepare the dataset for training by creating input-output pairs.
     :param examples: Batch of examples containing 'text', 'json_template', and 'target_json'.
@@ -19,20 +19,27 @@ def preprocess_function(examples: dict, model_loader: ModelLoader, max_length=51
     inputs = []
     targets = []
 
-    for text, json_template, target_json in zip(
-        examples["input_text"], examples["json_template"], examples["target_json"]
+    for text, template_json, target_json in zip(
+        examples["input_text"], examples["template_json"], examples["target_json"]
     ):
-        if model_type in ["encoder-decoder", "decoder"]:
-            # Combine text and JSON template into a prompt.
+        if model_loader.model_type == "encoder":
+            # template_json = template_json.replace(
+            #    "null", model_loader.tokenizer.mask_token
+            # )
+
+            print(template_json)
+
             input_text = SYSTEM_PROMPT.format(
-                input_text=text,
-                template_str=json_template,
-                prompt_separator="<END_OF_PROMPT>",
+                input_text=text, template_json=template_json
             )
-            target_text = target_json
-        elif model_type == "encoder":
-            # Input is just the text, target might need to be custom-processed for training.
-            input_text = text
+
+            target_text = SYSTEM_PROMPT.format(
+                input_text=text, template_json=target_json
+            )
+        else:
+            input_text = SYSTEM_PROMPT.format(
+                input_text=text, template_json=template_json
+            )
             target_text = target_json
 
         inputs.append(input_text)
@@ -61,12 +68,11 @@ def load_and_prepare_data(model_loader: ModelLoader, max_length=512):
     # Test dataset TODO: load real data from .jsonl
     data = {
         "input_text": ["The car is a 2021 model with 150 HP and comes in red color."],
-        "json_template": [
+        "template_json": [
             json.dumps(
                 [
                     {"id": 1, "field": "model_year", "value": None, "required": True},
-                    {"id": 2, "field": "horsepower", "value": None, "required": True},
-                    {"id": 3, "field": "color", "value": None, "required": True},
+                    {"id": 2, "field": "color", "value": None, "required": True},
                 ]
             ),
         ],
@@ -74,8 +80,7 @@ def load_and_prepare_data(model_loader: ModelLoader, max_length=512):
             json.dumps(
                 [
                     {"id": 1, "field": "model_year", "value": 2021, "required": True},
-                    {"id": 2, "field": "horsepower", "value": 150, "required": True},
-                    {"id": 3, "field": "color", "value": "red", "required": True},
+                    {"id": 2, "field": "color", "value": "red", "required": True},
                 ]
             ),
         ],
@@ -85,15 +90,13 @@ def load_and_prepare_data(model_loader: ModelLoader, max_length=512):
     dataset = Dataset.from_dict(data)
 
     return dataset.map(
-        lambda x: preprocess_function(x, model_loader, max_length),
+        lambda x: preprocess_dataset(x, model_loader, max_length),
         batched=True,
-        batch_size=4,
+        batch_size=10,
     )
 
 
-def train_model(
-    model_loader: ModelLoader, dataset: Dataset, output_dir="fine_tuned_model"
-):
+def train_model(model_loader: ModelLoader, dataset: Dataset, output_dir: str):
     """
     Train the model using the provided dataset.
     :param model: The model to be fine-tuned.
@@ -113,6 +116,11 @@ def train_model(
         logging_steps=10,
     )
 
+    if model_loader.model_type == "encoder":
+        data_collator = DataCollatorForLanguageModeling(
+            tokenizer=model_loader.tokenizer, mlm=True
+        )
+
     # Initialize the Trainer.
     trainer = Trainer(
         model=model_loader.model,
@@ -120,7 +128,7 @@ def train_model(
         train_dataset=dataset,
         processing_class=model_loader.tokenizer,
         # eval_dataset= # TODO: Add evaluation dataset and set eval_strategy to "epoch"
-        # data_collator=
+        data_collator=data_collator,
     )
 
     # Train the model.
@@ -132,7 +140,7 @@ def train_model(
 
 
 if __name__ == "__main__":
-    model_type = "encoder-decoder"
+    model_type = "encoder"
 
     # Load model and tokenizer.
     model_loader = ModelLoader(MODELS_DICT[model_type], model_type)
@@ -141,4 +149,4 @@ if __name__ == "__main__":
     dataset = load_and_prepare_data(model_loader)
 
     # Fine-tune the model.
-    train_model(model_loader, dataset)
+    train_model(model_loader, dataset, f"trained/{model_type}")

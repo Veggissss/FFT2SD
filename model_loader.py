@@ -4,11 +4,12 @@ from transformers import (
     AutoModelForSeq2SeqLM,
     AutoModelForCausalLM,
     AutoModel,
+    AutoModelForMaskedLM,
     BitsAndBytesConfig,
 )
 import torch
 import json
-from config import SYSTEM_PROMPT
+from config import SYSTEM_PROMPT, END_OF_PROMPT_MARKER
 
 
 class ModelLoader:
@@ -22,31 +23,53 @@ class ModelLoader:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model, self.tokenizer = self.__load_model(model_name, model_type)
 
-    def __load_model(self, model_name: str, model_type: str) -> tuple:
+    def __load_model(
+        self, model_name: str, model_type: str
+    ) -> tuple[AutoModel, AutoTokenizer]:
         """
         Load a model based on the specified type.
         :param model_name: The Hugging Face model name.
         :param model_type: Type of model - 'encoder', 'encoder-decoder', or 'decoder'.
         :return: model and tokenizer.
         """
-        config = BitsAndBytesConfig(load_in_8bit=True)
+        # Load the corresponding model's tokenizer
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+        config = BitsAndBytesConfig(load_in_4bit=True)
 
         # TODO: Load trained model from a custom local path!
         if model_type == "encoder-decoder":
-            # model = AutoModelForSeq2SeqLM.from_pretrained("/path/to/local")
             model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
             model.to(self.device)
+
         elif model_type == "decoder":
             # .to(self.device) is not used when using quantization
             model = AutoModelForCausalLM.from_pretrained(
                 model_name, quantization_config=config
             )
         else:
-            model = AutoModel.from_pretrained(model_name)
+            model = AutoModelForMaskedLM.from_pretrained(
+                model_name, trust_remote_code=True
+            )
             model.to(self.device)
 
-        # Load corresponding tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        # Set special tokens for the tokenizer
+        tokenizer.unk_token = "<unk>"
+        tokenizer.pad_token = "<pad>"
+        tokenizer.mask_token = "null"
+        tokenizer.eos_token = "</s>"
+
+        tokenizer.add_special_tokens(
+            {
+                "unk_token": tokenizer.unk_token,
+                "pad_token": tokenizer.pad_token,
+                "mask_token": tokenizer.mask_token,
+                "eos_token": tokenizer.eos_token,
+            }
+        )
+
+        # Resize the token embeddings to match the tokenizer
+        model.resize_token_embeddings(len(tokenizer))
 
         return model, tokenizer
 
@@ -60,24 +83,35 @@ class ModelLoader:
             return_tensors="pt",
             max_length=max_length,
             truncation=True,
-            # padding=True
+            padding=True,
         ).to(self.device)
 
         if self.model_type == "encoder":
+            # Generate encoder output
             output = self.model(**inputs)
-            # TODO: Extract embeddings and map them to values
-            print("TODO: Custom extraction needed for encoder models!")
-            output_text = "WIP"
-            return output_text
+
+            # Replace masked tokens with the predicted tokens
+            # mask_id = self.tokenizer.convert_tokens_to_ids("[MASK]")
+            mask_id = self.tokenizer.mask_token_id
+
+            output_ids = torch.where(
+                inputs.input_ids == mask_id, output.logits.argmax(-1), inputs.input_ids
+            )
+
+            return self.tokenizer.decode(
+                output_ids[0].tolist(),
+                skip_special_tokens=True,
+                clean_up_tokenization_spaces=True,
+            )
         else:
             # Generate decoder/encoder-decoder output
             output_ids = self.model.generate(**inputs, max_length=max_length)
             output_text = self.tokenizer.decode(
-                output_ids[0]
-            )  # skip_special_tokens=True
+                output_ids[0], skip_special_tokens=False
+            )
             return output_text
 
-    def generate_filled_json(self, input_text: str, json_template: dict) -> dict:
+    def generate_filled_json(self, input_text: str, template_str: str) -> dict:
         """
         Fill out the JSON values based on the input text.
         :param model_loader: ModelLoader object with the loaded model and tokenizer.
@@ -87,34 +121,45 @@ class ModelLoader:
         """
 
         # Convert JSON template to a string to include in the prompt.
-        template_str = json.dumps(json_template, indent=2)
-        prompt_separator = "<END_OF_PROMPT>"
 
         prompt = SYSTEM_PROMPT.format(
             input_text=input_text,
-            template_str=template_str,
-            prompt_separator=prompt_separator,
+            template_json=template_str,
         )
-        # print(prompt)
+        print(prompt)
 
         output_text = self.generate(prompt)
 
         try:
             # Decoder models
-            if prompt_separator in output_text:
-                filled_json = json.loads(output_text.split(prompt_separator)[-1])
-            else:
+            if self.model_type == "decoder":
+                output_text = output_text.replace(self.tokenizer.eos_token, "")
+                filled_json = json.loads(output_text.split(END_OF_PROMPT_MARKER)[-1])
+
+            elif self.model_type == "encoder-decoder":
                 # TODO Improve: T5 have problem with json formatting, maybe add { and } to its tokenizer?
-                unk_token = "<unk>"
                 is_alternate = False
-                while unk_token in output_text:
+                while self.tokenizer.unk_token in output_text:
                     symbol = "}" if is_alternate else "{"
-                    output_text = output_text.replace(unk_token, symbol, 1)
+                    output_text = output_text.replace(
+                        self.tokenizer.unk_token, symbol, 1
+                    )
                     is_alternate = not is_alternate
 
-                output_text = output_text.replace("</s>", "").replace("<pad>", "")
+                output_text = output_text.replace(self.tokenizer.pad_token, "")
+                output_text = output_text.replace(self.tokenizer.eos_token, "")
+
+                # Attempt to parse the output text back into a JSON object.
                 filled_json = json.loads(output_text)
-            # Attempt to parse the output text back into a JSON object.
+
+            elif self.model_type == "encoder":
+                start_index = output_text.find("[ {")
+                end_index = output_text.find("} ]") + len("} ]")
+                if start_index != -1 and end_index != -1:
+                    output_text = output_text[start_index:end_index]
+
+                filled_json = json.loads(output_text)
+
         except json.JSONDecodeError:
             print("Failed to parse model output into JSON. Raw output:", output_text)
             filled_json = {}
