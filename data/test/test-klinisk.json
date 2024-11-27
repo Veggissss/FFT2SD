@@ -1,0 +1,106 @@
+{
+    "input_text": "3 mm polypp. kald slynge. dysplasi?\nAnatomisk lokalisasjon:\n 1/1: colon hø. fleksur\n Er prøven tatt i forbindels med tarmscreeningsprogrammet?: Ja",
+    "target_json": [
+        {
+            "id": 128,
+            "field": "Beholder-ID",
+            "required": true,
+            "type": "string",
+            "value": "1"
+        },
+        {
+            "id": 100,
+            "field": "Prøvekategori",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "P06020"
+            ],
+            "value": "P06020"
+        },
+        {
+            "id": 101,
+            "field": "Lokasjon klinikk",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "T65520",
+                "T67100",
+                "T67200",
+                "T67300",
+                "T67400",
+                "T67500",
+                "T67600",
+                "T67700",
+                "T68200",
+                "T68000",
+                "T69000",
+                "T67000",
+                "T67920"
+            ],
+            "value": "T67300"
+        },
+        {
+            "id": 102,
+            "field": "Diameter av lesjon",
+            "required": true,
+            "type": "float",
+            "unit": "mm",
+            "value": 3
+        },
+        {
+            "id": 103,
+            "field": "Uttaksmetode klinikk",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "Biopsitang",
+                "Kald slynge in toto",
+                "Kald slynge piecemeal",
+                "Diatermislynge in toto",
+                "Diatermislynge piecemeal",
+                "Endoskopisk submucosal disseksjon (ESD)",
+                "Endoskopisk mucosal reseksjon (EMR)",
+                "Annen metode"
+            ],
+            "value": "Kald slynge in toto"
+        },
+        {
+            "id": 104,
+            "field": "Makroskopisk utseende",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "Is",
+                "Ip",
+                "IIa",
+                "IIb",
+                "IIc",
+                "III",
+                null
+            ],
+            "value": "Is"
+        },
+        {
+            "id": 105,
+            "field": "Vurdert komplett fjernet",
+            "required": true,
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "id": 130,
+            "field": "Mistanke om kreft",
+            "required": true,
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "id": 106,
+            "field": "Klinisk diagnose/problemstilling",
+            "required": false,
+            "type": "string",
+            "value": ""
+        }
+    ]
+}
