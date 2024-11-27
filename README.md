@@ -12,7 +12,8 @@ Resulting in datamodels for clinical, macroscopic and microscopic analysis repor
 
 The generated datamodels have a "value" field which is set to null. This is going to be given to the LLM along with the prose text for each reporting step (clinical, macroscopic, microscopic).
 
-**One thing to keep in mind is that the LLMs have different and a limited context window sizes and max lengths. Since some of the datamodels contain a lot of different enum values and/or fields that are required. Strategies to midigate this might include splitting up into multiple prompts/evals. Further investigation will occur once the extraction prosess of real data starts.**
+~~**One thing to keep in mind is that the LLMs have different and a limited context window sizes and max lengths. Since some of the datamodels contain a lot of different enum values and/or fields that are required. Strategies to midigate this might include splitting up into multiple prompts/evals. Further investigation will occur once the extraction prosess of real data starts.**~~
+Update: After using improved test data the spltting of prompts seems nessesary. Now each json entry in the model is prompted individually instead of the whole model per prompt. This increases generation times, but is nessesary for the output to not get cut off which due to the relativly small max length of the used models (~512 tokens). Other models with larger context length might be used to prevent this issue, but availablity of such open source models and which are pretrained on norwegean makes it out of scope for this project.
 
 
 ## Data Collection Process
