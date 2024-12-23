@@ -6,16 +6,16 @@ MODELS_DICT: dict[str, str] = {
     "trained-encoder": "trained/encoder",
     # Hugging Face models
     "encoder-decoder": "ltg/nort5-base",
-    "decoder": "norallm/normistral-7b-warm",
-    "encoder": "google-bert/bert-base-uncased",
+    "decoder": "norallm/normistral-7b-warm-instruct",
+    "encoder": "ltg/norbert3-base",
 }
 
 # Mark the end of the prompt for the model to start generating the output.
 # Useful for decoder models which continue generating using the prompt.
-END_OF_PROMPT_MARKER = "<END_OF_PROMPT>"
+END_OF_PROMPT_MARKER = "[MASK_8]"
 
 # Prompt for filling in the null JSON values. Used in training and evaluation.
 SYSTEM_PROMPT = (
-    "Input Text: '{input_text}'\nFill in the null JSON values while retaining its structure:\n{template_json}\n"
+    "Gitt teksten: '{input_text}'.\nFyll ut den manglede verdien for feltet \"value\", behold JSON strukturen: \n{template_json} "
     + END_OF_PROMPT_MARKER
 )

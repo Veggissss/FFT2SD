@@ -32,3 +32,5 @@ An overview of how the dataset is structured, along with training and the evalua
 ![Training overview](figures/LLM.DataFlow.drawio.svg)
 
 
+## Investigate
+- See if end of sentence marker impacts different models. Decoder seem to mess up. Encoder-decoder might learn to stop early now that it is added?.

@@ -1,3 +1,4 @@
+from peft import LoraConfig, get_peft_model
 from transformers import (
     Trainer,
     TrainingArguments,
@@ -6,7 +7,7 @@ from transformers import (
 from datasets import Dataset
 import json
 from model_loader import ModelLoader
-from config import MODELS_DICT, SYSTEM_PROMPT
+from config import MODELS_DICT, SYSTEM_PROMPT, END_OF_PROMPT_MARKER
 
 
 def preprocess_dataset(
@@ -63,8 +64,9 @@ def load_and_prepare_data(model_loader: ModelLoader, max_length=512):
         "output": [],
     }
 
+    # TODO Verify with multiple entries
     # for each entry create a new input-output pair
-    for [entry_index, entry_item] in enumerate(template_json):
+    for [entry_index, _] in enumerate(template_json):
         for template_json_entry, target_json_entry in zip(
             json.loads(template_json[entry_index]), json.loads(target_json[entry_index])
         ):
@@ -73,21 +75,22 @@ def load_and_prepare_data(model_loader: ModelLoader, max_length=512):
 
             if model_loader.model_type == "encoder":
                 template_json_entry = template_json_entry.replace(
-                    "null", model_loader.tokenizer.mask_token
+                    '"value": null', f'"value": {model_loader.tokenizer.mask_token}'
                 )
 
+            if model_loader.model_type in ["encoder", "decoder"]:
                 input_text = SYSTEM_PROMPT.format(
-                    input_text=text, template_json=template_json_entry
+                    input_text=text[entry_index], template_json=template_json_entry
                 )
 
                 target_text = SYSTEM_PROMPT.format(
-                    input_text=text, template_json=target_json_entry
+                    input_text=text[entry_index], template_json=target_json_entry
                 )
             else:
                 input_text = SYSTEM_PROMPT.format(
-                    input_text=text, template_json=template_json_entry
+                    input_text=text[entry_index], template_json=template_json_entry
                 )
-                target_text = target_json_entry
+                target_text = target_json_entry + END_OF_PROMPT_MARKER
 
             new_data["input"].append(input_text)
             new_data["output"].append(target_text)
@@ -99,7 +102,9 @@ def load_and_prepare_data(model_loader: ModelLoader, max_length=512):
     print(dataset["output"][0])
 
     batch_size = len(dataset["input"])
+    output_size = len(dataset["output"])
     print(f"Batch size: {batch_size}")
+    print(f"Number of examples: {output_size}")
 
     return dataset.map(
         lambda x: preprocess_dataset(x, model_loader, max_length),
@@ -121,29 +126,42 @@ def train_model(model_loader: ModelLoader, dataset: Dataset, output_dir: str):
         output_dir=output_dir,  # TODO: Set to a unique path for each model
         eval_strategy="no",  # TODO: Set to "epoch"
         learning_rate=2e-5,
-        num_train_epochs=40,  # TODO Make selectable along with other training params
+        num_train_epochs=8,  # TODO Make selectable along with other training params
         weight_decay=0.01,
         logging_dir="./logs",
         logging_steps=10,
+        fp16=True,  # Enable mixed precision
     )
-
-    if model_loader.model_type == "encoder":
-        data_collator = DataCollatorForLanguageModeling(
-            tokenizer=model_loader.tokenizer, mlm=True
-        )
 
     dataset = dataset.remove_columns(["input", "output"])
     # dataset = dataset.train_test_split(test_size=0.1)
 
-    # Initialize the Trainer.
-    trainer = Trainer(
-        model=model_loader.model,
-        args=training_args,
-        train_dataset=dataset,
-        processing_class=model_loader.tokenizer,
-        # eval_dataset= # TODO: Add evaluation dataset and set eval_strategy to "epoch"
-        # data_collator=data_collator,
-    )
+    if model_loader.model_type == "encoder" or model_loader.model_type == "decoder":
+        data_collator = DataCollatorForLanguageModeling(
+            tokenizer=model_loader.tokenizer,
+            mlm=False,
+            return_tensors="pt",
+        )
+
+        trainer = Trainer(
+            model=model_loader.model,
+            args=training_args,
+            train_dataset=dataset,
+            processing_class=model_loader.tokenizer,
+            # eval_dataset= # TODO: Add evaluation dataset and set eval_strategy to "epoch"
+            data_collator=data_collator,
+        )
+
+    else:
+        # Initialize the Trainer.
+        trainer = Trainer(
+            model=model_loader.model,
+            args=training_args,
+            train_dataset=dataset,
+            processing_class=model_loader.tokenizer,
+            # eval_dataset= # TODO: Add evaluation dataset and set eval_strategy to "epoch"
+            # data_collator=data_collator,
+        )
 
     # Train the model.
     trainer.train()
@@ -154,10 +172,26 @@ def train_model(model_loader: ModelLoader, dataset: Dataset, output_dir: str):
 
 
 if __name__ == "__main__":
-    model_type = "encoder-decoder"
+    model_type = "decoder"
 
     # Load model and tokenizer.
     model_loader = ModelLoader(MODELS_DICT[model_type], model_type)
+
+    if model_type == "decoder":
+        # Configure LoRA
+        lora_config = LoraConfig(
+            r=8,  # Rank of the LoRA layers
+            lora_alpha=32,  # Scaling factor
+            target_modules=["q_proj", "v_proj"],  # Which layers to apply LoRA
+            lora_dropout=0.1,  # Dropout for LoRA
+            bias="none",  # No bias in LoRA layers
+        )
+
+        peft_model = get_peft_model(model_loader.model, lora_config)
+        peft_model.print_trainable_parameters()
+
+        # Apply PEFT to the decoder model
+        model_loader.model = peft_model
 
     # Load and preprocess the dataset.
     dataset = load_and_prepare_data(model_loader)

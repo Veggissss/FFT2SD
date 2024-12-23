@@ -43,15 +43,17 @@ class ModelLoader:
             model.to(self.device)
 
         elif model_type == "decoder":
-            # config = BitsAndBytesConfig(load_in_4bit=True)
+            q_config = BitsAndBytesConfig(
+                load_in_4bit=True,  # Use 4-bit quantization
+                bnb_4bit_quant_type="nf4",  # NormalFloat4 (recommended for LLMs)
+                bnb_4bit_use_double_quant=True,  # Double quantization
+                bnb_4bit_compute_dtype="float16",  # Reduce memory further
+            )
 
-            # .to(self.device) is not used when using quantization
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
-                device_map="auto",
-                load_in_8bit=True,
-                torch_dtype=torch.bfloat16,
-            )
+                quantization_config=q_config,
+            ).to(self.device)
         else:
             model = AutoModelForMaskedLM.from_pretrained(
                 model_name, trust_remote_code=True
@@ -60,7 +62,7 @@ class ModelLoader:
 
         # Set special tokens for the tokenizer
         # tokenizer.unk_token = "<unk>"
-        # tokenizer.pad_token = "<pad>"
+        tokenizer.pad_token = "<pad>"
         # tokenizer.eos_token = "</s>"
         # tokenizer.mask_token = "[MASK]"
 
@@ -91,6 +93,10 @@ class ModelLoader:
             padding=True,
         ).to(self.device)
 
+        # The prompt is always longer than the output
+        amount_new_tokens = min(inputs["input_ids"].shape[1], max_length)
+        print(f"Prompt tokenized length: {amount_new_tokens}")
+
         if self.model_type == "encoder":
             # Generate encoder output
             output = self.model(**inputs)
@@ -109,11 +115,6 @@ class ModelLoader:
                 clean_up_tokenization_spaces=True,
             )
         elif self.model_type == "encoder-decoder":
-            inputs.pop("token_type_ids", None)
-
-            # The prompt is always longer than the output
-            amount_new_tokens = min(inputs["input_ids"].shape[1], max_length)
-            print(f"Prompt tokenized length: {amount_new_tokens}")
 
             # Generate decoder/encoder-decoder output
             output_ids = self.model.generate(
@@ -126,8 +127,10 @@ class ModelLoader:
             )
             return output_text
         else:
-            # Generate decoder/encoder-decoder output
-            output_ids = self.model.generate(**inputs)
+            # Generate decoder output
+            inputs.pop("token_type_ids", None)
+
+            output_ids = self.model.generate(**inputs, max_new_tokens=amount_new_tokens)
             output_text = self.tokenizer.decode(
                 output_ids[0], skip_special_tokens=False
             )
