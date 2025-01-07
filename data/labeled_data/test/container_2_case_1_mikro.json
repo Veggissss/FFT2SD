@@ -1,0 +1,226 @@
+{
+    "input_text": "1: Ileumslimhinne uten påviste patologiske forandringer. \n\n2: Colonslimhinne (cøkum) med lett kronisk aktiv betennelse. Se beskrivelsen. \n\n3: Colonslimhinne uten påviste patologiske forandringer.",
+    "target_json": [
+        {
+            "id": 128,
+            "field": "Beholder-ID",
+            "required": true,
+            "type": "string",
+            "value": "3"
+        },
+        {
+            "id": 109,
+            "field": "Patologidiagnose",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "M82111",
+                "M82112",
+                "M82631",
+                "M82632",
+                "M82611",
+                "M82612",
+                "M82101",
+                "M82102",
+                "M72040",
+                "M82140",
+                "M82142",
+                "M82131",
+                "M82132",
+                "M72004",
+                "M76820",
+                "M44440",
+                "M76880",
+                "M76830",
+                "M76835",
+                "M76834",
+                "M75630",
+                "M75640",
+                "M88500",
+                "M88900",
+                "M94900",
+                "M95400",
+                "M95600",
+                "M89363",
+                "M00100",
+                "M09000",
+                "M09010",
+                "P00308",
+                "P00311",
+                "M76055",
+                "M76086",
+                "M81402",
+                "S29350",
+                "M8213P",
+                "M76910",
+                "S50020",
+                "S61630",
+                "M82103",
+                "M82613",
+                "M82143",
+                "M82153",
+                "M81403"
+            ],
+            "value": "M82631"
+        },
+        {
+            "id": 117,
+            "field": "Kommentar",
+            "required": false,
+            "type": "string",
+            "value": "TEST3"
+        },
+        {
+            "id": 110,
+            "field": "Differensieringsgrad",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "Lavgradig histologisk differensiering",
+                "Høygradig histologisk differensiering",
+                "Differensieringsgrad kan ikke vurderes"
+            ],
+            "value": "Høygradig histologisk differensiering"
+        },
+        {
+            "id": 111,
+            "field": "Karsinomets største diameter",
+            "required": true,
+            "type": "float",
+            "unit": "mm",
+            "value": 2.0
+        },
+        {
+            "id": 112,
+            "field": "Lymfekarinnvekst",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "Lymfekarinnvekst ikke påvist",
+                "Lymfekarinnvekst påvist",
+                "Lymfekarinnvekst kan ikke vurderes"
+            ],
+            "value": "Lymfekarinnvekst kan ikke vurderes"
+        },
+        {
+            "id": 118,
+            "field": "Venekarinnvekst",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "Venekarinnvekst ikke påvist",
+                "Venekarinnvekst påvist intramural",
+                "Venekarinnvekst kan ikke vurderes"
+            ],
+            "value": "Venekarinnvekst kan ikke vurderes"
+        },
+        {
+            "id": 113,
+            "field": "Infiltrasjonsdybde",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "pT1",
+                "pT2",
+                "pT3",
+                "pT4a",
+                "pT4b",
+                null
+            ],
+            "value": "pT3"
+        },
+        {
+            "id": 114,
+            "field": "Haggitt-klassifikasjon",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "Nivå 1",
+                "Nivå 2",
+                "Nivå 3",
+                "Nivå 4",
+                null,
+                null
+            ],
+            "value": "Nivå 3"
+        },
+        {
+            "id": 120,
+            "field": "Sm-klassifikasjon",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "sm1",
+                "sm2",
+                "sm3",
+                null
+            ],
+            "value": "sm3"
+        },
+        {
+            "id": 127,
+            "field": "Dybde submukosal infiltrasjon",
+            "required": true,
+            "type": "float",
+            "unit": "mm",
+            "value": 3.0
+        },
+        {
+            "id": 116,
+            "field": "Reseksjonsrender",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "M09400",
+                "M09401",
+                "M09402",
+                null
+            ],
+            "value": null
+        },
+        {
+            "id": 122,
+            "field": "Korteste avstand til reseksjonsrand",
+            "required": true,
+            "type": "float",
+            "unit": "mm",
+            "value": 3.0
+        },
+        {
+            "id": 115,
+            "field": "Korteste avstand til nærmeste sidereseksjonsrand",
+            "required": true,
+            "type": "float",
+            "unit": "mm",
+            "value": 2.0
+        },
+        {
+            "id": 121,
+            "field": "Korteste avstand til dyp reseksjonsrand",
+            "required": true,
+            "type": "float",
+            "unit": "mm",
+            "value": 1.0
+        },
+        {
+            "id": 125,
+            "field": "Antall tumor 'buds'",
+            "required": false,
+            "type": "int",
+            "value": 3
+        },
+        {
+            "id": 126,
+            "field": "Graden av tumor 'budding'",
+            "required": false,
+            "type": "enum",
+            "enum": [
+                "Bd1",
+                "Bd2",
+                "Bd3",
+                null
+            ],
+            "value": null
+        }
+    ]
+}

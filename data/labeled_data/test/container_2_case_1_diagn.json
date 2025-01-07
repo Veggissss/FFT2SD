@@ -1,0 +1,106 @@
+{
+    "input_text": "1: Her ses tynntarmslimhinne med lange, slanke totter med rikelig antall begerceller og noen lymfoide follikler. Vanlig mengde mononukleære betennelsesceller i lamina propria. Ingen aktiv betennelse eller granulom. Dysplasi ikke påvist. \n\n2: Colonslimhinne med helt lett arkitekturforstyrrelse i form av enkelte lett forgrenete krypter og noe ujevn innbyrdes krypteavstand. Nokså bevarte begerceller. Lett varierende celletetthet i lamina propria av mononukleære betennelsesceller. Fokalt ses nøytrofile granulocytter i krypteepitelet (kryptitt) og enkelte krypteabscesser. Ingen basal plasmacytose. Epiteloidcellegranulom er ikke sett.\nVURDERING: \nFunnet må sammenholdes med klinikk. NSAIDs-induserte forandringer kan ikke utelukkes. \n\n3: Multiple slimhinnebiter fra colon med overveiende bevart kryptearkitektur og bevarte begerceller. Lett varierende celletetthet i lamina propria. Ingen aktiv betennelse, ingen epiteloidcellegranulom, ingen dysplasi. Ikke økt antall intraepiteliale lymfocytter og ingen fortykkelse av subepitelialt kollagenbånd.\n",
+    "target_json": [
+        {
+            "id": 128,
+            "field": "Beholder-ID",
+            "required": true,
+            "type": "string",
+            "value": "3"
+        },
+        {
+            "id": 100,
+            "field": "Prøvekategori",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "P06020"
+            ],
+            "value": "P06020"
+        },
+        {
+            "id": 101,
+            "field": "Lokasjon klinikk",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "T65520",
+                "T67100",
+                "T67200",
+                "T67300",
+                "T67400",
+                "T67500",
+                "T67600",
+                "T67700",
+                "T68200",
+                "T68000",
+                "T69000",
+                "T67000",
+                "T67920"
+            ],
+            "value": "T67200"
+        },
+        {
+            "id": 102,
+            "field": "Diameter av lesjon",
+            "required": true,
+            "type": "float",
+            "unit": "mm",
+            "value": 3.0
+        },
+        {
+            "id": 103,
+            "field": "Uttaksmetode klinikk",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "Biopsitang",
+                "Kald slynge in toto",
+                "Kald slynge piecemeal",
+                "Diatermislynge in toto",
+                "Diatermislynge piecemeal",
+                "Endoskopisk submucosal disseksjon (ESD)",
+                "Endoskopisk mucosal reseksjon (EMR)",
+                "Annen metode"
+            ],
+            "value": "Kald slynge piecemeal"
+        },
+        {
+            "id": 104,
+            "field": "Makroskopisk utseende",
+            "required": true,
+            "type": "enum",
+            "enum": [
+                "Is",
+                "Ip",
+                "IIa",
+                "IIb",
+                "IIc",
+                "III",
+                null
+            ],
+            "value": "IIa"
+        },
+        {
+            "id": 105,
+            "field": "Vurdert komplett fjernet",
+            "required": true,
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "id": 130,
+            "field": "Mistanke om kreft",
+            "required": true,
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "id": 106,
+            "field": "Klinisk diagnose/problemstilling",
+            "required": false,
+            "type": "string",
+            "value": "TEST3"
+        }
+    ]
+}
