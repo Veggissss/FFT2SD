@@ -1,5 +1,11 @@
 [
     {
+        "id": 128,
+        "field": "Beholder-ID",
+        "required": true,
+        "type": "string"
+    },
+    {
         "id": 107,
         "field": "Lokasjon patologi",
         "required": true,
