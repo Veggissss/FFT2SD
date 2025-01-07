@@ -1,0 +1,321 @@
+{
+    "klinisk": [
+        {
+            "id": 128,
+            "field": "Beholder-ID",
+            "type": "string"
+        },
+        {
+            "id": 100,
+            "field": "Prøvekategori",
+            "type": "enum",
+            "enum": [
+                "P06020"
+            ]
+        },
+        {
+            "id": 101,
+            "field": "Lokasjon klinikk",
+            "type": "enum",
+            "enum": [
+                "T65520",
+                "T67100",
+                "T67200",
+                "T67300",
+                "T67400",
+                "T67500",
+                "T67600",
+                "T67700",
+                "T68200",
+                "T68000",
+                "T69000",
+                "T67000",
+                "T67920"
+            ]
+        },
+        {
+            "id": 102,
+            "field": "Diameter av lesjon",
+            "type": "float",
+            "unit": "mm"
+        },
+        {
+            "id": 103,
+            "field": "Uttaksmetode klinikk",
+            "type": "enum",
+            "enum": [
+                "Biopsitang",
+                "Kald slynge in toto",
+                "Kald slynge piecemeal",
+                "Diatermislynge in toto",
+                "Diatermislynge piecemeal",
+                "Endoskopisk submucosal disseksjon (ESD)",
+                "Endoskopisk mucosal reseksjon (EMR)",
+                "Annen metode"
+            ]
+        },
+        {
+            "id": 104,
+            "field": "Makroskopisk utseende",
+            "type": "enum",
+            "enum": [
+                "Is",
+                "Ip",
+                "IIa",
+                "IIb",
+                "IIc",
+                "III",
+                null
+            ]
+        },
+        {
+            "id": 105,
+            "field": "Vurdert komplett fjernet",
+            "type": "boolean"
+        },
+        {
+            "id": 130,
+            "field": "Mistanke om kreft",
+            "type": "boolean"
+        },
+        {
+            "id": 106,
+            "field": "Klinisk diagnose/problemstilling",
+            "type": "string"
+        }
+    ],
+    "makroskopisk": [
+        {
+            "id": 128,
+            "field": "Beholder-ID",
+            "type": "string"
+        },
+        {
+            "id": 107,
+            "field": "Lokasjon patologi",
+            "type": "enum",
+            "enum": [
+                "T65520",
+                "T67100",
+                "T67200",
+                "T67300",
+                "T67400",
+                "T67500",
+                "T67600",
+                "T67700",
+                "T68200",
+                "T68000",
+                "T69000",
+                "T67000",
+                "T67920"
+            ]
+        },
+        {
+            "id": 108,
+            "field": "Prøvemateriale",
+            "type": "enum",
+            "enum": [
+                "P13400",
+                "P13402",
+                "P13403",
+                "P13405",
+                "P13409",
+                "P2070A"
+            ]
+        },
+        {
+            "id": 109,
+            "field": "Makroskopisk beskrivelse",
+            "type": "string"
+        }
+    ],
+    "mikroskopisk": [
+        {
+            "id": 128,
+            "field": "Beholder-ID",
+            "type": "string"
+        },
+        {
+            "id": 109,
+            "field": "Patologidiagnose",
+            "type": "enum",
+            "enum": [
+                "M82111",
+                "M82112",
+                "M82631",
+                "M82632",
+                "M82611",
+                "M82612",
+                "M82101",
+                "M82102",
+                "M72040",
+                "M82140",
+                "M82142",
+                "M82131",
+                "M82132",
+                "M72004",
+                "M76820",
+                "M44440",
+                "M76880",
+                "M76830",
+                "M76835",
+                "M76834",
+                "M75630",
+                "M75640",
+                "M88500",
+                "M88900",
+                "M94900",
+                "M95400",
+                "M95600",
+                "M89363",
+                "M00100",
+                "M09000",
+                "M09010",
+                "P00308",
+                "P00311",
+                "M76055",
+                "M76086",
+                "M81402",
+                "S29350",
+                "M8213P",
+                "M76910",
+                "S50020",
+                "S61630",
+                "M82103",
+                "M82613",
+                "M82143",
+                "M82153",
+                "M81403"
+            ]
+        },
+        {
+            "id": 117,
+            "field": "Kommentar",
+            "type": "string"
+        },
+        {
+            "id": 110,
+            "field": "Differensieringsgrad",
+            "type": "enum",
+            "enum": [
+                "Lavgradig histologisk differensiering",
+                "Høygradig histologisk differensiering",
+                "Differensieringsgrad kan ikke vurderes"
+            ]
+        },
+        {
+            "id": 111,
+            "field": "Karsinomets største diameter",
+            "type": "float",
+            "unit": "mm"
+        },
+        {
+            "id": 112,
+            "field": "Lymfekarinnvekst",
+            "type": "enum",
+            "enum": [
+                "Lymfekarinnvekst ikke påvist",
+                "Lymfekarinnvekst påvist",
+                "Lymfekarinnvekst kan ikke vurderes"
+            ]
+        },
+        {
+            "id": 118,
+            "field": "Venekarinnvekst",
+            "type": "enum",
+            "enum": [
+                "Venekarinnvekst ikke påvist",
+                "Venekarinnvekst påvist intramural",
+                "Venekarinnvekst kan ikke vurderes"
+            ]
+        },
+        {
+            "id": 113,
+            "field": "Infiltrasjonsdybde",
+            "type": "enum",
+            "enum": [
+                "pT1",
+                "pT2",
+                "pT3",
+                "pT4a",
+                "pT4b",
+                null
+            ]
+        },
+        {
+            "id": 114,
+            "field": "Haggitt-klassifikasjon",
+            "type": "enum",
+            "enum": [
+                "Nivå 1",
+                "Nivå 2",
+                "Nivå 3",
+                "Nivå 4",
+                null,
+                null
+            ]
+        },
+        {
+            "id": 120,
+            "field": "Sm-klassifikasjon",
+            "type": "enum",
+            "enum": [
+                "sm1",
+                "sm2",
+                "sm3",
+                null
+            ]
+        },
+        {
+            "id": 127,
+            "field": "Dybde submukosal infiltrasjon",
+            "type": "float",
+            "unit": "mm"
+        },
+        {
+            "id": 116,
+            "field": "Reseksjonsrender",
+            "type": "enum",
+            "enum": [
+                "M09400",
+                "M09401",
+                "M09402",
+                null
+            ]
+        },
+        {
+            "id": 122,
+            "field": "Korteste avstand til reseksjonsrand",
+            "type": "float",
+            "unit": "mm"
+        },
+        {
+            "id": 115,
+            "field": "Korteste avstand til nærmeste sidereseksjonsrand",
+            "type": "float",
+            "unit": "mm"
+        },
+        {
+            "id": 121,
+            "field": "Korteste avstand til dyp reseksjonsrand",
+            "type": "float",
+            "unit": "mm"
+        },
+        {
+            "id": 125,
+            "field": "Antall tumor 'buds'",
+            "type": "int"
+        },
+        {
+            "id": 126,
+            "field": "Graden av tumor 'budding'",
+            "type": "enum",
+            "enum": [
+                "Bd1",
+                "Bd2",
+                "Bd3",
+                null
+            ]
+        }
+    ]
+}
