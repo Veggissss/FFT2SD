@@ -18,7 +18,7 @@ Update: After using improved test data the spitting of prompts seems necessary. 
 ## UML Diagram of Structured Model
 Generated using [Code2Diagram.com](https://www.code2diagram.com/console):
 
-![Full datamodel](model/full-model.svg)
+![UML of Structured Datamodel](model/figure/full-structure.svg)
 
 ## Data Collection Process
 Data extraction will start after approval, early 2025.
