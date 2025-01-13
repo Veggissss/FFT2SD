@@ -8,7 +8,7 @@ if __name__ == "__main__":
     is_trained = True
 
     # Load the json template for clinical data report
-    with open("model/out/generated-klinisk.json", "r") as f:
+    with open("data_model/out/generated-klinisk.json", "r") as f:
         template_json = json.load(f)
 
     # Load the input text and the correct output

@@ -41,7 +41,7 @@ def load_and_prepare_data(model_loader: ModelLoader, max_length=512):
     """
 
     # Load the json template for clinical data report
-    with open("model/out/generated-klinisk.json", "r", encoding="utf-8") as f:
+    with open("data_model/out/generated-klinisk.json", "r", encoding="utf-8") as f:
         template_json = json.load(f)
 
     # Load the input text and the correct output

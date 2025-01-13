@@ -2,21 +2,6 @@ from typing import Union, List, Dict, Any
 import json
 import os
 
-# Directory of the script
-script_dir = os.path.dirname(__file__)
-
-# Directory where JSON files are stored
-struct_dir_path = os.path.join(script_dir, "struct")
-enum_dir_path = os.path.join(script_dir, "enum")
-out_dir_path = os.path.join(script_dir, "out")
-
-# Enum reference string and separator
-enum_replacement_string = "REF_ENUM"
-enum_replacement_separator = ";"
-
-# TODO: Change to special LLM token: <TOKEN> etc?
-value_placeholder = None
-
 
 def load_json_file(path: str) -> List[Dict[str, Any]]:
     """Load enum values from a JSON file."""
@@ -48,7 +33,9 @@ def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:
 
                     # Replace enum reference with enum values
                     # TODO: Optimize enum output while being within LLM token limits?
-                    data[key] = [enum for enum in enum_values]
+                    data[key] = [
+                        enum.get("value", enum.get("name")) for enum in enum_values
+                    ]
                 else:
                     print(f"Warning: Enum file {enum_file} not found!")
 
@@ -66,6 +53,21 @@ def main(input_json_file: str, output_json_file: str) -> None:
 
 
 if __name__ == "__main__":
+    # Directory of the script
+    script_dir = os.path.dirname(__file__)
+
+    # Directory where JSON files are stored
+    struct_dir_path = os.path.join(script_dir, "struct")
+    enum_dir_path = os.path.join(script_dir, "enum")
+    out_dir_path = os.path.join(script_dir, "out")
+
+    # Enum reference string and separator
+    enum_replacement_string = "REF_ENUM"
+    enum_replacement_separator = ";"
+
+    # TODO: Change to special LLM token: <TOKEN> etc?
+    value_placeholder = None
+
     # Generate data model for all JSON files in struct directory
     for file in os.listdir(struct_dir_path):
         if file.endswith(".json"):

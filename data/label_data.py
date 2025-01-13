@@ -105,14 +105,12 @@ def main(
             )
 
             # Create output directory if it doesn't exist
-            output_dir = os.path.join("labeled_data", output_dir_name)
+            output_dir = os.path.join(script_dir, "labeled_data", output_dir_name)
             os.makedirs(output_dir, exist_ok=True)
 
             # Save to file
             json_file_name = input_text_name.replace(".txt", ".json")
-            output_json_path = (
-                f"labeled_data/{output_dir_name}/container_{i}_{json_file_name}"
-            )
+            output_json_path = f"{output_dir}/container_{i}_{json_file_name}"
             write_json_file(output_json_path, final_json)
 
     except ValueError:
@@ -121,9 +119,16 @@ def main(
 
 
 if __name__ == "__main__":
-    input_text_dir = "example_batch"  # Dir with text files to be labeled
-    input_json_dir = "../model/out"  # Generated structured json files from model/out/
-    output_dir_name = "test"  # Output directory name
+    script_dir = os.path.dirname(__file__)
+
+    # Dir with text files to be labeled
+    input_text_dir = os.path.join(script_dir, "example_batch")
+
+    # Generated structured json files from data_model/out/
+    input_json_dir = os.path.join(script_dir, "../data_model/out")
+
+    # Output directory name
+    output_dir_name = os.path.join(script_dir, "test")
 
     # For every text case fill out the JSON values
     for text_file in os.listdir(input_text_dir):
