@@ -8,6 +8,7 @@ from datasets import Dataset
 import json
 from model_loader import ModelLoader
 from config import MODELS_DICT, SYSTEM_PROMPT, END_OF_PROMPT_MARKER
+import os
 
 
 def preprocess_dataset(
@@ -15,85 +16,75 @@ def preprocess_dataset(
 ) -> list:
     """
     Prepare the dataset for training by creating input-output pairs.
-    :param examples: Batch of examples containing 'text', 'json_template', and 'target_json'.
+    :param dataset: Dataset dictionary with input and output fields.
     :param model_loader: ModelLoader object with the loaded model and tokenizer.
     :return: Tokenized input and output tensors.
     """
-
-    # Get input and output list of size 1 and create a tensor mapped
-
     return model_loader.tokenizer(
         dataset["input"],
         text_target=dataset["output"],
         return_tensors="pt",
-        # max_length=max_length,
+        max_length=max_length,
         truncation=True,
         padding=True,
     ).to(model_loader.device)
 
 
-def load_and_prepare_data(model_loader: ModelLoader, max_length=512):
+def load_and_prepare_data(model_loader: ModelLoader, dataset_path, max_length=512):
     """
     Load and prepare the dataset for training.
     :param model_loader: ModelLoader object with the loaded model and tokenizer.
-    :param max_length: Maximum length of the input sequence.
+    :param max_length: Maximum length of the tensors.
     :return: Prepared dataset.
     """
-
-    # Load the json template for clinical data report
-    with open("data_model/out/generated-klinisk.json", "r", encoding="utf-8") as f:
-        template_json = json.load(f)
-
-    # Load the input text and the correct output
-    with open("data/test/test-klinisk.json", "r", encoding="utf-8") as f:
-        test_json = json.load(f)
-
-    # Test dataset TODO: load real data from .jsonl
-    data = {
-        "input_text": [json.dumps(test_json["input_text"])],
-        "template_json": [json.dumps(template_json)],
-        "target_json": [json.dumps(test_json["target_json"])],
-    }
-
-    text = data["input_text"]
-    template_json = data["template_json"]
-    target_json = data["target_json"]
-
+    # Dataset dictionary
     new_data = {
         "input": [],
         "output": [],
     }
+    for filename in os.listdir(dataset_path):
+        if filename.endswith(".json"):
+            with open(os.path.join(dataset_path, filename), "r", encoding="utf-8") as f:
+                loaded_json_data = json.load(f)
 
-    # TODO Verify with multiple entries
-    # for each entry create a new input-output pair
-    for [entry_index, _] in enumerate(template_json):
-        for template_json_entry, target_json_entry in zip(
-            json.loads(template_json[entry_index]), json.loads(target_json[entry_index])
-        ):
-            template_json_entry = json.dumps(template_json_entry)
-            target_json_entry = json.dumps(target_json_entry)
+                text = [json.dumps(loaded_json_data["input_text"])]
+                template_json = [json.dumps(loaded_json_data["template_json"])]
+                target_json = [json.dumps(loaded_json_data["target_json"])]
 
-            if model_loader.model_type == "encoder":
-                template_json_entry = template_json_entry.replace(
-                    '"value": null', f'"value": {model_loader.tokenizer.mask_token}'
-                )
+                # For each entry create a new input-output pair
+                for [entry_index, _] in enumerate(template_json):
+                    for template_json_entry, target_json_entry in zip(
+                        json.loads(template_json[entry_index]),
+                        json.loads(target_json[entry_index]),
+                    ):
+                        template_json_entry = json.dumps(template_json_entry)
+                        target_json_entry = json.dumps(target_json_entry)
 
-            if model_loader.model_type in ["encoder", "decoder"]:
-                input_text = SYSTEM_PROMPT.format(
-                    input_text=text[entry_index], template_json=template_json_entry
-                )
+                        if model_loader.model_type == "encoder":
+                            template_json_entry = template_json_entry.replace(
+                                '"value": null',
+                                f'"value": {model_loader.tokenizer.mask_token}',
+                            )
 
-                target_text = SYSTEM_PROMPT.format(
-                    input_text=text[entry_index], template_json=target_json_entry
-                )
-            else:
-                input_text = SYSTEM_PROMPT.format(
-                    input_text=text[entry_index], template_json=template_json_entry
-                )
-                target_text = target_json_entry + END_OF_PROMPT_MARKER
+                        if model_loader.model_type in ["encoder", "decoder"]:
+                            input_text = SYSTEM_PROMPT.format(
+                                input_text=text[entry_index],
+                                template_json=template_json_entry,
+                            )
 
-            new_data["input"].append(input_text)
-            new_data["output"].append(target_text)
+                            target_text = SYSTEM_PROMPT.format(
+                                input_text=text[entry_index],
+                                template_json=target_json_entry,
+                            )
+                        else:
+                            input_text = SYSTEM_PROMPT.format(
+                                input_text=text[entry_index],
+                                template_json=template_json_entry,
+                            )
+                            target_text = target_json_entry + END_OF_PROMPT_MARKER
+
+                        new_data["input"].append(input_text)
+                        new_data["output"].append(target_text)
 
     # Convert dict to Hugging Face Dataset.
     dataset = Dataset.from_dict(new_data)
@@ -116,8 +107,7 @@ def load_and_prepare_data(model_loader: ModelLoader, max_length=512):
 def train_model(model_loader: ModelLoader, dataset: Dataset, output_dir: str):
     """
     Train the model using the provided dataset.
-    :param model: The model to be fine-tuned.
-    :param tokenizer: Corresponding tokenizer.
+    :param model_loader: ModelLoader object with the loaded model and tokenizer.
     :param dataset: Preprocessed dataset.
     :param output_dir: Directory to save the fine-tuned model.
     """
@@ -126,7 +116,7 @@ def train_model(model_loader: ModelLoader, dataset: Dataset, output_dir: str):
         output_dir=output_dir,  # TODO: Set to a unique path for each model
         eval_strategy="no",  # TODO: Set to "epoch"
         learning_rate=2e-5,
-        num_train_epochs=8,  # TODO Make selectable along with other training params
+        num_train_epochs=20,  # TODO Make selectable along with other training params
         weight_decay=0.01,
         logging_dir="./logs",
         logging_steps=10,
@@ -172,7 +162,7 @@ def train_model(model_loader: ModelLoader, dataset: Dataset, output_dir: str):
 
 
 if __name__ == "__main__":
-    model_type = "decoder"
+    model_type = "encoder-decoder"
 
     # Load model and tokenizer.
     model_loader = ModelLoader(MODELS_DICT[model_type], model_type)
@@ -194,7 +184,7 @@ if __name__ == "__main__":
         model_loader.model = peft_model
 
     # Load and preprocess the dataset.
-    dataset = load_and_prepare_data(model_loader)
+    dataset = load_and_prepare_data(model_loader, "data/labeled_data/test/")
 
     # Fine-tune the model.
     train_model(model_loader, dataset, f"trained/{model_type}")
