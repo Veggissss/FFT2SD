@@ -2,116 +2,99 @@
     {
         "id": 128,
         "field": "Beholder-ID",
-        "required": true,
         "type": "string"
     },
     {
         "id": 109,
         "field": "Patologidiagnose",
-        "required": true,
         "type": "enum",
         "enum": "REF_ENUM;Diagnose"
     },
     {
         "id": 117,
         "field": "Kommentar",
-        "required": false,
         "type": "string"
     },
     {
         "id": 110,
         "field": "Differensieringsgrad",
-        "required": true,
         "type": "enum",
         "enum": "REF_ENUM;Differensieringsgrad"
     },
     {
         "id": 111,
         "field": "Karsinomets største diameter",
-        "required": true,
         "type": "float",
         "unit": "mm"
     },
     {
         "id": 112,
         "field": "Lymfekarinnvekst",
-        "required": true,
         "type": "enum",
         "enum": "REF_ENUM;Lymfekarinnvekst"
     },
     {
         "id": 118,
         "field": "Venekarinnvekst",
-        "required": true,
         "type": "enum",
         "enum": "REF_ENUM;Venekarinnvekst"
     },
     {
         "id": 113,
         "field": "Infiltrasjonsdybde",
-        "required": true,
         "type": "enum",
         "enum": "REF_ENUM;Infiltrasjonsdybde"
     },
     {
         "id": 114,
         "field": "Haggitt-klassifikasjon",
-        "required": true,
         "type": "enum",
         "enum": "REF_ENUM;Haggitt-klassifikasjon"
     },
     {
         "id": 120,
         "field": "Sm-klassifikasjon",
-        "required": true,
         "type": "enum",
         "enum": "REF_ENUM;Sm-klassifikasjon"
     },
     {
         "id": 127,
         "field": "Dybde submukosal infiltrasjon",
-        "required": true,
         "type": "float",
         "unit": "mm"
     },
     {
         "id": 116,
         "field": "Reseksjonsrender",
-        "required": true,
         "type": "enum",
         "enum": "REF_ENUM;Reseksjonsrender"
     },
     {
         "id": 122,
         "field": "Korteste avstand til reseksjonsrand",
-        "required": true,
         "type": "float",
         "unit": "mm"
     },
     {
         "id": 115,
         "field": "Korteste avstand til nærmeste sidereseksjonsrand",
-        "required": true,
         "type": "float",
         "unit": "mm"
     },
     {
         "id": 121,
         "field": "Korteste avstand til dyp reseksjonsrand",
-        "required": true,
         "type": "float",
         "unit": "mm"
     },
     {
         "id": 125,
         "field": "Antall tumor 'buds'",
-        "required": false,
         "type": "int"
     },
     {
         "id": 126,
         "field": "Graden av tumor 'budding'",
-        "required": false,
         "type": "enum",
         "enum": "REF_ENUM;TumorBudding"
     }

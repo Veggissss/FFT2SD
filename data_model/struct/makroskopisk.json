@@ -2,27 +2,23 @@
     {
         "id": 128,
         "field": "Beholder-ID",
-        "required": true,
         "type": "string"
     },
     {
         "id": 107,
         "field": "Lokasjon patologi",
-        "required": true,
         "type": "enum",
         "enum": "REF_ENUM;Lokasjon"
     },
     {
         "id": 108,
         "field": "Prøvemateriale",
-        "required": true,
         "type": "enum",
         "enum": "REF_ENUM;Prøvemateriale"
     },
     {
         "id": 109,
         "field": "Makroskopisk beskrivelse",
-        "required": false,
         "type": "string"
     }
 ]

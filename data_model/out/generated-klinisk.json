@@ -2,14 +2,12 @@
     {
         "id": 128,
         "field": "Beholder-ID",
-        "required": true,
         "type": "string",
         "value": null
     },
     {
         "id": 100,
         "field": "Prøvekategori",
-        "required": true,
         "type": "enum",
         "enum": [
             "P06020"
@@ -19,7 +17,6 @@
     {
         "id": 101,
         "field": "Lokasjon klinikk",
-        "required": true,
         "type": "enum",
         "enum": [
             "T65520",
@@ -41,7 +38,6 @@
     {
         "id": 102,
         "field": "Diameter av lesjon",
-        "required": true,
         "type": "float",
         "unit": "mm",
         "value": null
@@ -49,7 +45,6 @@
     {
         "id": 103,
         "field": "Uttaksmetode klinikk",
-        "required": true,
         "type": "enum",
         "enum": [
             "Biopsitang",
@@ -66,7 +61,6 @@
     {
         "id": 104,
         "field": "Makroskopisk utseende",
-        "required": true,
         "type": "enum",
         "enum": [
             "Is",
@@ -82,21 +76,18 @@
     {
         "id": 105,
         "field": "Vurdert komplett fjernet",
-        "required": true,
         "type": "boolean",
         "value": null
     },
     {
         "id": 130,
         "field": "Mistanke om kreft",
-        "required": true,
         "type": "boolean",
         "value": null
     },
     {
         "id": 106,
         "field": "Klinisk diagnose/problemstilling",
-        "required": false,
         "type": "string",
         "value": null
     }
