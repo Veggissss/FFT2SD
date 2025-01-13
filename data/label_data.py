@@ -1,5 +1,6 @@
 import json
 import os
+import copy
 
 
 def read_text_file(file_path: str) -> str:
@@ -17,6 +18,41 @@ def write_json_file(file_path: str, data: dict) -> None:
         json.dump(data, file, indent=4, ensure_ascii=False)
 
 
+def get_valid_input(input_prompt, item: dict) -> str | float | int | bool:
+    try:
+        labeled_input = input(input_prompt)
+
+        # If the field is an enum, check if the input is valid
+        if "enum" in item["type"]:
+            if labeled_input not in item["enum"]:
+                # Check if the input is an enum index
+                input_index = int(labeled_input)
+                if input_index < 0 or input_index >= len(item["enum"]):
+                    print(f"Invalid input! Must be one of {item['enum']}")
+                    return get_valid_input(input_prompt, item)
+                labeled_input = item["enum"][input_index]
+
+        elif "float" in item["type"]:
+            labeled_input = float(labeled_input)
+
+        elif "int" in item["type"]:
+            labeled_input = int(labeled_input)
+
+        elif "boolean" in item["type"]:
+            if labeled_input.lower() not in ["true", "false"]:
+                print("Invalid input! Please enter 'true' or 'false'.")
+                return get_valid_input(input_prompt, item)
+            labeled_input = labeled_input.lower() == "true"
+
+    except ValueError:
+        # If casts are failed due to invalid input, ask again
+        print(f"Invalid input! Please enter an {item['type']}.")
+        return get_valid_input(input_prompt, item)
+
+    # Return the valid labeled input
+    return labeled_input
+
+
 def main(
     input_text_name: str,
     input_text_path: str,
@@ -26,96 +62,45 @@ def main(
     input_text = read_text_file(input_text_path)
     target_json = read_json_file(input_json_path)
 
+    template_json = copy.deepcopy(target_json)
+    final_json = {"template_json": template_json}
+
     print(f"Input text:\n{input_text}\n")
 
-    report_count = input("How many containers/Beholder-IDs are there?\n: ")
-    try:
-        report_count = int(report_count)
+    # Get the number of containers/Beholder-IDs
+    while True:
+        report_count = get_valid_input(
+            "How many containers/Beholder-IDs are there?\n: ", {"type": "int"}
+        )
         if report_count < 1:
             print("Invalid input. Please enter a positive integer.")
-            return
+        else:
+            break
 
-        for i in range(report_count):
-            # For every field in the JSON, fill out the value field
-            for item in target_json:
-                print(f"Input text:\n{input_text}")
-                print(f"Container Number {i + 1}:")
+    for i in range(report_count):
+        # For every field in the JSON, fill out the value field
+        for item in target_json:
+            print(f"Input text:\n{input_text}")
+            print(f"Container Number {i + 1}:")
 
-                isValid = False
-                while not isValid:
-                    labeled_input = input(f"Enter value for \n{item}\n: ")
+            # Update the JSON with the valid labeled input
+            item["value"] = get_valid_input(f"Enter value for \n{item}\n: ", item)
 
-                    # If the field is an enum, check if the input is valid
-                    if "enum" in item["type"]:
-                        if labeled_input not in item["enum"]:
-                            # Check if the input is an enum index
-                            try:
-                                input_index = int(labeled_input)
-                                if input_index < 0 or input_index >= len(item["enum"]):
-                                    print(
-                                        f"Invalid input! Must be one of {item['enum']}"
-                                    )
-                                    continue
-                                labeled_input = item["enum"][input_index]
-                            except ValueError:
-                                print(f"Invalid input! Must be one of {item['enum']}")
-                                continue
+        # Combine input text and target JSON
+        final_json["input_text"] = input_text
+        final_json["target_json"] = target_json
+        print(
+            f"JSON Labeled:\n{json.dumps(final_json, indent=4, ensure_ascii=False)}\n"
+        )
 
-                    # If the field is a number, check if the input is a number
-                    elif "float" in item["type"]:
-                        try:
-                            labeled_input = float(labeled_input)
-                        except ValueError:
-                            print("Invalid input! Please enter a float.")
-                            continue
+        # Create output directory if it doesn't exist
+        output_dir = os.path.join(script_dir, "labeled_data", output_dir_name)
+        os.makedirs(output_dir, exist_ok=True)
 
-                    elif "int" in item["type"]:
-                        try:
-                            labeled_input = int(labeled_input)
-                        except ValueError:
-                            print("Invalid input! Please enter an int.")
-                            continue
-
-                    # If the field is a string, check if the input is a string
-                    elif "string" in item["type"]:
-                        if not isinstance(labeled_input, str):
-                            print("Invalid input! Please enter a string.")
-                            continue
-
-                    # If the field is a boolean, check if the input is a boolean
-                    elif "boolean" in item["type"]:
-                        if labeled_input.lower() not in ["true", "false"]:
-                            print("Invalid input! Please enter 'true' or 'false'.")
-                            continue
-
-                        if labeled_input.lower() == "true":
-                            labeled_input = True
-                        else:
-                            labeled_input = False
-
-                    isValid = True
-
-                # Update the JSON with the valid labeled input
-                item["value"] = labeled_input
-
-            # Combine input text and target JSON
-            final_json = {"input_text": input_text, "target_json": target_json}
-            print(
-                f"JSON Labeled:\n{json.dumps(final_json, indent=4, ensure_ascii=False)}\n"
-            )
-
-            # Create output directory if it doesn't exist
-            output_dir = os.path.join(script_dir, "labeled_data", output_dir_name)
-            os.makedirs(output_dir, exist_ok=True)
-
-            # Save to file
-            json_file_name = input_text_name.replace(".txt", ".json")
-            output_json_path = f"{output_dir}/container_{i}_{json_file_name}"
-            write_json_file(output_json_path, final_json)
-
-    except ValueError:
-        print("Invalid input. Please enter an integer.")
-        return
+        # Save to file
+        json_file_name = input_text_name.replace(".txt", ".json")
+        output_json_path = f"{output_dir}/container_{i}_{json_file_name}"
+        write_json_file(output_json_path, final_json)
 
 
 if __name__ == "__main__":
@@ -128,7 +113,7 @@ if __name__ == "__main__":
     input_json_dir = os.path.join(script_dir, "../data_model/out")
 
     # Output directory name
-    output_dir_name = os.path.join(script_dir, "test")
+    output_dir_name = "test"
 
     # For every text case fill out the JSON values
     for text_file in os.listdir(input_text_dir):
