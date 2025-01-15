@@ -11,25 +11,6 @@ from config import MODELS_DICT, SYSTEM_PROMPT, END_OF_PROMPT_MARKER
 import os
 
 
-def preprocess_dataset(
-    dataset: dict, model_loader: ModelLoader, max_length=512
-) -> list:
-    """
-    Prepare the dataset for training by creating input-output pairs.
-    :param dataset: Dataset dictionary with input and output fields.
-    :param model_loader: ModelLoader object with the loaded model and tokenizer.
-    :return: Tokenized input and output tensors.
-    """
-    return model_loader.tokenizer(
-        dataset["input"],
-        text_target=dataset["output"],
-        return_tensors="pt",
-        max_length=max_length,
-        truncation=True,
-        padding=True,
-    ).to(model_loader.device)
-
-
 def load_and_prepare_data(model_loader: ModelLoader, dataset_path, max_length=512):
     """
     Load and prepare the dataset for training.
@@ -43,48 +24,43 @@ def load_and_prepare_data(model_loader: ModelLoader, dataset_path, max_length=51
         "output": [],
     }
     for filename in os.listdir(dataset_path):
-        if filename.endswith(".json"):
-            with open(os.path.join(dataset_path, filename), "r", encoding="utf-8") as f:
-                loaded_json_data = json.load(f)
+        if not filename.endswith(".json"):
+            print(f"Skipping non-JSON file: {filename}")
+            continue
 
-                text = [json.dumps(loaded_json_data["input_text"])]
-                template_json = [json.dumps(loaded_json_data["template_json"])]
-                target_json = [json.dumps(loaded_json_data["target_json"])]
+        # Load JSON file and process data
+        with open(os.path.join(dataset_path, filename), "r", encoding="utf-8") as f:
+            loaded_json_data = json.load(f)
 
-                # For each entry create a new input-output pair
-                for [entry_index, _] in enumerate(template_json):
-                    for template_json_entry, target_json_entry in zip(
-                        json.loads(template_json[entry_index]),
-                        json.loads(target_json[entry_index]),
-                    ):
-                        template_json_entry = json.dumps(template_json_entry)
-                        target_json_entry = json.dumps(target_json_entry)
+            text = json.dumps(loaded_json_data["input_text"])
+            template_json = json.loads(json.dumps(loaded_json_data["template_json"]))
+            target_json = json.loads(json.dumps(loaded_json_data["target_json"]))
 
-                        if model_loader.model_type == "encoder":
-                            template_json_entry = template_json_entry.replace(
-                                '"value": null',
-                                f'"value": {model_loader.tokenizer.mask_token}',
-                            )
+            # Iterate through template and target JSON entries
+            for template_entry, target_entry in zip(template_json, target_json):
+                template_entry_str = json.dumps(template_entry)
+                target_entry_str = json.dumps(target_entry)
 
-                        if model_loader.model_type in ["encoder", "decoder"]:
-                            input_text = SYSTEM_PROMPT.format(
-                                input_text=text[entry_index],
-                                template_json=template_json_entry,
-                            )
+                if model_loader.model_type == "encoder":
+                    template_entry_str = template_entry_str.replace(
+                        '"value": null', f'"value": {model_loader.tokenizer.mask_token}'
+                    )
 
-                            target_text = SYSTEM_PROMPT.format(
-                                input_text=text[entry_index],
-                                template_json=target_json_entry,
-                            )
-                        else:
-                            input_text = SYSTEM_PROMPT.format(
-                                input_text=text[entry_index],
-                                template_json=template_json_entry,
-                            )
-                            target_text = target_json_entry + END_OF_PROMPT_MARKER
+                input_text = SYSTEM_PROMPT.format(
+                    input_text=text,
+                    template_json=template_entry_str,
+                )
 
-                        new_data["input"].append(input_text)
-                        new_data["output"].append(target_text)
+                if model_loader.model_type in ["encoder", "decoder"]:
+                    target_text = SYSTEM_PROMPT.format(
+                        input_text=text,
+                        template_json=target_entry_str,
+                    )
+                else:
+                    target_text = target_entry_str + " " + END_OF_PROMPT_MARKER
+
+                new_data["input"].append(input_text)
+                new_data["output"].append(target_text)
 
     # Convert dict to Hugging Face Dataset.
     dataset = Dataset.from_dict(new_data)
@@ -92,16 +68,21 @@ def load_and_prepare_data(model_loader: ModelLoader, dataset_path, max_length=51
     print(dataset["input"][0])
     print(dataset["output"][0])
 
-    batch_size = len(dataset["input"])
     output_size = len(dataset["output"])
-    print(f"Batch size: {batch_size}")
     print(f"Number of examples: {output_size}")
 
-    return dataset.map(
-        lambda x: preprocess_dataset(x, model_loader, max_length),
+    dataset = dataset.map(
+        lambda data: model_loader.tokenizer(
+            data["input"],
+            text_target=data["output"],
+            padding=True,
+            truncation=True,
+            return_tensors="np",  # NumPy is faster: https://huggingface.co/docs/datasets/nlp_process#map
+        ),
         batched=True,
-        batch_size=batch_size,
     )
+
+    return dataset
 
 
 def train_model(model_loader: ModelLoader, dataset: Dataset, output_dir: str):
@@ -118,12 +99,14 @@ def train_model(model_loader: ModelLoader, dataset: Dataset, output_dir: str):
         learning_rate=2e-5,
         num_train_epochs=20,  # TODO Make selectable along with other training params
         weight_decay=0.01,
+        per_device_train_batch_size=8,
+        per_device_eval_batch_size=8,
         logging_dir="./logs",
         logging_steps=10,
         fp16=True,  # Enable mixed precision
     )
 
-    dataset = dataset.remove_columns(["input", "output"])
+    # dataset = dataset.remove_columns(["input", "output"])
     # dataset = dataset.train_test_split(test_size=0.1)
 
     if model_loader.model_type == "encoder" or model_loader.model_type == "decoder":
