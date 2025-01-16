@@ -13,6 +13,17 @@ from config import SYSTEM_PROMPT, END_OF_PROMPT_MARKER
 
 
 class ModelLoader:
+    """
+    Class to load and generate from a transformer model and its tokenizer with the specified architecture type.
+
+    Attributes:
+        model_name (str): The name of the model to load.
+        model_type (Literal["decoder", "encoder", "encoder-decoder"]): The type of the model architecture.
+        device (torch.device): The device to run the model on (CPU or GPU).
+        model (AutoModel): The loaded transformer model.
+        tokenizer (AutoTokenizer): The tokenizer associated with the model.
+    """
+
     def __init__(
         self,
         model_name: str,
@@ -35,7 +46,6 @@ class ModelLoader:
         # Load the corresponding model's tokenizer
         tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 
-        # TODO: Load trained model from a custom local path!
         if model_type == "encoder-decoder":
             model = AutoModelForSeq2SeqLM.from_pretrained(
                 model_name, trust_remote_code=True
@@ -155,6 +165,7 @@ class ModelLoader:
         # Generate the filled JSON based on the prompt
         output_text = self.generate(prompt)
 
+        filled_json = {}
         try:
             # Decoder models
             if self.model_type == "decoder":
@@ -193,6 +204,5 @@ class ModelLoader:
 
         except json.JSONDecodeError:
             print("Failed to parse model output into JSON. Raw output:", output_text)
-            filled_json = {}
 
         return filled_json

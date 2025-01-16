@@ -5,7 +5,7 @@ MODELS_DICT: dict[str, str] = {
     "trained-decoder": "trained/decoder",
     "trained-encoder": "trained/encoder",
     # Hugging Face models
-    "encoder-decoder": "ltg/nort5-base",
+    "encoder-decoder": "ltg/nort5-small",
     "decoder": "norallm/normistral-7b-warm-instruct",
     "encoder": "ltg/norbert3-base",
 }

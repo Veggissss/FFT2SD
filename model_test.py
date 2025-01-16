@@ -1,23 +1,23 @@
-import json
 from model_loader import ModelLoader
 from config import MODELS_DICT
+import json
 
 if __name__ == "__main__":
     # Define the model type and whether it is trained or not.
-    model_type = "decoder"
-    is_trained = True
+    MODEL_TYPE = "decoder"
+    IS_TRAINED = True
 
     # Load the json template for clinical data report
-    with open("data_model/out/generated-klinisk.json", "r") as f:
+    with open("data_model/out/generated-klinisk.json", "r", encoding="utf-8") as f:
         template_json = json.load(f)
 
     # Load the input text and the correct output
-    with open("data/test/test-klinisk.json", "r") as f:
+    with open("data/test/test-klinisk.json", "r", encoding="utf-8") as f:
         test_json = json.load(f)
 
     # Add 'trained-' prefix to the model name if it is trained.
-    model_key = f"trained-{model_type}" if is_trained else model_type
-    model_loader = ModelLoader(MODELS_DICT[model_key], model_type)
+    model_key = f"trained-{MODEL_TYPE}" if IS_TRAINED else MODEL_TYPE
+    model_loader = ModelLoader(MODELS_DICT[model_key], MODEL_TYPE)
 
     for template_entry in template_json:
         template_str = json.dumps(template_entry)
