@@ -97,10 +97,10 @@ class ModelLoader:
         """
         inputs = self.tokenizer(
             prompt,
-            return_tensors="pt",
             max_length=max_length,
-            truncation=True,
             padding=True,
+            truncation=True,
+            return_tensors="pt",
         ).to(self.device)
 
         # The prompt is always longer than the output
@@ -128,7 +128,8 @@ class ModelLoader:
 
             # Generate decoder/encoder-decoder output
             output_ids = self.model.generate(
-                **inputs,
+                input_ids=inputs["input_ids"],
+                attention_mask=inputs["attention_mask"],
                 eos_token_id=8,
                 max_new_tokens=amount_new_tokens,
             )
