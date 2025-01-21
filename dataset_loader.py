@@ -1,8 +1,10 @@
-import json
 import os
+import json
+import copy
 from typing import Literal
-from config import SYSTEM_PROMPT, END_OF_PROMPT_MARKER
 from datasets import Dataset
+
+from config import SYSTEM_PROMPT, END_OF_PROMPT_MARKER
 
 
 def create_dataset(
@@ -35,10 +37,23 @@ def create_dataset(
             template_json = json.loads(json.dumps(loaded_json_data["template_json"]))
             target_json = json.loads(json.dumps(loaded_json_data["target_json"]))
 
+            container_json = json.loads(json.dumps(loaded_json_data["container_json"]))
+
+            # Add container amount into training data
+            target_json.insert(0, copy.deepcopy(container_json[0]))
+
+            # Set "value" fields to null for "antall glass"/container amount into template
+            if "value" in container_json[0]:
+                container_json[0]["value"] = None
+            template_json.insert(0, container_json[0])
+
             # Iterate through template and target JSON entries
             for template_entry, target_entry in zip(template_json, target_json):
                 template_entry_str = json.dumps(template_entry)
                 target_entry_str = json.dumps(target_entry)
+
+                # Inject container number into the prompt
+                container_number = json.dumps(container_json[1]["value"])
 
                 if model_type == "encoder":
                     template_entry_str = template_entry_str.replace(
@@ -47,14 +62,19 @@ def create_dataset(
 
                 input_text = SYSTEM_PROMPT.format(
                     input_text=text,
+                    container_number=container_number,
                     template_json=template_entry_str,
                 )
 
-                if model_type in ["encoder", "decoder"]:
+                if model_type == "decoder":
                     target_text = SYSTEM_PROMPT.format(
                         input_text=text,
+                        container_number=container_number,
                         template_json=target_entry_str,
                     )
+                elif model_type == "encoder":
+                    # Just add the masked value to the target text for the encoder model
+                    target_text = json.dumps(target_entry["value"])
                 else:
                     target_text = target_entry_str + " " + END_OF_PROMPT_MARKER
 
@@ -62,10 +82,20 @@ def create_dataset(
                 dataset_dict["output"].append(target_text)
 
     # Convert dict to Hugging Face Dataset.
-    dataset = Dataset.from_dict(dataset_dict)
-
-    return dataset
+    return Dataset.from_dict(dataset_dict)
 
 
-def save_dataset(dataset: Dataset, dataset_path):
-    dataset.save_to_disk(dataset_path)
+if __name__ == "__main__":
+    # Define the path to the dataset directory
+    DATASET_PATH = "data/labeled_data/test"
+    # Define the model type and mask token
+    MODEL_TYPE = "encoder-decoder"
+
+    # Create a Hugging Face Dataset
+    dataset = create_dataset(DATASET_PATH, MODEL_TYPE, "[VALUE_MASK]")
+
+    print(dataset)
+    print(dataset["input"][0])
+    print(dataset["output"][0])
+
+    assert len(dataset["input"]) == len(dataset["output"])

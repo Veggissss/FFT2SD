@@ -3,8 +3,9 @@ from transformers import (
     Trainer,
     TrainingArguments,
     DataCollatorForLanguageModeling,
+    AutoTokenizer,
+    DataCollatorForSeq2Seq,
 )
-from transformers import AutoTokenizer
 from datasets import Dataset
 from model_loader import ModelLoader
 from config import MODELS_DICT
@@ -23,7 +24,6 @@ def tokenize_dataset(tokenizer: AutoTokenizer, text_data: Dataset) -> Dataset:
             data["input"],
             text_target=data["output"],
             padding=True,
-            truncation=True,
             return_tensors="np",  # NumPy is faster here: https://huggingface.co/docs/datasets/nlp_process#map
         ),
         batched=True,
@@ -41,21 +41,28 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str):
     training_args = TrainingArguments(
         output_dir=output_dir,
         eval_strategy="no",  # Set to "epoch"
-        learning_rate=2e-5,
-        num_train_epochs=20,  # Make selectable along with other training params
+        learning_rate=2e-4,
+        num_train_epochs=50,  # Make selectable along with other training params
         weight_decay=0.01,
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=8,
+        per_device_train_batch_size=2,
+        per_device_eval_batch_size=2,
         logging_dir="./logs",
         logging_steps=10,
         fp16=True,  # Enable mixed precision
     )
 
-    data_collator = DataCollatorForLanguageModeling(
-        tokenizer=loader.tokenizer,
-        mlm=False,
-        return_tensors="pt",
-    )
+    print(training_data)
+    if loader.model_type == "encoder-decoder":
+        data_collator = DataCollatorForSeq2Seq(
+            tokenizer=loader.tokenizer,
+            return_tensors="pt",
+        )
+    else:
+        data_collator = DataCollatorForLanguageModeling(
+            tokenizer=loader.tokenizer,
+            mlm=False,
+            return_tensors="pt",
+        )
 
     trainer = Trainer(
         model=loader.model,
@@ -102,11 +109,21 @@ if __name__ == "__main__":
         model_loader.model_type,
         model_loader.tokenizer.mask_token,
     )
+
+    print("\n\n")
+    print(dataset["output"][0])
+
     output_size = len(dataset["output"])
     print(f"Number of examples: {output_size}")
 
     # Tokenize the dataset.
     tokenized_dataset = tokenize_dataset(model_loader.tokenizer, dataset)
+
+    print(len(tokenized_dataset["input_ids"][0]))
+    print(len(tokenized_dataset["labels"][0]))
+
+    # labels = tokenized_dataset["labels"]
+    # labels = labels[labels == model_loader.tokenizer.pad_token_id] = -100
 
     # training_data = tokenized_dataset.train_test_split(test_size=0.1)
 

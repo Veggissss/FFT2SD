@@ -97,9 +97,7 @@ class ModelLoader:
         """
         inputs = self.tokenizer(
             prompt,
-            max_length=max_length,
-            padding=True,
-            truncation=True,
+            # padding=True,
             return_tensors="pt",
         ).to(self.device)
 
@@ -126,7 +124,7 @@ class ModelLoader:
             )
         elif self.model_type == "encoder-decoder":
 
-            # Generate decoder/encoder-decoder output
+            # Generate encoder-decoder output
             output_ids = self.model.generate(
                 input_ids=inputs["input_ids"],
                 attention_mask=inputs["attention_mask"],
@@ -134,7 +132,7 @@ class ModelLoader:
                 max_new_tokens=amount_new_tokens,
             )
             output_text = self.tokenizer.decode(
-                output_ids.squeeze(), skip_special_tokens=False
+                output_ids.squeeze(), skip_special_tokens=True
             )
             return output_text
         else:
@@ -147,7 +145,9 @@ class ModelLoader:
             )
             return output_text
 
-    def generate_filled_json(self, input_text: str, template_str: str) -> dict:
+    def generate_filled_json(
+        self, input_text: str, container_number: int, template_str: str
+    ) -> dict:
         """
         Fill out the JSON values based on the input text.
         :param model_loader: ModelLoader object with the loaded model and tokenizer.
@@ -159,12 +159,14 @@ class ModelLoader:
         # Convert JSON template to a string to include in the prompt.
         prompt = SYSTEM_PROMPT.format(
             input_text=input_text,
+            container_number=container_number,
             template_json=template_str,
         )
         print(f"Prompt:\n{prompt}")
 
         # Generate the filled JSON based on the prompt
         output_text = self.generate(prompt)
+        print(f"Output text:\n{output_text}")
 
         filled_json = {}
         try:
@@ -174,24 +176,6 @@ class ModelLoader:
                 filled_json = json.loads(output_text.split(END_OF_PROMPT_MARKER)[-1])
 
             elif self.model_type == "encoder-decoder":
-                # Find the start and end of the tokens
-                start_token = "[BOS]"
-                end_token = "[MASK_"
-
-                # Get the indices of the tokens
-                start_index = output_text.find(start_token) + len(start_token)
-                end_index = output_text.find(end_token)
-
-                # Extract the substring
-                if start_index != -1 and end_index != -1 and start_index < end_index:
-                    output_text = output_text[
-                        start_index:end_index
-                    ].strip()  # Extract and strip whitespace
-                else:
-                    print(
-                        f"Failed to extract substring from model output: {output_text}"
-                    )
-
                 # Attempt to parse the output text back into a JSON object.
                 filled_json = json.loads(output_text)
 

@@ -6,7 +6,7 @@ MODELS_DICT: dict[str, str] = {
     "trained-encoder": "trained/encoder",
     # Hugging Face models
     "encoder-decoder": "ltg/nort5-small",
-    "decoder": "norallm/normistral-7b-warm-instruct",
+    "decoder": "norallm/normistral-7b-warm",
     "encoder": "ltg/norbert3-base",
 }
 
@@ -16,6 +16,6 @@ END_OF_PROMPT_MARKER = "[MASK_8]"
 
 # Prompt for filling in the null JSON values. Used in training and evaluation.
 SYSTEM_PROMPT = (
-    "Gitt teksten: '{input_text}'.\nFyll ut den manglede verdien for feltet \"value\", behold JSON strukturen: \n{template_json} "
+    "Gitt teksten: \n'{input_text}'.\nGlass nummer {container_number}\nFyll ut den manglede verdien for feltet \"value\". Behold JSON strukturen: \n{template_json} "
     + END_OF_PROMPT_MARKER
 )
