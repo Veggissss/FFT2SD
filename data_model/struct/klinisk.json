@@ -1,10 +1,5 @@
 [
     {
-        "id": 128,
-        "field": "Beholder-ID",
-        "type": "string"
-    },
-    {
         "id": 100,
         "field": "Prøvekategori",
         "type": "enum",
@@ -25,7 +20,7 @@
     {
         "id": 103,
         "field": "Uttaksmetode klinikk",
-        "type":"enum",
+        "type": "enum",
         "enum": "REF_ENUM;UttaksmetodeKlinikk"
     },
     {

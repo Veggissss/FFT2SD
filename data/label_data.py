@@ -1,6 +1,9 @@
 import json
 import os
 import copy
+from data_model_enum import get_enum_names
+
+SCRIPT_PATH = os.path.dirname(__file__)
 
 
 def read_text_file(file_path: str) -> str:
@@ -57,11 +60,14 @@ def main(
     input_text_name: str,
     input_text_path: str,
     input_json_path: str,
+    input_container_path: str,
     output_dir_name: str,
 ) -> None:
     input_text = read_text_file(input_text_path)
     target_json = read_json_file(input_json_path)
+    container_json = read_json_file(input_container_path)
 
+    # Create a non filled out template JSON
     template_json = copy.deepcopy(target_json)
     final_json = {"template_json": template_json}
 
@@ -77,60 +83,84 @@ def main(
         else:
             break
 
-    for i in range(report_count):
+    # Update the total amount of containers present in the input text
+    container_json[0]["value"] = report_count
+
+    for container_index in range(report_count):
+        # Set the container number
+        container_json[1]["value"] = container_index + 1
+
         # For every field in the JSON, fill out the value field
         for item in target_json:
             print(f"Input text:\n{input_text}")
-            print(f"Container Number {i + 1}:")
+            print(f"Container Number {container_index + 1}:")
 
             # Update the JSON with the valid labeled input
-            item["value"] = get_valid_input(f"Enter value for \n{item}\n: ", item)
+            input_prompt = f"Enter a value for {item['field']}.\n{item['type']}\n"
+            if item.get("enum") is not None:
+                for index, enum_name in enumerate(get_enum_names(item["enum"])):
+                    if enum_name is not None:
+                        input_prompt += (
+                            f"{enum_name} [{item['enum'][index]}] (Nummer: {(index)})\n"
+                        )
+                    else:
+                        input_prompt += f"{item['enum'][index]} (Number: {(index)})\n"
+            input_prompt += ": "
+            item["value"] = get_valid_input(input_prompt, item)
 
         # Combine input text and target JSON
         final_json["input_text"] = input_text
         final_json["target_json"] = target_json
+        final_json["container_json"] = container_json
         print(
             f"JSON Labeled:\n{json.dumps(final_json, indent=4, ensure_ascii=False)}\n"
         )
 
         # Create output directory if it doesn't exist
-        output_dir = os.path.join(script_dir, "labeled_data", output_dir_name)
+        output_dir = os.path.join(SCRIPT_PATH, "labeled_data", output_dir_name)
         os.makedirs(output_dir, exist_ok=True)
 
         # Save to file
         json_file_name = input_text_name.replace(".txt", ".json")
-        output_json_path = f"{output_dir}/container_{i}_{json_file_name}"
+        output_json_path = f"{output_dir}/container_{container_index}_{json_file_name}"
         write_json_file(output_json_path, final_json)
 
 
 if __name__ == "__main__":
-    script_dir = os.path.dirname(__file__)
-
     # Dir with text files to be labeled
-    input_text_dir = os.path.join(script_dir, "example_batch")
+    input_text_dir = os.path.join(SCRIPT_PATH, "example_batch")
 
     # Generated structured json files from data_model/out/
-    input_json_dir = os.path.join(script_dir, "../data_model/out")
+    input_json_dir = os.path.join(SCRIPT_PATH, "../data_model/out")
 
     # Output directory name
     output_dir_name = "test"
 
     # For every text case fill out the JSON values
-    for text_file in os.listdir(input_text_dir):
-        if text_file.endswith(".txt"):
-            text_file_path = os.path.join(input_text_dir, text_file)
+    for text_file_name in os.listdir(input_text_dir):
+        if text_file_name.endswith(".txt"):
+            text_path = os.path.join(input_text_dir, text_file_name)
 
-            if "klinisk" in text_file or "diagn" in text_file:
-                json_file_path = os.path.join(input_json_dir, "generated-klinisk.json")
+            json_container_path = os.path.join(
+                input_json_dir, "generated-beholder.json"
+            )
 
-            elif "makro" in text_file:
-                json_file_path = os.path.join(
-                    input_json_dir, "generated-makroskopisk.json"
-                )
+            if "klinisk" in text_file_name or "makro" in text_file_name:
+                json_path = os.path.join(input_json_dir, "generated-klinisk.json")
 
-            elif "mikro" in text_file:
-                json_file_path = os.path.join(
-                    input_json_dir, "generated-mikroskopisk.json"
-                )
+            elif "mikro" in text_file_name:
+                json_path = os.path.join(input_json_dir, "generated-makroskopisk.json")
 
-            main(text_file, text_file_path, json_file_path, output_dir_name)
+            elif "diagn" in text_file_name:
+                json_path = os.path.join(input_json_dir, "generated-mikroskopisk.json")
+            else:
+                print(f"Could not find a matching JSON file for {text_file_name}.")
+                continue
+
+            main(
+                text_file_name,
+                text_path,
+                json_path,
+                json_container_path,
+                output_dir_name,
+            )

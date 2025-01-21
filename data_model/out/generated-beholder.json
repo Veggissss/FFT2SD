@@ -1,0 +1,14 @@
+[
+    {
+        "id": 0,
+        "field": "Antall glass",
+        "type": "int",
+        "value": null
+    },
+    {
+        "id": 128,
+        "field": "Beholder-ID",
+        "type": "string",
+        "value": null
+    }
+]

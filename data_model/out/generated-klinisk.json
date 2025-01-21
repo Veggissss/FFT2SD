@@ -1,11 +1,5 @@
 [
     {
-        "id": 128,
-        "field": "Beholder-ID",
-        "type": "string",
-        "value": null
-    },
-    {
         "id": 100,
         "field": "Prøvekategori",
         "type": "enum",

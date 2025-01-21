@@ -1,10 +1,5 @@
 [
     {
-        "id": 128,
-        "field": "Beholder-ID",
-        "type": "string"
-    },
-    {
         "id": 109,
         "field": "Patologidiagnose",
         "type": "enum",

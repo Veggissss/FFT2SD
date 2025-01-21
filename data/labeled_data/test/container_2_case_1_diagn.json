@@ -397,7 +397,7 @@
                 "Bd3",
                 null
             ],
-            "value": "Bd3"
+            "value": "Bd2"
         }
     ],
     "container_json": [
@@ -411,7 +411,7 @@
             "id": 128,
             "field": "Beholder-ID",
             "type": "string",
-            "value": 2
+            "value": 3
         }
     ]
 }

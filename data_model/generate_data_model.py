@@ -3,6 +3,22 @@ import json
 import os
 
 
+# Enum reference string and separator
+ENUM_IDENTIFIER = "REF_ENUM"
+ENUM_SEPARATOR = ";"
+
+# TODO: Change to special LLM token: <TOKEN> etc?
+VALUE_PLACEHOLDER = None
+
+# Directory of the script
+SCRIPT_PATH = os.path.dirname(__file__)
+
+# Directory where JSON files are stored
+STRUCT_DIR_PATH = os.path.join(SCRIPT_PATH, "struct")
+ENUM_DIR_PATH = os.path.join(SCRIPT_PATH, "enum")
+OUT_DIR_PATH = os.path.join(SCRIPT_PATH, "out")
+
+
 def load_json_file(path: str) -> List[Dict[str, Any]]:
     """Load enum values from a JSON file."""
     with open(path, "r", encoding="utf-8") as f:
@@ -21,12 +37,12 @@ def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:
         for item in data:
             replace_enum_references(item)
     elif isinstance(data, dict):
-        data["value"] = value_placeholder
+        data["value"] = VALUE_PLACEHOLDER
         for key, value in data.items():
-            if isinstance(value, str) and value.startswith(enum_replacement_string):
+            if isinstance(value, str) and value.startswith(ENUM_IDENTIFIER):
                 # Enum filename without prefix
-                enum_name = value.split(enum_replacement_separator)[1]
-                enum_file = os.path.join(enum_dir_path, f"{enum_name}.json")
+                enum_name = value.split(ENUM_SEPARATOR)[1]
+                enum_file = os.path.join(ENUM_DIR_PATH, f"{enum_name}.json")
 
                 if os.path.exists(enum_file):
                     enum_values = load_json_file(enum_file)
@@ -40,7 +56,7 @@ def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:
                     print(f"Warning: Enum file {enum_file} not found!")
 
 
-def main(input_json_file: str, output_json_file: str) -> None:
+def generate_data_model(input_json_file: str, output_json_file: str) -> None:
     """Main function to replace enum values and save the output."""
     # Load the original JSON data
     data = load_json_file(input_json_file)
@@ -53,26 +69,10 @@ def main(input_json_file: str, output_json_file: str) -> None:
 
 
 if __name__ == "__main__":
-    # Directory of the script
-    script_dir = os.path.dirname(__file__)
-
-    # Directory where JSON files are stored
-    struct_dir_path = os.path.join(script_dir, "struct")
-    enum_dir_path = os.path.join(script_dir, "enum")
-    out_dir_path = os.path.join(script_dir, "out")
-
-    # Enum reference string and separator
-    enum_replacement_string = "REF_ENUM"
-    enum_replacement_separator = ";"
-
-    # TODO: Change to special LLM token: <TOKEN> etc?
-    value_placeholder = None
-
     # Generate data model for all JSON files in struct directory
-    for file in os.listdir(struct_dir_path):
+    for file in os.listdir(STRUCT_DIR_PATH):
         if file.endswith(".json"):
-            input_json_file = f"{struct_dir_path}\\{file}"
-            output_json_file = f"{out_dir_path}\\generated-{file}"
-
             # Generate data model
-            main(input_json_file, output_json_file)
+            generate_data_model(
+                f"{STRUCT_DIR_PATH}\\{file}", f"{OUT_DIR_PATH}\\generated-{file}"
+            )

@@ -1,191 +1,417 @@
 {
     "template_json": [
         {
-            "id": 128,
-            "field": "Beholder-ID",
+            "id": 109,
+            "field": "Patologidiagnose",
+            "type": "enum",
+            "enum": [
+                "M82111",
+                "M82112",
+                "M82631",
+                "M82632",
+                "M82611",
+                "M82612",
+                "M82101",
+                "M82102",
+                "M72040",
+                "M82140",
+                "M82142",
+                "M82131",
+                "M82132",
+                "M72004",
+                "M76820",
+                "M44440",
+                "M76880",
+                "M76830",
+                "M76835",
+                "M76834",
+                "M75630",
+                "M75640",
+                "M88500",
+                "M88900",
+                "M94900",
+                "M95400",
+                "M95600",
+                "M89363",
+                "M00100",
+                "M09000",
+                "M09010",
+                "P00308",
+                "P00311",
+                "M76055",
+                "M76086",
+                "M81402",
+                "S29350",
+                "M8213P",
+                "M76910",
+                "S50020",
+                "S61630",
+                "M82103",
+                "M82613",
+                "M82143",
+                "M82153",
+                "M81403"
+            ],
+            "value": null
+        },
+        {
+            "id": 117,
+            "field": "Kommentar",
             "type": "string",
             "value": null
         },
         {
-            "id": 100,
-            "field": "Prøvekategori",
+            "id": 110,
+            "field": "Differensieringsgrad",
             "type": "enum",
             "enum": [
-                "P06020"
+                "Lavgradig histologisk differensiering",
+                "Høygradig histologisk differensiering",
+                "Differensieringsgrad kan ikke vurderes"
             ],
             "value": null
         },
         {
-            "id": 101,
-            "field": "Lokasjon klinikk",
-            "type": "enum",
-            "enum": [
-                "T65520",
-                "T67100",
-                "T67200",
-                "T67300",
-                "T67400",
-                "T67500",
-                "T67600",
-                "T67700",
-                "T68200",
-                "T68000",
-                "T69000",
-                "T67000",
-                "T67920"
-            ],
-            "value": null
-        },
-        {
-            "id": 102,
-            "field": "Diameter av lesjon",
+            "id": 111,
+            "field": "Karsinomets største diameter",
             "type": "float",
             "unit": "mm",
             "value": null
         },
         {
-            "id": 103,
-            "field": "Uttaksmetode klinikk",
+            "id": 112,
+            "field": "Lymfekarinnvekst",
             "type": "enum",
             "enum": [
-                "Biopsitang",
-                "Kald slynge in toto",
-                "Kald slynge piecemeal",
-                "Diatermislynge in toto",
-                "Diatermislynge piecemeal",
-                "Endoskopisk submucosal disseksjon (ESD)",
-                "Endoskopisk mucosal reseksjon (EMR)",
-                "Annen metode"
+                "Lymfekarinnvekst ikke påvist",
+                "Lymfekarinnvekst påvist",
+                "Lymfekarinnvekst kan ikke vurderes"
             ],
             "value": null
         },
         {
-            "id": 104,
-            "field": "Makroskopisk utseende",
+            "id": 118,
+            "field": "Venekarinnvekst",
             "type": "enum",
             "enum": [
-                "Is",
-                "Ip",
-                "IIa",
-                "IIb",
-                "IIc",
-                "III",
+                "Venekarinnvekst ikke påvist",
+                "Venekarinnvekst påvist intramural",
+                "Venekarinnvekst kan ikke vurderes"
+            ],
+            "value": null
+        },
+        {
+            "id": 113,
+            "field": "Infiltrasjonsdybde",
+            "type": "enum",
+            "enum": [
+                "pT1",
+                "pT2",
+                "pT3",
+                "pT4a",
+                "pT4b",
                 null
             ],
             "value": null
         },
         {
-            "id": 105,
-            "field": "Vurdert komplett fjernet",
-            "type": "boolean",
+            "id": 114,
+            "field": "Haggitt-klassifikasjon",
+            "type": "enum",
+            "enum": [
+                "Nivå 1",
+                "Nivå 2",
+                "Nivå 3",
+                "Nivå 4",
+                null,
+                null
+            ],
             "value": null
         },
         {
-            "id": 130,
-            "field": "Mistanke om kreft",
-            "type": "boolean",
+            "id": 120,
+            "field": "Sm-klassifikasjon",
+            "type": "enum",
+            "enum": [
+                "sm1",
+                "sm2",
+                "sm3",
+                null
+            ],
             "value": null
         },
         {
-            "id": 106,
-            "field": "Klinisk diagnose/problemstilling",
-            "type": "string",
+            "id": 127,
+            "field": "Dybde submukosal infiltrasjon",
+            "type": "float",
+            "unit": "mm",
+            "value": null
+        },
+        {
+            "id": 116,
+            "field": "Reseksjonsrender",
+            "type": "enum",
+            "enum": [
+                "M09400",
+                "M09401",
+                "M09402",
+                null
+            ],
+            "value": null
+        },
+        {
+            "id": 122,
+            "field": "Korteste avstand til reseksjonsrand",
+            "type": "float",
+            "unit": "mm",
+            "value": null
+        },
+        {
+            "id": 115,
+            "field": "Korteste avstand til nærmeste sidereseksjonsrand",
+            "type": "float",
+            "unit": "mm",
+            "value": null
+        },
+        {
+            "id": 121,
+            "field": "Korteste avstand til dyp reseksjonsrand",
+            "type": "float",
+            "unit": "mm",
+            "value": null
+        },
+        {
+            "id": 125,
+            "field": "Antall tumor 'buds'",
+            "type": "int",
+            "value": null
+        },
+        {
+            "id": 126,
+            "field": "Graden av tumor 'budding'",
+            "type": "enum",
+            "enum": [
+                "Bd1",
+                "Bd2",
+                "Bd3",
+                null
+            ],
             "value": null
         }
     ],
     "input_text": "1: Her ses tynntarmslimhinne med lange, slanke totter med rikelig antall begerceller og noen lymfoide follikler. Vanlig mengde mononukleære betennelsesceller i lamina propria. Ingen aktiv betennelse eller granulom. Dysplasi ikke påvist. \n\n2: Colonslimhinne med helt lett arkitekturforstyrrelse i form av enkelte lett forgrenete krypter og noe ujevn innbyrdes krypteavstand. Nokså bevarte begerceller. Lett varierende celletetthet i lamina propria av mononukleære betennelsesceller. Fokalt ses nøytrofile granulocytter i krypteepitelet (kryptitt) og enkelte krypteabscesser. Ingen basal plasmacytose. Epiteloidcellegranulom er ikke sett.\nVURDERING: \nFunnet må sammenholdes med klinikk. NSAIDs-induserte forandringer kan ikke utelukkes. \n\n3: Multiple slimhinnebiter fra colon med overveiende bevart kryptearkitektur og bevarte begerceller. Lett varierende celletetthet i lamina propria. Ingen aktiv betennelse, ingen epiteloidcellegranulom, ingen dysplasi. Ikke økt antall intraepiteliale lymfocytter og ingen fortykkelse av subepitelialt kollagenbånd.\n",
     "target_json": [
         {
-            "id": 128,
-            "field": "Beholder-ID",
+            "id": 109,
+            "field": "Patologidiagnose",
+            "type": "enum",
+            "enum": [
+                "M82111",
+                "M82112",
+                "M82631",
+                "M82632",
+                "M82611",
+                "M82612",
+                "M82101",
+                "M82102",
+                "M72040",
+                "M82140",
+                "M82142",
+                "M82131",
+                "M82132",
+                "M72004",
+                "M76820",
+                "M44440",
+                "M76880",
+                "M76830",
+                "M76835",
+                "M76834",
+                "M75630",
+                "M75640",
+                "M88500",
+                "M88900",
+                "M94900",
+                "M95400",
+                "M95600",
+                "M89363",
+                "M00100",
+                "M09000",
+                "M09010",
+                "P00308",
+                "P00311",
+                "M76055",
+                "M76086",
+                "M81402",
+                "S29350",
+                "M8213P",
+                "M76910",
+                "S50020",
+                "S61630",
+                "M82103",
+                "M82613",
+                "M82143",
+                "M82153",
+                "M81403"
+            ],
+            "value": "M82112"
+        },
+        {
+            "id": 117,
+            "field": "Kommentar",
             "type": "string",
-            "value": "1"
+            "value": ""
         },
         {
-            "id": 100,
-            "field": "Prøvekategori",
+            "id": 110,
+            "field": "Differensieringsgrad",
             "type": "enum",
             "enum": [
-                "P06020"
+                "Lavgradig histologisk differensiering",
+                "Høygradig histologisk differensiering",
+                "Differensieringsgrad kan ikke vurderes"
             ],
-            "value": "P06020"
+            "value": "Høygradig histologisk differensiering"
         },
         {
-            "id": 101,
-            "field": "Lokasjon klinikk",
+            "id": 111,
+            "field": "Karsinomets største diameter",
+            "type": "float",
+            "unit": "mm",
+            "value": 0.0
+        },
+        {
+            "id": 112,
+            "field": "Lymfekarinnvekst",
             "type": "enum",
             "enum": [
-                "T65520",
-                "T67100",
-                "T67200",
-                "T67300",
-                "T67400",
-                "T67500",
-                "T67600",
-                "T67700",
-                "T68200",
-                "T68000",
-                "T69000",
-                "T67000",
-                "T67920"
+                "Lymfekarinnvekst ikke påvist",
+                "Lymfekarinnvekst påvist",
+                "Lymfekarinnvekst kan ikke vurderes"
             ],
-            "value": "T65520"
+            "value": "Lymfekarinnvekst kan ikke vurderes"
         },
         {
-            "id": 102,
-            "field": "Diameter av lesjon",
+            "id": 118,
+            "field": "Venekarinnvekst",
+            "type": "enum",
+            "enum": [
+                "Venekarinnvekst ikke påvist",
+                "Venekarinnvekst påvist intramural",
+                "Venekarinnvekst kan ikke vurderes"
+            ],
+            "value": "Venekarinnvekst påvist intramural"
+        },
+        {
+            "id": 113,
+            "field": "Infiltrasjonsdybde",
+            "type": "enum",
+            "enum": [
+                "pT1",
+                "pT2",
+                "pT3",
+                "pT4a",
+                "pT4b",
+                null
+            ],
+            "value": "pT1"
+        },
+        {
+            "id": 114,
+            "field": "Haggitt-klassifikasjon",
+            "type": "enum",
+            "enum": [
+                "Nivå 1",
+                "Nivå 2",
+                "Nivå 3",
+                "Nivå 4",
+                null,
+                null
+            ],
+            "value": "Nivå 4"
+        },
+        {
+            "id": 120,
+            "field": "Sm-klassifikasjon",
+            "type": "enum",
+            "enum": [
+                "sm1",
+                "sm2",
+                "sm3",
+                null
+            ],
+            "value": "sm3"
+        },
+        {
+            "id": 127,
+            "field": "Dybde submukosal infiltrasjon",
             "type": "float",
             "unit": "mm",
             "value": 1.0
         },
         {
-            "id": 103,
-            "field": "Uttaksmetode klinikk",
+            "id": 116,
+            "field": "Reseksjonsrender",
             "type": "enum",
             "enum": [
-                "Biopsitang",
-                "Kald slynge in toto",
-                "Kald slynge piecemeal",
-                "Diatermislynge in toto",
-                "Diatermislynge piecemeal",
-                "Endoskopisk submucosal disseksjon (ESD)",
-                "Endoskopisk mucosal reseksjon (EMR)",
-                "Annen metode"
-            ],
-            "value": "Biopsitang"
-        },
-        {
-            "id": 104,
-            "field": "Makroskopisk utseende",
-            "type": "enum",
-            "enum": [
-                "Is",
-                "Ip",
-                "IIa",
-                "IIb",
-                "IIc",
-                "III",
+                "M09400",
+                "M09401",
+                "M09402",
                 null
             ],
-            "value": "Ip"
+            "value": "M09402"
         },
         {
-            "id": 105,
-            "field": "Vurdert komplett fjernet",
-            "type": "boolean",
-            "value": false
+            "id": 122,
+            "field": "Korteste avstand til reseksjonsrand",
+            "type": "float",
+            "unit": "mm",
+            "value": 1.0
         },
         {
-            "id": 130,
-            "field": "Mistanke om kreft",
-            "type": "boolean",
-            "value": true
+            "id": 115,
+            "field": "Korteste avstand til nærmeste sidereseksjonsrand",
+            "type": "float",
+            "unit": "mm",
+            "value": 2.0
         },
         {
-            "id": 106,
-            "field": "Klinisk diagnose/problemstilling",
+            "id": 121,
+            "field": "Korteste avstand til dyp reseksjonsrand",
+            "type": "float",
+            "unit": "mm",
+            "value": 3.0
+        },
+        {
+            "id": 125,
+            "field": "Antall tumor 'buds'",
+            "type": "int",
+            "value": 2
+        },
+        {
+            "id": 126,
+            "field": "Graden av tumor 'budding'",
+            "type": "enum",
+            "enum": [
+                "Bd1",
+                "Bd2",
+                "Bd3",
+                null
+            ],
+            "value": "Bd3"
+        }
+    ],
+    "container_json": [
+        {
+            "id": 0,
+            "field": "Antall glass",
+            "type": "int",
+            "value": 3
+        },
+        {
+            "id": 128,
+            "field": "Beholder-ID",
             "type": "string",
-            "value": "test"
+            "value": 1
         }
     ]
 }
