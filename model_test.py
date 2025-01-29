@@ -4,7 +4,7 @@ import json
 
 if __name__ == "__main__":
     # Define the model type and whether it is trained or not.
-    MODEL_TYPE = "encoder-decoder"
+    MODEL_TYPE = "encoder"
     IS_TRAINED = True
 
     # Load the test clinical data report data
@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     # First find out how many containers/Beholder-IDs there are in the input text
     filled_json = model_loader.generate_filled_json(
-        test_json["input_text"], 1, glass_count_entry
+        test_json["input_text"], "", glass_count_entry
     )
     print(filled_json)
 

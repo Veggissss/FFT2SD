@@ -11,7 +11,7 @@ def create_dataset(
     dataset_path: str,
     model_type: Literal["decoder", "encoder", "encoder-decoder"],
     mask_token: str,
-) -> Dataset:
+) -> tuple[Dataset, list]:
     """
     Create a Hugging Face Dataset from the JSON files in the specified directory.
     :param dataset_path: The path to the directory containing the JSON files.
@@ -24,6 +24,7 @@ def create_dataset(
         "input": [],
         "output": [],
     }
+    enums = []
     for filename in os.listdir(dataset_path):
         if not filename.endswith(".json"):
             print(f"Skipping non-JSON file: {filename}")
@@ -33,69 +34,72 @@ def create_dataset(
         with open(os.path.join(dataset_path, filename), "r", encoding="utf-8") as f:
             loaded_json_data = json.load(f)
 
-            text = json.dumps(loaded_json_data["input_text"])
-            template_json = json.loads(json.dumps(loaded_json_data["template_json"]))
-            target_json = json.loads(json.dumps(loaded_json_data["target_json"]))
+            # Text to extract information from
+            input_text_str = json.dumps(
+                loaded_json_data["input_text"], ensure_ascii=False
+            )
 
-            container_json = json.loads(json.dumps(loaded_json_data["container_json"]))
+            template_json = loaded_json_data["template_json"]
+            target_json = loaded_json_data["target_json"]
+            container_json = loaded_json_data["container_json"]
 
             # Add container amount into training data
             target_json.insert(0, copy.deepcopy(container_json[0]))
-
-            # Set "value" fields to null for "antall glass"/container amount into template
-            if "value" in container_json[0]:
-                container_json[0]["value"] = None
-            template_json.insert(0, container_json[0])
+            template_json.insert(0, copy.deepcopy(container_json[0]))
 
             # Iterate through template and target JSON entries
             for template_entry, target_entry in zip(template_json, target_json):
-                template_entry_str = json.dumps(template_entry)
-                target_entry_str = json.dumps(target_entry)
+                # Mask out the correct value in the template JSON
+                template_entry["value"] = mask_token
+
+                template_entry_str = json.dumps(template_entry, ensure_ascii=False)
+                target_entry_str = json.dumps(target_entry, ensure_ascii=False)
 
                 # Inject container number into the prompt
-                container_number = json.dumps(container_json[1]["value"])
-
-                if model_type == "encoder":
-                    template_entry_str = template_entry_str.replace(
-                        '"value": null', f'"value": {mask_token}'
-                    )
+                container_number = json.dumps(
+                    container_json[1]["value"], ensure_ascii=False
+                )
 
                 input_text = SYSTEM_PROMPT.format(
-                    input_text=text,
+                    input_text=input_text_str,
                     container_number=container_number,
                     template_json=template_entry_str,
                 )
 
-                if model_type == "decoder":
+                if model_type in ["decoder", "encoder"]:
                     target_text = SYSTEM_PROMPT.format(
-                        input_text=text,
+                        input_text=input_text_str,
                         container_number=container_number,
                         template_json=target_entry_str,
                     )
-                elif model_type == "encoder":
-                    # Just add the masked value to the target text for the encoder model
-                    target_text = json.dumps(target_entry["value"])
                 else:
                     target_text = target_entry_str + " " + END_OF_PROMPT_MARKER
 
                 dataset_dict["input"].append(input_text)
                 dataset_dict["output"].append(target_text)
 
+                if template_entry.get("type") == "enum":
+                    for enum in template_entry["enum"]:
+                        if str(enum) not in enums:
+                            enums.append(str(enum))
+
     # Convert dict to Hugging Face Dataset.
-    return Dataset.from_dict(dataset_dict)
+    return Dataset.from_dict(dataset_dict), enums
 
 
 if __name__ == "__main__":
     # Define the path to the dataset directory
     DATASET_PATH = "data/labeled_data/test"
     # Define the model type and mask token
-    MODEL_TYPE = "encoder-decoder"
+    MODEL_TYPE = "encoder"
 
     # Create a Hugging Face Dataset
-    dataset = create_dataset(DATASET_PATH, MODEL_TYPE, "[VALUE_MASK]")
+    dataset, enums = create_dataset(DATASET_PATH, MODEL_TYPE, "[VALUE_MASK]")
+    assert len(dataset["input"]) == len(dataset["output"])
 
     print(dataset)
     print(dataset["input"][0])
+    print("\n")
     print(dataset["output"][0])
 
-    assert len(dataset["input"]) == len(dataset["output"])
+    # print(enums)

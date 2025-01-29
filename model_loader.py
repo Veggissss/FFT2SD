@@ -9,6 +9,7 @@ from transformers import (
 )
 import torch
 import json
+from allowed_tokens import get_allowed_tokens
 from config import SYSTEM_PROMPT, END_OF_PROMPT_MARKER
 
 
@@ -33,6 +34,8 @@ class ModelLoader:
         self.model_type = model_type
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model, self.tokenizer = self.__load_model(model_name, model_type)
+        print(f"Model loaded: {model_name}")
+        print(f"Device: {self.device}")
 
     def __load_model(
         self, model_name: str, model_type: str
@@ -60,10 +63,21 @@ class ModelLoader:
                 bnb_4bit_compute_dtype="float16",  # Reduce memory further
             )
 
+            device_map = {
+                "model.layers": 1,
+                "model.embed_tokens": 1,
+                "model.norm": 0,
+                "lm_head": 1,
+            }
+
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 quantization_config=q_config,
-            ).to(self.device)
+                low_cpu_mem_usage=True,
+                device_map=device_map,
+            )  # .to(self.device)
+
+            print(model.hf_device_map)
         else:
             model = AutoModelForMaskedLM.from_pretrained(
                 model_name, trust_remote_code=True
@@ -109,21 +123,64 @@ class ModelLoader:
             # Generate encoder output
             output = self.model(**inputs)
 
-            # Replace masked tokens with the predicted tokens
-            # mask_id = self.tokenizer.convert_tokens_to_ids("[MASK]")
-            mask_id = self.tokenizer.mask_token_id
+            # Get the logits from the model output
+            logits = output.logits
 
-            output_ids = torch.where(
-                inputs.input_ids == mask_id, output.logits.argmax(-1), inputs.input_ids
+            # Find the position of the masked token
+            masked_position = (
+                inputs.input_ids == self.tokenizer.mask_token_id
+            ).nonzero(as_tuple=True)[0]
+
+            if masked_position.numel() == 0:
+                print("No masked token found in the input.")
+                return
+
+            # There is only one masked position
+            pos = masked_position[0].item()
+
+            # Get the logits for the masked position and batch size is 1
+            position_logits = logits[0, pos]
+
+            allowed_token_ids = get_allowed_tokens(self.tokenizer, "int")
+            if len(allowed_token_ids) == 0:
+                print("No allowed tokens found!")
+                return
+
+            # Create a mask for allowed tokens
+            allowed_mask = torch.zeros_like(position_logits, dtype=torch.bool)
+            for token_id in allowed_token_ids:
+                allowed_mask[token_id] = True
+
+            # Mask the logits of disallowed tokens
+            masked_logits = torch.where(
+                allowed_mask,
+                position_logits,
+                torch.tensor(float("-inf")).to(self.device),
             )
 
+            # Get the top 5 logits and their corresponding token IDs from the allowed tokens
+            top_k_logits, top_k_ids = torch.topk(masked_logits, 5, dim=-1)
+
+            # Convert logits to probabilities using softmax
+            top_k_probs = torch.nn.functional.softmax(top_k_logits, dim=-1)
+
+            print(f"DEBUG Masked position {pos}:")
+            for j in range(5):
+                token_id = top_k_ids[j].item()
+                token_prob = top_k_probs[j].item()
+                token_str = self.tokenizer.decode([token_id])
+                print(
+                    f"  Token ID: {token_id}, Token: '{token_str}', Probability: {token_prob:.4f}"
+                )
+
+            # Return the token with the highest probability
+            token_id = top_k_ids[0].item()
             return self.tokenizer.decode(
-                output_ids[0].tolist(),
+                [token_id],
                 skip_special_tokens=True,
                 clean_up_tokenization_spaces=True,
             )
         elif self.model_type == "encoder-decoder":
-
             # Generate encoder-decoder output
             output_ids = self.model.generate(
                 input_ids=inputs["input_ids"],
@@ -146,7 +203,7 @@ class ModelLoader:
             return output_text
 
     def generate_filled_json(
-        self, input_text: str, container_number: int, template_str: str
+        self, input_text: str, container_number: str, template_str: str
     ) -> dict:
         """
         Fill out the JSON values based on the input text.
