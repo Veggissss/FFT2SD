@@ -120,7 +120,8 @@ if __name__ == "__main__":
         model_loader.model_type,
         model_loader.tokenizer.mask_token,
     )
-    print(f"Number of examples: {len(dataset["input"])}")
+    example_count = len(dataset["input"])
+    print(f"Number of examples: {example_count}")
 
     # Register enum strings present in dataset as new tokens. #TODO CUDA Error when adding enums and then training
     # model_loader.tokenizer = model_loader.tokenizer.train_new_from_iterator(
@@ -130,7 +131,6 @@ if __name__ == "__main__":
     # print(enums)
     # model_loader.model.resize_token_embeddings(len(model_loader.tokenizer))
     print(f"Number of tokens in the tokenizer: {len(model_loader.tokenizer)}")
-
 
     # Tokenize the dataset.
     tokenized_dataset = tokenize_dataset(model_loader.tokenizer, dataset)
