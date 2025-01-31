@@ -67,11 +67,13 @@ def create_dataset(
                 )
 
                 if model_type in ["decoder", "encoder"]:
-                    target_text = SYSTEM_PROMPT.format(
+                    input_text = SYSTEM_PROMPT.format(
                         input_text=input_text_str,
                         container_number=container_number,
                         template_json=target_entry_str,
                     )
+                    # Not used by the encoder and decoder models
+                    target_text = "[UNUSED]"
                 else:
                     target_text = target_entry_str + " " + END_OF_PROMPT_MARKER
 
@@ -85,21 +87,3 @@ def create_dataset(
 
     # Convert dict to Hugging Face Dataset.
     return Dataset.from_dict(dataset_dict), enums
-
-
-if __name__ == "__main__":
-    # Define the path to the dataset directory
-    DATASET_PATH = "data/labeled_data/test"
-    # Define the model type and mask token
-    MODEL_TYPE = "encoder"
-
-    # Create a Hugging Face Dataset
-    dataset, enums = create_dataset(DATASET_PATH, MODEL_TYPE, "[VALUE_MASK]")
-    assert len(dataset["input"]) == len(dataset["output"])
-
-    print(dataset)
-    print(dataset["input"][0])
-    print("\n")
-    print(dataset["output"][0])
-
-    # print(enums)

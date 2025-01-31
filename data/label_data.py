@@ -56,13 +56,17 @@ def get_valid_input(input_prompt, item: dict) -> str | float | int | bool:
     return labeled_input
 
 
-def main(
+def label_data(
     input_text_name: str,
     input_text_path: str,
     input_json_path: str,
     input_container_path: str,
-    output_dir_name: str,
+    output_dir_path: str,
 ) -> None:
+    """
+    Prompt the user to fill out the JSON values for a given text file.
+    The labeled JSON is saved to the output directory.
+    """
     input_text = read_text_file(input_text_path)
     target_json = read_json_file(input_json_path)
     container_json = read_json_file(input_container_path)
@@ -116,13 +120,11 @@ def main(
             f"JSON Labeled:\n{json.dumps(final_json, indent=4, ensure_ascii=False)}\n"
         )
 
-        # Create output directory if it doesn't exist
-        output_dir = os.path.join(SCRIPT_PATH, "labeled_data", output_dir_name)
-        os.makedirs(output_dir, exist_ok=True)
-
         # Save to file
         json_file_name = input_text_name.replace(".txt", ".json")
-        output_json_path = f"{output_dir}/container_{container_index}_{json_file_name}"
+        output_json_path = (
+            f"{output_dir_path}/container_{container_index}_{json_file_name}"
+        )
         write_json_file(output_json_path, final_json)
 
 
@@ -133,34 +135,34 @@ if __name__ == "__main__":
     # Generated structured json files from data_model/out/
     input_json_dir = os.path.join(SCRIPT_PATH, "../data_model/out")
 
-    # Output directory name
-    output_dir_name = "test"
+    # Output directory
+    output_dir = os.path.join(SCRIPT_PATH, "test")
 
     # For every text case fill out the JSON values
     for text_file_name in os.listdir(input_text_dir):
-        if text_file_name.endswith(".txt"):
-            text_path = os.path.join(input_text_dir, text_file_name)
+        if not text_file_name.endswith(".txt"):
+            print(f"Skipping non-text file: {text_file_name}")
+            continue
 
-            json_container_path = os.path.join(
-                input_json_dir, "generated-beholder.json"
-            )
+        text_path = os.path.join(input_text_dir, text_file_name)
+        json_container_path = os.path.join(input_json_dir, "generated-beholder.json")
 
-            if "klinisk" in text_file_name or "makro" in text_file_name:
-                json_path = os.path.join(input_json_dir, "generated-klinisk.json")
+        if "klinisk" in text_file_name or "makro" in text_file_name:
+            json_path = os.path.join(input_json_dir, "generated-klinisk.json")
 
-            elif "mikro" in text_file_name:
-                json_path = os.path.join(input_json_dir, "generated-makroskopisk.json")
+        elif "mikro" in text_file_name:
+            json_path = os.path.join(input_json_dir, "generated-makroskopisk.json")
 
-            elif "diagn" in text_file_name:
-                json_path = os.path.join(input_json_dir, "generated-mikroskopisk.json")
-            else:
-                print(f"Could not find a matching JSON file for {text_file_name}.")
-                continue
+        elif "diagn" in text_file_name:
+            json_path = os.path.join(input_json_dir, "generated-mikroskopisk.json")
+        else:
+            print(f"Could not find a matching JSON file for {text_file_name}.")
+            continue
 
-            main(
-                text_file_name,
-                text_path,
-                json_path,
-                json_container_path,
-                output_dir_name,
-            )
+        label_data(
+            text_file_name,
+            text_path,
+            json_path,
+            json_container_path,
+            output_dir,
+        )
