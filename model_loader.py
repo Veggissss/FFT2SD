@@ -1,3 +1,4 @@
+import json
 from typing import Literal
 from transformers import (
     AutoTokenizer,
@@ -8,7 +9,6 @@ from transformers import (
     BitsAndBytesConfig,
 )
 import torch
-import json
 from allowed_tokens import get_allowed_tokens
 from config import SYSTEM_PROMPT, END_OF_PROMPT_MARKER
 
@@ -99,86 +99,108 @@ class ModelLoader:
         #    }
         # )
 
+        # tokenizer.add_tokens(["\n"])
+
         # Resize the token embeddings to match the tokenizer
-        # model.resize_token_embeddings(len(tokenizer))
+        model.resize_token_embeddings(len(tokenizer))
 
         return model, tokenizer
 
-    def generate(self, prompt: str, max_length: int = 512) -> str:
+    def generate(self, prompt: str, template_str: str) -> str:
         """Generate model output based on the input prompt.
         :param prompt: Text input prompt for the model.
         :return: Generated output text.
         """
         inputs = self.tokenizer(
             prompt,
-            # padding=True,
             return_tensors="pt",
         ).to(self.device)
 
-        # The prompt is always longer than the output
-        amount_new_tokens = min(inputs["input_ids"].shape[1], max_length)
-        print(f"Prompt tokenized length: {amount_new_tokens}")
+        tokenized_template = self.tokenizer(
+            template_str,
+            return_tensors="pt",
+        )
+
+        # Get the amount of new tokens to generate based on the json template
+        amount_new_tokens = tokenized_template["input_ids"].shape[1]
+        print(f"Max new decoder tokens: {amount_new_tokens}")
 
         if self.model_type == "encoder":
-            # Generate encoder output
-            output = self.model(**inputs)
+            # Forward pass to get logits
+            with torch.no_grad():
+                outputs = self.model(**inputs)
+                logits = outputs.logits
 
-            # Get the logits from the model output
-            logits = output.logits
-
-            # Find the position of the masked token
-            masked_position = (
+            # Find the masked token position
+            masked_index = torch.where(
                 inputs.input_ids == self.tokenizer.mask_token_id
-            ).nonzero(as_tuple=True)[0]
+            )[1].item()
 
-            if masked_position.numel() == 0:
-                print("No masked token found in the input.")
-                return
+            # Get logits for the masked token
+            masked_token_logits = logits[0, masked_index]
 
-            # There is only one masked position
-            pos = masked_position[0].item()
+            # Apply softmax to convert logits to probabilities
+            probabilities = torch.nn.functional.softmax(masked_token_logits, dim=-1)
 
-            # Get the logits for the masked position and batch size is 1
-            position_logits = logits[0, pos]
+            # Filter the allowed tokens' probabilities based on template type
+            print(f"Template: {template_str}")
+            template_json = json.loads(template_str)
+            template_type = template_json["type"]
+            template_enums = None
+            if template_type == "enum":
+                template_enums = template_json["enum"]
 
-            allowed_token_ids = get_allowed_tokens(self.tokenizer, "int")
-            if len(allowed_token_ids) == 0:
-                print("No allowed tokens found!")
-                return
-
-            # Create a mask for allowed tokens
-            allowed_mask = torch.zeros_like(position_logits, dtype=torch.bool)
-            for token_id in allowed_token_ids:
-                allowed_mask[token_id] = True
-
-            # Mask the logits of disallowed tokens
-            masked_logits = torch.where(
-                allowed_mask,
-                position_logits,
-                torch.tensor(float("-inf")).to(self.device),
+            # Get allowed tokens
+            allowed_token_ids = get_allowed_tokens(
+                self.tokenizer, template_type, template_enums
             )
 
-            # Get the top 5 logits and their corresponding token IDs from the allowed tokens
-            top_k_logits, top_k_ids = torch.topk(masked_logits, 5, dim=-1)
-
-            # Convert logits to probabilities using softmax
-            top_k_probs = torch.nn.functional.softmax(top_k_logits, dim=-1)
-
-            print(f"DEBUG Masked position {pos}:")
-            for j in range(5):
-                token_id = top_k_ids[j].item()
-                token_prob = top_k_probs[j].item()
-                token_str = self.tokenizer.decode([token_id])
+            # Check if allowed tokens are empty, and if so, use the model's output without filtering
+            if len(allowed_token_ids) == 0:
                 print(
-                    f"  Token ID: {token_id}, Token: '{token_str}', Probability: {token_prob:.4f}"
+                    "No allowed tokens found! Using the token with the highest probability instead."
                 )
+                allowed_token_ids = None  # Set to None to signal using all tokens
 
-            # Return the token with the highest probability
-            token_id = top_k_ids[0].item()
+            allowed_token_probabilities = []
+            # Get token probabilities for allowed tokens or use the highest probability if no allowed tokens
+            if allowed_token_ids:
+                allowed_token_probabilities = [
+                    (token_id, probabilities[token_id].item())
+                    for token_id in allowed_token_ids
+                ]
+            else:
+                # If no allowed tokens are provided, select the top tokens based on probability
+                top_tokens = probabilities.topk(10).indices
+                allowed_token_probabilities = [
+                    (token_id.item(), probabilities[token_id].item())
+                    for token_id in top_tokens
+                ]
+
+            # Print top-k tokens with their probabilities
+            top_k = sorted(
+                allowed_token_probabilities, key=lambda x: x[1], reverse=True
+            )[:10]
+            print("Top tokens and their probabilities:")
+            for token_id, prob in top_k:
+                token = self.tokenizer.decode(token_id)
+                print(f"Token: {token}, Probability: {prob:.4f}")
+
+            # Select the allowed token with the highest probability (or the top one if no allowed tokens)
+            predicted_token_id = max(allowed_token_probabilities, key=lambda x: x[1])[0]
+
+            # Convert token ID back to token
+            predicted_token = self.tokenizer.decode(predicted_token_id)
+
+            # Replace the [MASK] token with the predicted token in the original sequence
+            input_ids = inputs.input_ids[0].tolist()
+            input_ids[masked_index] = predicted_token_id
+
+            print(f"Predicted token: {predicted_token}")
+
+            # Convert the updated input_ids back to text
             return self.tokenizer.decode(
-                [token_id],
-                skip_special_tokens=True,
-                clean_up_tokenization_spaces=True,
+                input_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
             )
         elif self.model_type == "encoder-decoder":
             # Generate encoder-decoder output
@@ -212,7 +234,6 @@ class ModelLoader:
         :param json_template: JSON template with fields to be filled.
         :return: JSON with filled values.
         """
-
         # Convert JSON template to a string to include in the prompt.
         prompt = SYSTEM_PROMPT.format(
             input_text=input_text,
@@ -221,8 +242,10 @@ class ModelLoader:
         )
         print(f"Prompt:\n{prompt}")
 
+        prompt += "\nUtfylt JSON verdi for 'value':\n{"
+
         # Generate the filled JSON based on the prompt
-        output_text = self.generate(prompt)
+        output_text = self.generate(prompt, template_str)
         print(f"Output text:\n{output_text}")
 
         filled_json = {}
@@ -237,8 +260,12 @@ class ModelLoader:
                 filled_json = json.loads(output_text)
 
             elif self.model_type == "encoder":
-                start_index = output_text.find("[ {")
-                end_index = output_text.find("} ]") + len("} ]")
+                start_index = output_text.find("{")
+                end_index = output_text.find("}") + len("}")
+
+                # Replace single quotes with double quotes for JSON parsing
+                output_text = output_text.replace("'", '"')
+
                 if start_index != -1 and end_index != -1:
                     output_text = output_text[start_index:end_index]
 

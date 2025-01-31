@@ -26,6 +26,13 @@ Data extraction will start after approval, early 2025.
 ![Data Collection](figures/LLM.Overview.drawio.svg)
 
 ## Data Labeling
+The labeling program takes in a text containing either *klinisk*, *makroskopisk* or *microskopisk* information. The text is then mapped to the corresponding data model. Every field from the data model is then prompted to be labeled by the user. In addition to the clinical information the user is prompted to fill in the data model based on the glass container. Since each text can include multiple containers that needs to be mapped in a one to many relation to the corresponding data model. 
+
+The resulting labeled data is then stored in a json with the fields:
+- *input_text* | The original information text.
+- *template_json* | A copy of either *klinisk*, *makro* or *micro* model for easy unlabeled dataset.
+- *target_json* | The "correctly" labeled out json that the model will try to replicate. 
+- *container_json* | Info about the total amount of glass containers in the original *input_text* as well as the number corresponding to the filled out *target_json*. (1-indexed)
 
 ## Training / Fine-tuning Process
 The project will focus on using open source models that already have been trained to understand natural language. Since this project involves analyzing medical journal texts which contains prose written in norwegian, more specialiced trained models will be used. Namely some of the norwegian trained models by the [Language Technology Group (University of Oslo) on HuggingFace](https://huggingface.co/ltg).
@@ -37,6 +44,32 @@ An overview of how the dataset is structured, along with training and the evalua
 
 ![Training overview](figures/LLM.DataFlow.drawio.svg)
 
+### Tokenization
+- Added enums to tokenizer.
+
+### Encoder 
+- Masked learning
+- Allowed tokens filtering
+- *Single token restriction*
+- Differ from NER
+
+### Decoder
+- Casual learning
+- Prompt engineering; Starter tokens
+- Masked attention
+
+### Encoder-Decoder
+- Sequence to Sequence
+
+## Evaluating data
+- Separate from training
 
 ## Investigate
-- See if end of sentence marker impacts different models. Decoder seem to mess up. Encoder-decoder might learn to stop early now that it is added?.
+- See if end of sentence marker impacts different models.
+- Encoder: 
+    * Extra label specific masked training
+    * One mask to many tokens. (String comments etc)
+- 
+
+## Libraries
+- pytest: Unit testing

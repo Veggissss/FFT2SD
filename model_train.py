@@ -10,7 +10,6 @@ from datasets import Dataset
 from model_loader import ModelLoader
 from config import MODELS_DICT
 import dataset_loader
-import allowed_tokens
 
 
 def tokenize_dataset(tokenizer: AutoTokenizer, text_data: Dataset) -> Dataset:
@@ -45,14 +44,14 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str):
     training_args = TrainingArguments(
         output_dir=output_dir,
         eval_strategy="no",  # Set to "epoch"
+        num_train_epochs=10,  # Make selectable along with other training params
         # learning_rate=2e-4,
-        num_train_epochs=20,  # Make selectable along with other training params
         # weight_decay=0.01,
-        per_device_train_batch_size=2,
+        per_device_train_batch_size=1,
         per_device_eval_batch_size=1,
         logging_dir="./logs",
         logging_steps=10,
-        # fp16=True,  # Enable mixed precision
+        # fp16=True,  # Mixed precision
     )
 
     if loader.model_type == "encoder-decoder":
@@ -61,6 +60,7 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str):
             return_tensors="pt",
         )
     elif loader.model_type == "encoder":
+        training_data = training_data.remove_columns(["labels"])
         data_collator = DataCollatorForLanguageModeling(
             tokenizer=loader.tokenizer,
             mlm=True,
@@ -68,6 +68,7 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str):
             return_tensors="pt",
         )
     else:
+        training_data = training_data.remove_columns(["labels"])
         data_collator = DataCollatorForLanguageModeling(
             tokenizer=loader.tokenizer,
             mlm=False,
@@ -78,7 +79,7 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str):
         model=loader.model,
         args=training_args,
         train_dataset=training_data,
-        tokenizer=loader.tokenizer,
+        processing_class=loader.tokenizer,
         # eval_dataset= # Add evaluation dataset and set eval_strategy to "epoch"
         data_collator=data_collator,
     )
@@ -98,7 +99,7 @@ if __name__ == "__main__":
     model_loader = ModelLoader(MODELS_DICT[MODEL_TYPE], MODEL_TYPE)
 
     # Quantized models can't be trained directly.
-    if MODEL_TYPE == "encoder-decoder":
+    if MODEL_TYPE == "decoder":
         # Configure LoRA
         lora_config = LoraConfig(
             r=256,  # Rank of the LoRA layers
@@ -115,29 +116,25 @@ if __name__ == "__main__":
 
     # Load the test dataset.
     dataset, enums = dataset_loader.create_dataset(
-        "data/labeled_data/test/",
+        "data/test_data/",
         model_loader.model_type,
         model_loader.tokenizer.mask_token,
     )
+    print(f"Number of examples: {len(dataset["input"])}")
 
-    print(enums)
-
-    # Register enum strings present in dataset as new tokens.
-    # allowed_tokens.register_enum_tokens(model_loader.tokenizer, enums)
+    # Register enum strings present in dataset as new tokens. #TODO CUDA Error when adding enums and then training
+    # model_loader.tokenizer = model_loader.tokenizer.train_new_from_iterator(
+    #    enums, len(model_loader.tokenizer) + len(enums)
+    # )
     # model_loader.tokenizer.add_tokens(enums)
+    # print(enums)
     # model_loader.model.resize_token_embeddings(len(model_loader.tokenizer))
+    print(f"Number of tokens in the tokenizer: {len(model_loader.tokenizer)}")
 
-    print("\n\n")
-    print(dataset["output"][0])
-
-    output_size = len(dataset["output"])
-    print(f"Number of examples: {output_size}")
 
     # Tokenize the dataset.
     tokenized_dataset = tokenize_dataset(model_loader.tokenizer, dataset)
-
-    print(len(tokenized_dataset["input_ids"][0]))
-    print(len(tokenized_dataset["labels"][0]))
+    print(tokenized_dataset)
 
     # training_data = tokenized_dataset.train_test_split(test_size=0.1)
 
