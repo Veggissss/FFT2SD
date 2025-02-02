@@ -5,8 +5,10 @@ from transformers import (
     DataCollatorForLanguageModeling,
     AutoTokenizer,
     DataCollatorForSeq2Seq,
+    AddedToken,
 )
 from datasets import Dataset
+import torch
 from model_loader import ModelLoader
 from config import MODELS_DICT
 import dataset_loader
@@ -30,7 +32,7 @@ def tokenize_dataset(tokenizer: AutoTokenizer, text_data: Dataset) -> Dataset:
     )
 
 
-def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str):
+def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) -> None:
     """
     Train the model using the provided dataset.
     :param loader: ModelLoader object with the loaded model and tokenizer.
@@ -51,7 +53,7 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str):
         per_device_eval_batch_size=1,
         logging_dir="./logs",
         logging_steps=10,
-        # fp16=True,  # Mixed precision
+        fp16=True,  # Mixed precision
     )
 
     if loader.model_type == "encoder-decoder":
@@ -123,14 +125,27 @@ if __name__ == "__main__":
     example_count = len(dataset["input"])
     print(f"Number of examples: {example_count}")
 
-    # Register enum strings present in dataset as new tokens. #TODO CUDA Error when adding enums and then training
-    # model_loader.tokenizer = model_loader.tokenizer.train_new_from_iterator(
-    #    enums, len(model_loader.tokenizer) + len(enums)
-    # )
-    # model_loader.tokenizer.add_tokens(enums)
-    # print(enums)
-    # model_loader.model.resize_token_embeddings(len(model_loader.tokenizer))
+    # Register enum strings present in dataset as new tokens.
+    print(f"Number of tokens in the tokenizer before: {len(model_loader.tokenizer)}")
+    new_tokens = [
+        AddedToken(enum, single_word=True, rstrip=True, lstrip=True) for enum in enums
+    ]
+
+    print(f"Adding {len(new_tokens)} new tokens to the tokenizer")
+    num_added_tokens = model_loader.tokenizer.add_tokens(new_tokens)
+
     print(f"Number of tokens in the tokenizer: {len(model_loader.tokenizer)}")
+    model_loader.model.resize_token_embeddings(len(model_loader.tokenizer))
+
+    # Fix for: "CUDA Assertion `t >= 0 && t < n_classes` failed" for the ltg encoder and encoder-decoder models
+    # The Classifier does not get resized when calling model.resize_token_embeddings() so needs to be manually re-initialized
+    if model_loader.model_type in ["encoder"]:
+        model_loader.model.classifier.__init__(
+            model_loader.model.config,
+            model_loader.model.embedding.word_embedding.weight,
+        )
+    elif model_loader.model_type in ["encoder-decoder"]:
+        model_loader.model.classifier.__init__(model_loader.model.config)
 
     # Tokenize the dataset.
     tokenized_dataset = tokenize_dataset(model_loader.tokenizer, dataset)

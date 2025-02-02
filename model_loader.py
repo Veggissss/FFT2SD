@@ -86,7 +86,7 @@ class ModelLoader:
 
         # Set special tokens for the tokenizer
         # tokenizer.unk_token = "<unk>"
-        tokenizer.pad_token = "<pad>"
+        tokenizer.pad_token = "[PAD]"
         # tokenizer.eos_token = "</s>"
         # tokenizer.mask_token = "[MASK]"
 
@@ -120,6 +120,10 @@ class ModelLoader:
             template_str,
             return_tensors="pt",
         )
+
+        # Get the amount of tokens in the prompt
+        amount_prompt_tokens = inputs["input_ids"].shape[1]
+        print(f"Prompt tokens: {amount_prompt_tokens}")
 
         # Get the amount of new tokens to generate based on the json template
         amount_new_tokens = tokenized_template["input_ids"].shape[1]
