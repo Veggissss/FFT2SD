@@ -61,8 +61,9 @@ An overview of how the dataset is structured, along with training and the evalua
 ### Encoder-Decoder
 - Sequence to Sequence
 
-## Evaluating data
+## Evaluation of Models
 - Separate from training
+- TODO: Evaluation metrics presented as graphical, tables etc.
 
 ## Investigate
 - See if end of sentence marker impacts different models.

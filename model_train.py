@@ -8,7 +8,6 @@ from transformers import (
     AddedToken,
 )
 from datasets import Dataset
-import torch
 from model_loader import ModelLoader
 from config import MODELS_DICT
 import dataset_loader
@@ -46,7 +45,7 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     training_args = TrainingArguments(
         output_dir=output_dir,
         eval_strategy="no",  # Set to "epoch"
-        num_train_epochs=10,  # Make selectable along with other training params
+        num_train_epochs=50,  # Make selectable along with other training params
         # learning_rate=2e-4,
         # weight_decay=0.01,
         per_device_train_batch_size=1,

@@ -1,4 +1,17 @@
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, StoppingCriteria
+
+
+class StopOnToken(StoppingCriteria):
+    """
+    Stopping criteria to stop generation when a specific token is generated.
+    """
+
+    def __init__(self, tokenizer, stop_token):
+        super().__init__()
+        self.stop_token_id = tokenizer.convert_tokens_to_ids(stop_token)
+
+    def __call__(self, input_ids, scores, **kwargs):
+        return input_ids[0, -1].item() == self.stop_token_id
 
 
 def get_allowed_tokens(tokenizer: AutoTokenizer, token_type: str, enums: list = None):
@@ -14,12 +27,6 @@ def get_allowed_tokens(tokenizer: AutoTokenizer, token_type: str, enums: list = 
                 token_str = tokenizer.decode([token_id]).strip()
                 if token_str.isdigit():
                     allowed_token_ids.append(token_id)
-        case "float":
-            # Identify token IDs corresponding to float tokens
-            for token_id in range(tokenizer.vocab_size):
-                token_str = tokenizer.decode([token_id])
-                if is_float(token_str):
-                    allowed_token_ids.append(token_id)
         case "enum":
             if enums is None:
                 raise ValueError("Enums must be provided for enum token type.")
@@ -33,14 +40,3 @@ def get_allowed_tokens(tokenizer: AutoTokenizer, token_type: str, enums: list = 
                     allowed_token_ids.append(token_id)
 
     return allowed_token_ids
-
-
-def is_float(string):
-    """
-    Check if a string can be converted to a float.
-    """
-    try:
-        float(string)
-        return True
-    except ValueError:
-        return False

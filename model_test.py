@@ -31,26 +31,30 @@ if __name__ == "__main__":
 
     # First find out how many containers/Beholder-IDs there are in the input text
     filled_json = model_loader.generate_filled_json(
-        test_json["input_text"], "", json.dumps(glass_count_entry)
+        test_json["input_text"],
+        "?",
+        json.dumps(glass_count_entry, ensure_ascii=False),
     )
-    print(filled_json)
+    # print(filled_json)
 
     if filled_json.get("value") is not None:
         TOTAL_CONTAINERS = int(filled_json["value"])
         print(f"Container count: {TOTAL_CONTAINERS}")
     else:
         print("Could not find the container count.")
-    TOTAL_CONTAINERS = 1  # DEBUG VALUE
+        TOTAL_CONTAINERS = 1  # DEBUG VALUE
 
     for container_number in range(TOTAL_CONTAINERS):
         for template_entry in test_json["template_json"]:
             template_entry["value"] = str(mask_token)
-            template_str = json.dumps(template_entry)
-            print(template_str)
+            template_str = json.dumps(template_entry, indent=2, ensure_ascii=False)
+            # print(template_str)
 
             # Generate filled JSON using the model
             filled_json = model_loader.generate_filled_json(
                 test_json["input_text"], container_number + 1, template_str
             )
 
-            print("Filled JSON:\n", json.dumps(filled_json, indent=2))
+            print(
+                "Filled JSON:\n", json.dumps(filled_json, indent=2, ensure_ascii=False)
+            )

@@ -1,13 +1,14 @@
 import pytest
-from transformers import AutoTokenizer
-from allowed_tokens import get_allowed_tokens
+from transformers import AutoTokenizer, AddedToken
+from token_constraints import get_allowed_tokens
 from config import MODELS_DICT
 
 
 def test_allowed_tokens_enum():
     test_enums = ["Hello", "World", "Test", "59jfa9fjFJFj29"]
+    test_tokens = [AddedToken(enum, single_word=True) for enum in test_enums]
     tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT["encoder"])
-    tokenizer.add_tokens(test_enums)
+    tokenizer.add_tokens(test_tokens)
     allowed_token_ids = get_allowed_tokens(tokenizer, "enum", test_enums)
 
     assert len(allowed_token_ids) > 0, "No allowed token IDs found"
@@ -43,21 +44,6 @@ def test_allowed_tokens_int():
     ]
     for test_int in test_ints:
         assert test_int in allowed_ints, f"Unexpected token: '{test_int}'"
-
-
-def test_allowed_tokens_float():
-    test_floats = ["1.0", "2.5", "3.14", "-0.001", "100.0"]
-    tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT["encoder"])
-    tokenizer.add_tokens(test_floats)
-    allowed_token_ids = get_allowed_tokens(tokenizer, "float")
-
-    assert len(allowed_token_ids) > 0, "No allowed token IDs found"
-
-    allowed_floats = [
-        tokenizer.decode([token_id]).strip() for token_id in allowed_token_ids
-    ]
-    for test_int in test_floats:
-        assert test_int in allowed_floats, f"Unexpected token: '{test_int}'"
 
 
 if __name__ == "__main__":

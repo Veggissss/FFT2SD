@@ -64,6 +64,7 @@ def create_dataset(
                     input_text=input_text_str,
                     container_number=container_number,
                     template_json=template_entry_str,
+                    decoder_start="",
                 )
 
                 if model_type in ["decoder", "encoder"]:
@@ -71,8 +72,11 @@ def create_dataset(
                         input_text=input_text_str,
                         container_number=container_number,
                         template_json=target_entry_str,
+                        decoder_start=("{" if model_type == "decoder" else ""),
                     )
                     # Not used by the encoder and decoder models
+                    # As the decoder uses next token prediction
+                    # And the encoder uses random masked token prediction
                     target_text = "[UNUSED]"
                 else:
                     target_text = target_entry_str + " " + END_OF_PROMPT_MARKER
