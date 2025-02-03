@@ -1,10 +1,18 @@
 {
-    "klinisk": [
+    "beholder": [
+        {
+            "id": 0,
+            "field": "Antall glass",
+            "type": "int",
+            "unit": "stk"
+        },
         {
             "id": 128,
             "field": "Beholder-ID",
             "type": "string"
-        },
+        }
+    ],
+    "klinisk": [
         {
             "id": 100,
             "field": "Prøvekategori",
@@ -36,7 +44,7 @@
         {
             "id": 102,
             "field": "Diameter av lesjon",
-            "type": "float",
+            "type": "int",
             "unit": "mm"
         },
         {
@@ -86,11 +94,6 @@
     ],
     "makroskopisk": [
         {
-            "id": 128,
-            "field": "Beholder-ID",
-            "type": "string"
-        },
-        {
             "id": 107,
             "field": "Lokasjon patologi",
             "type": "enum",
@@ -130,11 +133,6 @@
         }
     ],
     "mikroskopisk": [
-        {
-            "id": 128,
-            "field": "Beholder-ID",
-            "type": "string"
-        },
         {
             "id": 109,
             "field": "Patologidiagnose",
@@ -206,7 +204,7 @@
         {
             "id": 111,
             "field": "Karsinomets største diameter",
-            "type": "float",
+            "type": "int",
             "unit": "mm"
         },
         {
@@ -269,8 +267,8 @@
         {
             "id": 127,
             "field": "Dybde submukosal infiltrasjon",
-            "type": "float",
-            "unit": "mm"
+            "type": "int",
+            "unit": "µm"
         },
         {
             "id": 116,
@@ -286,25 +284,26 @@
         {
             "id": 122,
             "field": "Korteste avstand til reseksjonsrand",
-            "type": "float",
+            "type": "int",
             "unit": "mm"
         },
         {
             "id": 115,
             "field": "Korteste avstand til nærmeste sidereseksjonsrand",
-            "type": "float",
+            "type": "int",
             "unit": "mm"
         },
         {
             "id": 121,
             "field": "Korteste avstand til dyp reseksjonsrand",
-            "type": "float",
+            "type": "int",
             "unit": "mm"
         },
         {
             "id": 125,
             "field": "Antall tumor 'buds'",
-            "type": "int"
+            "type": "int",
+            "unit": "stk"
         },
         {
             "id": 126,
