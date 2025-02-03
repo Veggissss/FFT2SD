@@ -7,9 +7,7 @@ from config import SYSTEM_PROMPT
 
 
 def create_dataset(
-    dataset_path: str,
-    model_type: Literal["decoder", "encoder", "encoder-decoder"],
-    mask_token: str,
+    dataset_path: str, model_type: Literal["decoder", "encoder", "encoder-decoder"]
 ) -> tuple[Dataset, list]:
     """
     Create a Hugging Face Dataset from the JSON files in the specified directory.
@@ -44,13 +42,13 @@ def create_dataset(
 
             # Add container amount into training data
             target_json.insert(0, copy.deepcopy(container_json[0]))
+
+            # Add container amount into template data
+            container_json[0]["value"] = None
             template_json.insert(0, copy.deepcopy(container_json[0]))
 
             # Iterate through template and target JSON entries
             for template_entry, target_entry in zip(template_json, target_json):
-                # Mask out the correct value in the template JSON
-                template_entry["value"] = mask_token
-
                 template_entry_str = json.dumps(template_entry, ensure_ascii=False)
                 target_entry_str = json.dumps(target_entry, ensure_ascii=False)
 

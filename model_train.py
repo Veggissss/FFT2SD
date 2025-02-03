@@ -117,9 +117,7 @@ if __name__ == "__main__":
 
     # Load the test dataset.
     dataset, enums = dataset_loader.create_dataset(
-        "data/test_data/",
-        model_loader.model_type,
-        model_loader.tokenizer.mask_token,
+        "data/test_data/", model_loader.model_type
     )
     example_count = len(dataset["input"])
     print(f"Number of examples: {example_count}")
