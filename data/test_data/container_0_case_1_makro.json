@@ -33,7 +33,7 @@
         {
             "id": 102,
             "field": "Diameter av lesjon",
-            "type": "float",
+            "type": "int",
             "unit": "mm",
             "value": null
         },
@@ -122,7 +122,7 @@
         {
             "id": 102,
             "field": "Diameter av lesjon",
-            "type": "float",
+            "type": "int",
             "unit": "mm",
             "value": 0.0
         },
