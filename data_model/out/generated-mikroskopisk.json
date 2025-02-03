@@ -73,7 +73,7 @@
     {
         "id": 111,
         "field": "Karsinomets største diameter",
-        "type": "float",
+        "type": "int",
         "unit": "mm",
         "value": null
     },
@@ -142,8 +142,8 @@
     {
         "id": 127,
         "field": "Dybde submukosal infiltrasjon",
-        "type": "float",
-        "unit": "mm",
+        "type": "int",
+        "unit": "µm",
         "value": null
     },
     {
@@ -161,21 +161,21 @@
     {
         "id": 122,
         "field": "Korteste avstand til reseksjonsrand",
-        "type": "float",
+        "type": "int",
         "unit": "mm",
         "value": null
     },
     {
         "id": 115,
         "field": "Korteste avstand til nærmeste sidereseksjonsrand",
-        "type": "float",
+        "type": "int",
         "unit": "mm",
         "value": null
     },
     {
         "id": 121,
         "field": "Korteste avstand til dyp reseksjonsrand",
-        "type": "float",
+        "type": "int",
         "unit": "mm",
         "value": null
     },
@@ -183,6 +183,7 @@
         "id": 125,
         "field": "Antall tumor 'buds'",
         "type": "int",
+        "unit": "stk",
         "value": null
     },
     {

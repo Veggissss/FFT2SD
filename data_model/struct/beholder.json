@@ -3,12 +3,11 @@
         "id": 0,
         "field": "Antall glass",
         "type": "int",
-        "value": null
+        "unit": "stk"
     },
     {
         "id": 128,
         "field": "Beholder-ID",
-        "type": "string",
-        "value": null
+        "type": "string"
     }
 ]
