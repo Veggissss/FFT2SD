@@ -20,7 +20,7 @@ class BaseGenerationStrategy:
         raise NotImplementedError
 
     def output_to_json(self, output_text: str) -> dict:
-        raise NotImplementedError
+        return json.loads(output_text.split(END_OF_PROMPT_MARKER)[-1])
 
 
 class EncoderDecoderStrategy(BaseGenerationStrategy):
@@ -36,7 +36,7 @@ class EncoderDecoderStrategy(BaseGenerationStrategy):
         output_ids = model_loader.model.generate(
             input_ids=inputs["input_ids"],
             attention_mask=inputs["attention_mask"],
-            eos_token_id=8,
+            # eos_token_id=8,
             max_new_tokens=amount_new_tokens,
             stopping_criteria=stopping_criteria,
         )
@@ -70,11 +70,6 @@ class DecoderStrategy(BaseGenerationStrategy):
             output_ids[0],
             skip_special_tokens=False,
         )
-
-    def output_to_json(self, output_text: str) -> dict:
-        print(output_text)
-        # output_text = output_text.replace(model_loader.tokenizer.eos_token, "")
-        return json.loads(output_text.split(END_OF_PROMPT_MARKER)[-1])
 
 
 class EncoderStrategy(BaseGenerationStrategy):
@@ -150,13 +145,3 @@ class EncoderStrategy(BaseGenerationStrategy):
         return model_loader.tokenizer.decode(
             input_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
         )
-
-    def output_to_json(self, output_text: str) -> dict:
-        start_index = output_text.find("{")
-        end_index = output_text.find("}") + len("}")
-
-        # Extract the JSON part from the output text
-        if start_index != -1 and end_index != -1:
-            output_text = output_text[start_index:end_index]
-
-        return json.loads(output_text)

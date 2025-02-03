@@ -14,7 +14,7 @@ MODELS_DICT: dict[str, str] = {
 Mark the end of the prompt for the model to start generating the output.
 Useful for decoder models which continue generating using the prompt.
 """
-END_OF_PROMPT_MARKER = "[MASK_8]"
+END_OF_PROMPT_MARKER = "[JSON_START]"
 
 """
 The prompt for the system to ask the model to fill in the missing JSON values.
@@ -26,7 +26,7 @@ Parameters:
 - decoder_start: The start of the prompt for decoder models. Empty for other models.
 """
 SYSTEM_PROMPT = (
-    "Gitt teksten: \n'{input_text}'.\nGlass nummer {container_number}\nFyll ut den manglede verdien for feltet \"value\". Behold JSON strukturen: \n{template_json} "
+    "Gitt teksten: \n'{input_text}'.\nGlass nummer {container_number}.\nFyll ut den manglede verdien for feltet \"value\". Behold JSON strukturen: "
     + END_OF_PROMPT_MARKER
-    + "{decoder_start}"
+    + " {template_json}"
 )

@@ -165,8 +165,12 @@ class ModelLoader:
         prompt = SYSTEM_PROMPT.format(
             input_text=input_text,
             container_number=container_number,
-            template_json=template_str,
-            decoder_start=("{" if self.model_type == "decoder" else ""),
+            # Strip the value field if the model is a decoder speed up generation
+            template_json=(
+                template_str.split('"value":')[0] + '"value": '
+                if self.model_type == "decoder"
+                else template_str
+            ),
         )
 
         # Generate the filled JSON based on the prompt

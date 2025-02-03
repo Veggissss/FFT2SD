@@ -3,8 +3,7 @@ import json
 import copy
 from typing import Literal
 from datasets import Dataset
-
-from config import SYSTEM_PROMPT, END_OF_PROMPT_MARKER
+from config import SYSTEM_PROMPT
 
 
 def create_dataset(
@@ -60,26 +59,24 @@ def create_dataset(
                     container_json[1]["value"], ensure_ascii=False
                 )
 
-                input_text = SYSTEM_PROMPT.format(
-                    input_text=input_text_str,
-                    container_number=container_number,
-                    template_json=template_entry_str,
-                    decoder_start="",
-                )
-
                 if model_type in ["decoder", "encoder"]:
+                    # Use target as input
                     input_text = SYSTEM_PROMPT.format(
                         input_text=input_text_str,
                         container_number=container_number,
                         template_json=target_entry_str,
-                        decoder_start=("{" if model_type == "decoder" else ""),
                     )
                     # Not used by the encoder and decoder models
                     # As the decoder uses next token prediction
                     # And the encoder uses random masked token prediction
                     target_text = "[UNUSED]"
                 else:
-                    target_text = target_entry_str + " " + END_OF_PROMPT_MARKER
+                    input_text = SYSTEM_PROMPT.format(
+                        input_text=input_text_str,
+                        container_number=container_number,
+                        template_json=template_entry_str,
+                    )
+                    target_text = target_entry_str
 
                 dataset_dict["input"].append(input_text)
                 dataset_dict["output"].append(target_text)
