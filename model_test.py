@@ -4,7 +4,7 @@ import json
 
 if __name__ == "__main__":
     # Define the model type and whether it is trained or not.
-    MODEL_TYPE = "encoder"
+    MODEL_TYPE = "decoder"
     IS_TRAINED = True
 
     # Load the test clinical data report data

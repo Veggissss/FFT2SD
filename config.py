@@ -11,8 +11,8 @@ MODELS_DICT: dict[str, str] = {
 }
 
 """
-Mark the end of the prompt for the model to start generating the output.
-Useful for decoder models which continue generating using the prompt.
+Mark the end of the model prompt and before the template JSON in the prompt.
+Useful for splitting json from the final output from decoder and encoder models.
 """
 END_OF_PROMPT_MARKER = "[JSON_START]"
 
@@ -23,7 +23,6 @@ Parameters:
 - input_text: The input text to extract information from.
 - container_number: The number of the container. Example: "Glass nummer 3"
 - template_json: The JSON template to fill in.
-- decoder_start: The start of the prompt for decoder models. Empty for other models.
 """
 SYSTEM_PROMPT = (
     "Gitt teksten: \n'{input_text}'.\nGlass nummer {container_number}.\nFyll ut den manglede verdien for feltet \"value\". Behold JSON strukturen: "

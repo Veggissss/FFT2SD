@@ -13,7 +13,6 @@ def create_dataset(
     Create a Hugging Face Dataset from the JSON files in the specified directory.
     :param dataset_path: The path to the directory containing the JSON files.
     :param model_type: The type of model architecture - 'encoder', 'encoder-decoder', or 'decoder'.
-    :param mask_token: The mask token used for the encoder model.
     :return: Hugging Face Dataset.
     """
     # Dataset dictionary

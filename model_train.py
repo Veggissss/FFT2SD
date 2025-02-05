@@ -45,7 +45,7 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     training_args = TrainingArguments(
         output_dir=output_dir,
         eval_strategy="no",  # Set to "epoch"
-        num_train_epochs=50,  # Make selectable along with other training params
+        num_train_epochs=5,  # Make selectable along with other training params
         # learning_rate=2e-4,
         # weight_decay=0.01,
         per_device_train_batch_size=1,
@@ -94,7 +94,7 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
 
 
 if __name__ == "__main__":
-    MODEL_TYPE = "encoder"
+    MODEL_TYPE = "decoder"
 
     # Load model and tokenizer.
     model_loader = ModelLoader(MODELS_DICT[MODEL_TYPE], MODEL_TYPE)
@@ -109,10 +109,11 @@ if __name__ == "__main__":
             bias="none",  # No bias in LoRA layers
         )
 
+        # Apply PEFT to the decoder model
         peft_model = get_peft_model(model_loader.model, lora_config)
         peft_model.print_trainable_parameters()
 
-        # Apply PEFT to the decoder model
+        # Use the PEFT model for training
         model_loader.model = peft_model
 
     # Load the test dataset.
@@ -128,11 +129,13 @@ if __name__ == "__main__":
         AddedToken(enum, single_word=True, rstrip=True, lstrip=True) for enum in enums
     ]
 
-    print(f"Adding {len(new_tokens)} new tokens to the tokenizer")
-    num_added_tokens = model_loader.tokenizer.add_tokens(new_tokens)
+    # Add tokens to the tokenizer.
+    model_loader.tokenizer.add_tokens(new_tokens)
+    model_loader.tokenizer.add_special_tokens({"pad_token": "<PAD>"})
 
-    print(f"Number of tokens in the tokenizer: {len(model_loader.tokenizer)}")
+    # Resize the model's token embeddings to fit the new tokens.
     model_loader.model.resize_token_embeddings(len(model_loader.tokenizer))
+    print(f"Number of tokens in the tokenizer: {len(model_loader.tokenizer)}")
 
     # Fix for: "CUDA Assertion `t >= 0 && t < n_classes` failed" for the ltg encoder and encoder-decoder models
     # The Classifier does not get resized when calling model.resize_token_embeddings() so needs to be manually re-initialized

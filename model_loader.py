@@ -9,9 +9,10 @@ from transformers import (
     BitsAndBytesConfig,
     StoppingCriteriaList,
 )
+from peft import PeftModel
 import torch
 from token_constraints import StopOnToken
-from config import SYSTEM_PROMPT
+from config import SYSTEM_PROMPT, MODELS_DICT
 from generation_strategy import (
     BaseGenerationStrategy,
     EncoderDecoderStrategy,
@@ -76,32 +77,29 @@ class ModelLoader:
                 bnb_4bit_compute_dtype="float16",  # Reduce memory further
             )
 
-            # Custom map for multi gpu on MY setup.
-            device_map = {
-                "model.layers": 1,
-                "model.embed_tokens": 1,
-                "model.norm": 0,
-                "lm_head": 1,
-            }
-
+            # Load the model, if its already trained using peft, then load the untrained base model.
             model = AutoModelForCausalLM.from_pretrained(
-                model_name,
+                MODELS_DICT[model_type.replace("trained-", "")],
                 quantization_config=q_config,
                 low_cpu_mem_usage=True,
-                # device_map=device_map,
+                device_map="auto",
             )
-            print(model.hf_device_map)
+
+            if "trained" in model_name:
+                # Resize to fit the trained model's token embeddings
+                model.resize_token_embeddings(len(tokenizer))
+
+                # Load the PEFT model
+                model = PeftModel.from_pretrained(
+                    model,
+                    model_name,
+                )
         else:
+            # Encoder model
             model = AutoModelForMaskedLM.from_pretrained(
                 model_name, trust_remote_code=True
             )
             model.to(self.device)
-
-        # Set special tokens for the tokenizer
-        tokenizer.pad_token = "[PAD]"
-
-        # Resize the token embeddings to match the tokenizer
-        model.resize_token_embeddings(len(tokenizer))
 
         return model, tokenizer
 
