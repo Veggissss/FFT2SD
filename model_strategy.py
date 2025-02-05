@@ -1,13 +1,38 @@
+from abc import abstractmethod
 import json
 import torch
-from token_constraints import get_allowed_tokens, StopOnToken
-from config import END_OF_PROMPT_MARKER
+from peft import PeftModel
+from transformers import (
+    AutoModel,
+    AutoTokenizer,
+    AutoModelForSeq2SeqLM,
+    AutoModelForCausalLM,
+    AutoModelForMaskedLM,
+    BitsAndBytesConfig,
+)
+
+from token_constraints import get_allowed_tokens
+from config import END_OF_PROMPT_MARKER, MODELS_DICT
 
 
-class BaseGenerationStrategy:
+class BaseModelStrategy:
     """
     Base class for generation strategies. Every model type (encoder, decoder, encoder-decoder) will implement this.
     """
+
+    def __init__(self):
+        # Transfer tokenizer from abstract to implemented load method
+        self._tokenizer = None
+
+    @abstractmethod
+    def load(self, model_loader) -> tuple[AutoModel, AutoTokenizer]:
+        """
+        Load the model and tokenizer for the specific model type.
+        """
+        # Load the corresponding model's tokenizer
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            model_loader.model_name, trust_remote_code=True
+        )
 
     def generate(
         self,
@@ -15,15 +40,40 @@ class BaseGenerationStrategy:
         inputs: dict[str, torch.Tensor],
         amount_new_tokens: int,
         template_str: str = None,
-        stopping_criteria: StopOnToken = None,
     ) -> str:
+        """
+        Generate model output text based on the input prompt.
+        :param model_loader: The model loader object.
+        :param inputs: Tokenized input prompt.
+        :param amount_new_tokens: The number of tokens to generate for autoregressive models.
+        :param template_str: The untokenized template as a JSON string. Used for loading datatype and enum constraints for tokens (encoder model).
+        :return: Generated output text.
+        """
         raise NotImplementedError
 
     def output_to_json(self, output_text: str) -> dict:
+        """
+        Convert generated output text back into just a JSON.
+        """
         return json.loads(output_text.split(END_OF_PROMPT_MARKER)[-1])
 
 
-class EncoderDecoderStrategy(BaseGenerationStrategy):
+class EncoderDecoderStrategy(BaseModelStrategy):
+    """
+    Encoder-Decoder model strategy.
+    Sequence-to-sequence model with encoder and decoder.
+    """
+
+    def load(self, model_loader) -> None:
+        # Load tokenizer
+        super().load(model_loader)
+
+        model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_loader.model_name, trust_remote_code=True
+        )
+        model.to(model_loader.device)
+
+        return model, self._tokenizer
 
     def generate(
         self,
@@ -31,14 +81,13 @@ class EncoderDecoderStrategy(BaseGenerationStrategy):
         inputs,
         amount_new_tokens,
         template_str=None,
-        stopping_criteria=None,
     ) -> str:
         output_ids = model_loader.model.generate(
             input_ids=inputs["input_ids"],
             attention_mask=inputs["attention_mask"],
             # eos_token_id=8,
             max_new_tokens=amount_new_tokens,
-            stopping_criteria=stopping_criteria,
+            stopping_criteria=model_loader.stopping_criteria,
         )
         return model_loader.tokenizer.decode(
             output_ids.squeeze(), skip_special_tokens=True
@@ -48,7 +97,42 @@ class EncoderDecoderStrategy(BaseGenerationStrategy):
         return json.loads(output_text)
 
 
-class DecoderStrategy(BaseGenerationStrategy):
+class DecoderStrategy(BaseModelStrategy):
+    """
+    Decoder model strategy.
+    Next token prediction model.
+    """
+
+    def load(self, model_loader) -> None:
+        # Load tokenizer
+        super().load(model_loader)
+
+        q_config = BitsAndBytesConfig(
+            load_in_4bit=True,  # Use 4-bit quantization
+            bnb_4bit_quant_type="nf4",  # NormalFloat4 (recommended for LLMs)
+            bnb_4bit_use_double_quant=True,  # Double quantization
+            bnb_4bit_compute_dtype="float16",  # Reduce memory further
+        )
+
+        # Load the model, if its already trained using peft, then load the untrained base model.
+        model = AutoModelForCausalLM.from_pretrained(
+            MODELS_DICT[model_loader.model_type.replace("trained-", "")],
+            quantization_config=q_config,
+            low_cpu_mem_usage=True,
+            device_map="auto",
+        )
+
+        if "trained" in model_loader.model_name:
+            # Resize to fit the trained model's token embeddings
+            model.resize_token_embeddings(len(self._tokenizer))
+
+            # Load the PEFT model
+            model = PeftModel.from_pretrained(
+                model,
+                model_loader.model_name,
+            )
+
+        return model, self._tokenizer
 
     def generate(
         self,
@@ -56,7 +140,6 @@ class DecoderStrategy(BaseGenerationStrategy):
         inputs,
         amount_new_tokens,
         template_str=None,
-        stopping_criteria=None,
     ) -> str:
         # Generate decoder output
         inputs.pop("token_type_ids", None)
@@ -64,7 +147,7 @@ class DecoderStrategy(BaseGenerationStrategy):
         output_ids = model_loader.model.generate(
             **inputs,
             max_new_tokens=amount_new_tokens,
-            stopping_criteria=stopping_criteria,
+            stopping_criteria=model_loader.stopping_criteria,
         )
         return model_loader.tokenizer.decode(
             output_ids[0],
@@ -72,7 +155,23 @@ class DecoderStrategy(BaseGenerationStrategy):
         )
 
 
-class EncoderStrategy(BaseGenerationStrategy):
+class EncoderStrategy(BaseModelStrategy):
+    """
+    Encoder model strategy.
+    Random masked token prediction model with constrained unmasking tokens.
+    """
+
+    def load(self, model_loader):
+        # Load tokenizer
+        super().load(model_loader)
+
+        # Encoder model
+        model = AutoModelForMaskedLM.from_pretrained(
+            model_loader.model_name, trust_remote_code=True
+        )
+        model.to(model_loader.device)
+
+        return model, self._tokenizer
 
     def generate(
         self,
@@ -80,7 +179,6 @@ class EncoderStrategy(BaseGenerationStrategy):
         inputs,
         amount_new_tokens,
         template_str=None,
-        stopping_criteria=None,
     ) -> str:
         # Forward pass to get logits
         with torch.no_grad():

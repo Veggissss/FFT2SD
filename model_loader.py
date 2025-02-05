@@ -1,20 +1,12 @@
 import json
 from typing import Literal
-from transformers import (
-    AutoTokenizer,
-    AutoModelForSeq2SeqLM,
-    AutoModelForCausalLM,
-    AutoModel,
-    AutoModelForMaskedLM,
-    BitsAndBytesConfig,
-    StoppingCriteriaList,
-)
-from peft import PeftModel
+from transformers import StoppingCriteriaList
 import torch
+
 from token_constraints import StopOnToken
-from config import SYSTEM_PROMPT, MODELS_DICT
-from generation_strategy import (
-    BaseGenerationStrategy,
+from config import SYSTEM_PROMPT
+from model_strategy import (
+    BaseModelStrategy,
     EncoderDecoderStrategy,
     DecoderStrategy,
     EncoderStrategy,
@@ -41,67 +33,24 @@ class ModelLoader:
         self.model_name = model_name
         self.model_type = model_type
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model, self.tokenizer = self.__load_model(model_name, model_type)
-        self.strategy: BaseGenerationStrategy = {
+
+        # Load the model architecture specific handler
+        self.strategy: BaseModelStrategy = {
             "encoder-decoder": EncoderDecoderStrategy,
             "decoder": DecoderStrategy,
             "encoder": EncoderStrategy,
         }[model_type]()
 
+        # Load model with corresponding tokenizer
+        self.model, self.tokenizer = self.strategy.load(self)
+
+        # Set stopping criteria to json end [Not used for encoder model]
+        self.stopping_criteria = StoppingCriteriaList(
+            [StopOnToken(self.tokenizer, "}")]
+        )
+
         print(f"Model loaded: {model_name}")
         print(f"Device: {self.device}")
-
-    def __load_model(
-        self, model_name: str, model_type: str
-    ) -> tuple[AutoModel, AutoTokenizer]:
-        """
-        Load a model based on the specified type.
-        :param model_name: The Hugging Face model name.
-        :param model_type: Type of model - 'encoder', 'encoder-decoder', or 'decoder'.
-        :return: model and tokenizer.
-        """
-        # Load the corresponding model's tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-
-        if model_type == "encoder-decoder":
-            model = AutoModelForSeq2SeqLM.from_pretrained(
-                model_name, trust_remote_code=True
-            )
-            model.to(self.device)
-
-        elif model_type == "decoder":
-            q_config = BitsAndBytesConfig(
-                load_in_4bit=True,  # Use 4-bit quantization
-                bnb_4bit_quant_type="nf4",  # NormalFloat4 (recommended for LLMs)
-                bnb_4bit_use_double_quant=True,  # Double quantization
-                bnb_4bit_compute_dtype="float16",  # Reduce memory further
-            )
-
-            # Load the model, if its already trained using peft, then load the untrained base model.
-            model = AutoModelForCausalLM.from_pretrained(
-                MODELS_DICT[model_type.replace("trained-", "")],
-                quantization_config=q_config,
-                low_cpu_mem_usage=True,
-                device_map="auto",
-            )
-
-            if "trained" in model_name:
-                # Resize to fit the trained model's token embeddings
-                model.resize_token_embeddings(len(tokenizer))
-
-                # Load the PEFT model
-                model = PeftModel.from_pretrained(
-                    model,
-                    model_name,
-                )
-        else:
-            # Encoder model
-            model = AutoModelForMaskedLM.from_pretrained(
-                model_name, trust_remote_code=True
-            )
-            model.to(self.device)
-
-        return model, tokenizer
 
     def __generate(self, prompt: str, template_str: str) -> str:
         """Generate model output based on the input prompt.
@@ -128,12 +77,9 @@ class ModelLoader:
         print(f"Max new decoder tokens: {amount_new_tokens}")
 
         # Stop when the closing curly brace is generated
-        stopping_criteria = StoppingCriteriaList([StopOnToken(self.tokenizer, "}")])
 
         # Generate output based on the strategy
-        return self.strategy.generate(
-            self, inputs, amount_new_tokens, template_str, stopping_criteria
-        )
+        return self.strategy.generate(self, inputs, amount_new_tokens, template_str)
 
     def __output_to_json(self, output_text: str) -> dict:
         """
