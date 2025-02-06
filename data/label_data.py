@@ -1,7 +1,7 @@
 import json
 import os
 import copy
-from data_model_enum import get_enum_names
+from data_model_enum import get_enum_fields
 
 SCRIPT_PATH = os.path.dirname(__file__)
 
@@ -102,13 +102,19 @@ def label_data(
             # Update the JSON with the valid labeled input
             input_prompt = f"Enter a value for {item['field']}.\n{item['type']}\n"
             if item.get("enum") is not None:
-                for index, enum_name in enumerate(get_enum_names(item["enum"])):
+                for index, enum_name in enumerate(
+                    get_enum_fields(item["enum"], "name")
+                ):
                     if enum_name is not None:
-                        input_prompt += (
-                            f"{enum_name} [{item['enum'][index]}] (Nummer: {(index)})\n"
-                        )
+                        group = get_enum_fields(item["enum"], "group")
+                        if group[index] is not None:
+                            input_prompt += f"[{group[index]}] "
+
+                        input_prompt += f"{enum_name} [{item['enum'][index]}] (Valg nummer: {(index)})\n"
                     else:
-                        input_prompt += f"{item['enum'][index]} (Number: {(index)})\n"
+                        input_prompt += (
+                            f"{item['enum'][index]} (Valg nummer: {(index)})\n"
+                        )
             input_prompt += ": "
             item["value"] = get_valid_input(input_prompt, item)
 

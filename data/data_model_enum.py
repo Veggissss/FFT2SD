@@ -5,6 +5,7 @@ import json
 def load_all_enums() -> list:
     """
     Loads all JSON files from the 'enum' directory and returns their contents as a list of dictionaries.
+    TODO: Fix inefficient way of loading enums. Use field name to load enum file directly. Not critical for now.
 
     Returns:
         dict: A list of dictionaries containing the data from each JSON file in the 'enum' directory.
@@ -22,7 +23,7 @@ def load_all_enums() -> list:
     return enum_data
 
 
-def get_enum_name(enum: str) -> str:
+def get_enum_field(enum: str, field: str) -> str:
     """
     Retrieves the human readable name of a code enum.
     Args:
@@ -33,11 +34,11 @@ def get_enum_name(enum: str) -> str:
     enum_data = load_all_enums()
     for data in enum_data:
         if data.get("value") == enum:
-            return data["name"]
+            return data[field]
     return None
 
 
-def get_enum_names(enums: list[str]) -> list[str]:
+def get_enum_fields(enums: list[str], field: str = "name") -> list[str]:
     """
     Retrieves the human readable names of a list of code enums.
     Args:
@@ -45,4 +46,4 @@ def get_enum_names(enums: list[str]) -> list[str]:
     Returns:
         [str]: A list of enumeration names if found, otherwise None.
     """
-    return [get_enum_name(enum) for enum in enums]
+    return [get_enum_field(enum, field) for enum in enums]
