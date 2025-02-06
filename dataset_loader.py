@@ -35,16 +35,14 @@ def create_dataset(
                 loaded_json_data["input_text"], ensure_ascii=False
             )
 
-            template_json = loaded_json_data["template_json"]
             target_json = loaded_json_data["target_json"]
             container_json = loaded_json_data["container_json"]
 
-            # Add container amount into training data
+            # Add total container amount into training data
             target_json.insert(0, copy.deepcopy(container_json[0]))
 
-            # Add container amount into template data
-            container_json[0]["value"] = None
-            template_json.insert(0, copy.deepcopy(container_json[0]))
+            # Create a template JSON with all value fields set to None
+            template_json = reset_value_fields(copy.deepcopy(target_json))
 
             # Iterate through template and target JSON entries
             for template_entry, target_entry in zip(template_json, target_json):
@@ -85,3 +83,12 @@ def create_dataset(
 
     # Convert dict to Hugging Face Dataset.
     return Dataset.from_dict(dataset_dict), enums
+
+
+def reset_value_fields(input_json: dict, key="value", value=None) -> dict:
+    """
+    Set all the value fields in the JSON to None.
+    """
+    for item in input_json:
+        item[key] = value
+    return input_json
