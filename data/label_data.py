@@ -1,6 +1,5 @@
 import json
 import os
-import copy
 from data_model_enum import get_enum_fields
 
 SCRIPT_PATH = os.path.dirname(__file__)
@@ -37,9 +36,15 @@ def get_valid_input(input_prompt, item: dict) -> str | float | int | bool:
 
         elif "float" in item["type"]:
             labeled_input = float(labeled_input)
+            if labeled_input < 0:
+                print("Invalid input! Please enter a positive integer.")
+                return get_valid_input(input_prompt, item)
 
         elif "int" in item["type"]:
             labeled_input = int(labeled_input)
+            if labeled_input < 0:
+                print("Invalid input! Please enter a positive integer.")
+                return get_valid_input(input_prompt, item)
 
         elif "boolean" in item["type"]:
             if labeled_input.lower() not in ["true", "false"]:
@@ -71,10 +76,6 @@ def label_data(
     target_json = read_json_file(input_json_path)
     container_json = read_json_file(input_container_path)
 
-    # Create a non filled out template JSON
-    template_json = copy.deepcopy(target_json)
-    final_json = {"template_json": template_json}
-
     print(f"Input text:\n{input_text}\n")
 
     # Get the number of containers/Beholder-IDs
@@ -91,26 +92,27 @@ def label_data(
     container_json[0]["value"] = report_count
 
     for container_index in range(report_count):
+        final_json = {}
         # Set the container number
         container_json[1]["value"] = container_index + 1
 
         # For every field in the JSON, fill out the value field
         for item in target_json:
+            print("\n" * 5)
             print(f"Input text:\n{input_text}")
-            print(f"Container Number {container_index + 1}:")
+            print(f"Glass nummer {container_index + 1}:")
 
             # Update the JSON with the valid labeled input
             input_prompt = f"Enter a value for {item['field']}.\n{item['type']}\n"
             if item.get("enum") is not None:
-                for index, enum_name in enumerate(
-                    get_enum_fields(item["enum"], "name")
-                ):
-                    if enum_name is not None:
-                        group = get_enum_fields(item["enum"], "group")
-                        if group[index] is not None:
-                            input_prompt += f"[{group[index]}] "
+                for index, _ in enumerate(item["enum"]):
+                    enum_names = get_enum_fields(item["enum"], "name")
+                    if len(enum_names) > 0:
+                        enum_groups = get_enum_fields(item["enum"], "group")
+                        if len(enum_groups) > 0:
+                            input_prompt += f"[{enum_groups[index]}] "
 
-                        input_prompt += f"{enum_name} [{item['enum'][index]}] (Valg nummer: {(index)})\n"
+                        input_prompt += f"{enum_names[index]} [{item['enum'][index]}] (Valg nummer: {(index)})\n"
                     else:
                         input_prompt += (
                             f"{item['enum'][index]} (Valg nummer: {(index)})\n"
@@ -142,7 +144,7 @@ if __name__ == "__main__":
     input_json_dir = os.path.join(SCRIPT_PATH, "../data_model/out")
 
     # Output directory
-    output_dir = os.path.join(SCRIPT_PATH, "test")
+    output_dir = os.path.join(SCRIPT_PATH, "test_data")
 
     # For every text case fill out the JSON values
     for text_file_name in os.listdir(input_text_dir):

@@ -2,28 +2,31 @@ import os
 import json
 
 
-def load_all_enums() -> list:
+def load_enum_json(enum_name: str) -> dict:
     """
     Loads all JSON files from the 'enum' directory and returns their contents as a list of dictionaries.
-    TODO: Fix inefficient way of loading enums. Use field name to load enum file directly. Not critical for now.
 
     Returns:
         dict: A list of dictionaries containing the data from each JSON file in the 'enum' directory.
     """
     folder_path = os.path.join(os.path.dirname(__file__), "../data_model/enum")
-    enum_data = []
     for filename in os.listdir(folder_path):
-        if filename.endswith(".json"):
-            file_path = os.path.join(folder_path, filename)
-            with open(file_path, "r", encoding="utf-8") as file:
-                data = json.load(file)
+        if not filename.endswith(".json"):
+            print(f"Skipping non-JSON file: {filename}")
+            continue
 
-                for item in data:
-                    enum_data.append(item)
-    return enum_data
+        file_path = os.path.join(folder_path, filename)
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+
+            for item in data:
+                if item.get("value", None) == enum_name:
+                    return data
+
+    return {}
 
 
-def get_enum_field(enum: str, field: str) -> str:
+def get_enum_fields(enums: list[str], field: str = "name") -> list[str]:
     """
     Retrieves the human readable name of a code enum.
     Args:
@@ -31,19 +34,11 @@ def get_enum_field(enum: str, field: str) -> str:
     Returns:
         str: The name of the enumeration if found, otherwise None.
     """
-    enum_data = load_all_enums()
-    for data in enum_data:
-        if data.get("value") == enum:
-            return data[field]
-    return None
+    enum_json = load_enum_json(enums[0])
 
-
-def get_enum_fields(enums: list[str], field: str = "name") -> list[str]:
-    """
-    Retrieves the human readable names of a list of code enums.
-    Args:
-        enums ([str]): A list of enumeration values to look up.
-    Returns:
-        [str]: A list of enumeration names if found, otherwise None.
-    """
-    return [get_enum_field(enum, field) for enum in enums]
+    result = []
+    for entry in enum_json:
+        if entry.get(field, None) is None:
+            return []
+        result.append(entry.get(field))
+    return result
