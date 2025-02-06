@@ -29,7 +29,7 @@
                 "T67000",
                 "T67920"
             ],
-            "value": "T67700"
+            "value": "T67500"
         },
         {
             "id": 102,
@@ -100,7 +100,7 @@
             "id": 128,
             "field": "Beholder-ID",
             "type": "string",
-            "value": 1
+            "value": 2
         }
     ]
 }

@@ -53,7 +53,7 @@
                 "M82153",
                 "M81403"
             ],
-            "value": "M82111"
+            "value": "M76086"
         },
         {
             "id": 117,
@@ -70,7 +70,7 @@
                 "Høygradig histologisk differensiering",
                 "Differensieringsgrad kan ikke vurderes"
             ],
-            "value": "Lavgradig histologisk differensiering"
+            "value": "Differensieringsgrad kan ikke vurderes"
         },
         {
             "id": 111,
@@ -88,7 +88,7 @@
                 "Lymfekarinnvekst påvist",
                 "Lymfekarinnvekst kan ikke vurderes"
             ],
-            "value": "Lymfekarinnvekst ikke påvist"
+            "value": "Lymfekarinnvekst kan ikke vurderes"
         },
         {
             "id": 118,
@@ -99,7 +99,7 @@
                 "Venekarinnvekst påvist intramural",
                 "Venekarinnvekst kan ikke vurderes"
             ],
-            "value": "Venekarinnvekst ikke påvist"
+            "value": "Venekarinnvekst kan ikke vurderes"
         },
         {
             "id": 113,
@@ -113,7 +113,7 @@
                 "pT4b",
                 null
             ],
-            "value": "pT1"
+            "value": null
         },
         {
             "id": 114,
@@ -127,7 +127,7 @@
                 null,
                 null
             ],
-            "value": "Nivå 1"
+            "value": "Nivå 4"
         },
         {
             "id": 120,
@@ -139,7 +139,7 @@
                 "sm3",
                 null
             ],
-            "value": "sm1"
+            "value": "sm2"
         },
         {
             "id": 127,
@@ -158,7 +158,7 @@
                 "M09402",
                 null
             ],
-            "value": "M09400"
+            "value": "M09401"
         },
         {
             "id": 122,

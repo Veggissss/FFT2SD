@@ -53,7 +53,7 @@
                 "M82153",
                 "M81403"
             ],
-            "value": "M82631"
+            "value": "M75640"
         },
         {
             "id": 117,
@@ -70,7 +70,7 @@
                 "Høygradig histologisk differensiering",
                 "Differensieringsgrad kan ikke vurderes"
             ],
-            "value": "Lavgradig histologisk differensiering"
+            "value": "Differensieringsgrad kan ikke vurderes"
         },
         {
             "id": 111,
@@ -127,7 +127,7 @@
                 null,
                 null
             ],
-            "value": "Nivå 1"
+            "value": null
         },
         {
             "id": 120,
@@ -139,7 +139,7 @@
                 "sm3",
                 null
             ],
-            "value": null
+            "value": "sm2"
         },
         {
             "id": 127,
@@ -198,7 +198,7 @@
                 "Bd3",
                 null
             ],
-            "value": null
+            "value": "Bd1"
         }
     ],
     "container_json": [
