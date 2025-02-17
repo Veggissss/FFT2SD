@@ -20,6 +20,10 @@ def get_allowed_tokens(tokenizer: AutoTokenizer, token_type: str, enums: list = 
     """
     allowed_token_ids = []
 
+    # Add token ID for null token, if data can't be extracted as its not defined in the input text
+    null_token_id = tokenizer.convert_tokens_to_ids("null")
+    allowed_token_ids.append(null_token_id)
+
     match token_type:
         case "int":
             # Identify token IDs corresponding to numeric tokens
