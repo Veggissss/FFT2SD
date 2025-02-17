@@ -3,7 +3,7 @@ import json
 import copy
 from typing import Literal
 from datasets import Dataset
-from config import SYSTEM_PROMPT
+from config import SYSTEM_PROMPT, CONTAINER_NUMBER_MASK
 
 
 def create_dataset(
@@ -53,6 +53,10 @@ def create_dataset(
                 container_number = json.dumps(
                     container_json[1]["value"], ensure_ascii=False
                 )
+
+                if template_entry.get("field") == "Antall glass":
+                    # Mask the container number only once
+                    container_number = CONTAINER_NUMBER_MASK
 
                 if model_type in ["decoder", "encoder"]:
                     # Use target as input

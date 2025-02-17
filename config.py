@@ -29,3 +29,9 @@ SYSTEM_PROMPT = (
     + END_OF_PROMPT_MARKER
     + " {template_json}"
 )
+
+"""
+Used for masking out "Glass nummer X" in the input prompt.
+Only used for when asking for glass amount in training and inference.
+"""
+CONTAINER_NUMBER_MASK = "?"
