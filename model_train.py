@@ -93,9 +93,7 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     loader.tokenizer.save_pretrained(output_dir)
 
 
-if __name__ == "__main__":
-    MODEL_TYPE = "decoder"
-
+def train(MODEL_TYPE="encoder-decoder"):
     # Load model and tokenizer.
     model_loader = ModelLoader(MODELS_DICT[MODEL_TYPE], MODEL_TYPE)
 
@@ -103,10 +101,11 @@ if __name__ == "__main__":
     if MODEL_TYPE == "decoder":
         # Configure LoRA
         lora_config = LoraConfig(
-            r=256,  # Rank of the LoRA layers
-            lora_alpha=64,  # Scaling factor
+            r=128,  # Rank of the LoRA layers
+            lora_alpha=256,  # Scaling factor
             lora_dropout=0.1,  # Dropout for LoRA
             bias="none",  # No bias in LoRA layers
+            task_type="CAUSAL_LM",
         )
 
         # Apply PEFT to the decoder model
@@ -155,3 +154,7 @@ if __name__ == "__main__":
 
     # Train/Fine-tune and save the model.
     train_model(model_loader, tokenized_dataset, f"trained/{MODEL_TYPE}")
+
+
+if __name__ == "__main__":
+    train()
