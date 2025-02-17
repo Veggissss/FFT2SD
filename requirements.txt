@@ -2,3 +2,6 @@ datasets==3.0.2
 torch==2.5.1+cu124
 transformers==4.46.2
 pytest==8.3.4
+accelerate==1.1.1
+peft==0.13.2
+Flask==3.1.0
