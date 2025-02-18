@@ -23,7 +23,7 @@ def get_filled_json(
     )
 
 
-def main():
+if __name__ == "__main__":
     MODEL_TYPE = "encoder"
     IS_TRAINED = True
 
@@ -61,7 +61,3 @@ def main():
                 test_data["input_text"], container_id, json_to_str(entry)
             )
             print("Filled JSON:\n", json_to_str(filled_json, indent=2))
-
-
-if __name__ == "__main__":
-    main()

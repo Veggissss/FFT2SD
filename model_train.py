@@ -119,12 +119,12 @@ def train(MODEL_TYPE="encoder"):
     dataset, enums = dataset_loader.create_dataset(
         "data/test_data/", model_loader.model_type
     )
-    print(enums)
     example_count = len(dataset["input"])
     print(f"Number of examples: {example_count}")
 
     # Register enum strings present in dataset as new tokens.
     print(f"Number of tokens in the tokenizer before: {len(model_loader.tokenizer)}")
+    enums.extend(["true", "false"])
     new_tokens = [
         AddedToken(enum, single_word=True, rstrip=True, lstrip=True) for enum in enums
     ]

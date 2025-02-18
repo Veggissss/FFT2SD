@@ -67,7 +67,7 @@ def generate(input_text: str) -> dict | None:
 
     # Load the generated JSON template based on the report type
     template_json = load_json(f"data_model/out/generated-{report_type}.json")
-    final_json = {"input": input_text, "output": [], report_type: report_type}
+    final_json = {"input": input_text, "output": [], "report_type": report_type}
 
     # Get the filled JSON for each container, 1 indexed
     for container_number in range(1, total_containers + 1):
