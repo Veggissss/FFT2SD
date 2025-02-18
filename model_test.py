@@ -13,11 +13,8 @@ if __name__ == "__main__":
     ) as f:
         test_json = json.load(f)
 
-    with open("data_model/out/generated-mikroskopisk.json", "r", encoding="utf-8") as f:
-        template_json = json.load(f)
-
-    with open("data_model/out/generated-beholder.json", "r", encoding="utf-8") as f:
-        container_json = json.load(f)
+    with open("data_model/out/generated-metadata.json", "r", encoding="utf-8") as f:
+        metadata_json = json.load(f)
 
     # Add 'trained-' prefix to the model name if it is trained.
     model_key = f"trained-{MODEL_TYPE}" if IS_TRAINED else MODEL_TYPE
@@ -30,13 +27,13 @@ if __name__ == "__main__":
     )
 
     # Mask out the total amount of containers present in the input text
-    container_json[0]["value"] = f"{mask_token}"
+    metadata_json[1]["value"] = f"{mask_token}"
 
     # First find out how many containers/Beholder-IDs there are in the input text
     filled_json = model_loader.generate_filled_json(
         test_json["input_text"],
         "?",
-        json.dumps(container_json[0], ensure_ascii=False),
+        json.dumps(metadata_json[1], ensure_ascii=False),
     )
 
     if filled_json.get("value") is not None:
@@ -45,6 +42,27 @@ if __name__ == "__main__":
     else:
         print("ERROR: Could not find the container count!")
         TOTAL_CONTAINERS = 1  # DEBUG VALUE
+
+    # Find the report type for the input text
+    metadata_json[0]["value"] = f"{mask_token}"
+
+    filled_json = model_loader.generate_filled_json(
+        test_json["input_text"],
+        "1",
+        json.dumps(metadata_json[0], ensure_ascii=False),
+    )
+
+    if filled_json.get("value") is not None:
+        REPORT_TYPE = str(filled_json["value"]).strip()
+        print(f"Container count: {TOTAL_CONTAINERS}")
+    else:
+        REPORT_TYPE = "klinisk"  # DEBUG VALUE
+        print("ERROR: Could not find the container count!")
+
+    with open(
+        f"data_model/out/generated-{REPORT_TYPE}.json", "r", encoding="utf-8"
+    ) as f:
+        template_json = json.load(f)
 
     for container_number in range(TOTAL_CONTAINERS):
         for template_entry in template_json:

@@ -201,9 +201,20 @@
             "value": "Bd1"
         }
     ],
-    "container_json": [
+    "metadata_json": [
         {
             "id": 0,
+            "field": "Rapport type",
+            "type": "enum",
+            "enum": [
+                "klinisk",
+                "makroskopisk",
+                "mikroskopisk"
+            ],
+            "value": "mikroskopisk"
+        },
+        {
+            "id": 1,
             "field": "Antall glass",
             "type": "int",
             "unit": "stk",

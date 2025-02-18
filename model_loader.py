@@ -117,6 +117,8 @@ class ModelLoader:
             ),
         )
 
+        print(prompt)
+
         # Generate the filled JSON based on the prompt
         output_text = self.__generate(prompt, template_str)
 

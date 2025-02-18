@@ -1,6 +1,12 @@
 [
     {
         "id": 0,
+        "field": "Rapport type",
+        "type": "enum",
+        "enum": "REF_ENUM;RapportType"
+    },
+    {
+        "id": 1,
         "field": "Antall glass",
         "type": "int",
         "unit": "stk"

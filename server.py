@@ -40,14 +40,14 @@ def generate(
     )
 
     # Mask out the total amount of containers present in the input text
-    container_json = load_json("data_model/out/generated-beholder.json")
-    container_json[0]["value"] = f"{mask_token}"
+    metadata_json = load_json("data_model/out/generated-metadata.json")
+    metadata_json[1]["value"] = f"{mask_token}"
 
     # Find out how many containers there are in the input text
     filled_json = model_loader.generate_filled_json(
         input_text,
         CONTAINER_NUMBER_MASK,
-        json.dumps(container_json[0], ensure_ascii=False),
+        json.dumps(metadata_json[1], ensure_ascii=False),
     )
 
     if filled_json.get("value") is not None:

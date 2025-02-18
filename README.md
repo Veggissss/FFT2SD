@@ -30,9 +30,8 @@ The labeling program takes in a text containing either *klinisk*, *makroskopisk*
 
 The resulting labeled data is then stored in a json with the fields:
 - *input_text* | The original information text.
-- *template_json* | A copy of either *klinisk*, *makro* or *micro* model for easy unlabeled dataset.
 - *target_json* | The "correctly" labeled out json that the model will try to replicate. 
-- *container_json* | Info about the total amount of glass containers in the original *input_text* as well as the number corresponding to the filled out *target_json*. (1-indexed)
+- *metadata_json* | Info about the total amount of glass containers in the original *input_text* as well as the number corresponding to the filled out *target_json*. (1-indexed)
 
 ## Training / Fine-tuning Process
 The project will focus on using open source models that already have been trained to understand natural language. Since this project involves analyzing medical journal texts which contains prose written in norwegian, more specialiced trained models will be used. Namely some of the norwegian trained models by the [Language Technology Group (University of Oslo) on HuggingFace](https://huggingface.co/ltg).

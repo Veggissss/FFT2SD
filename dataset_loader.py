@@ -36,10 +36,11 @@ def create_dataset(
             )
 
             target_json = loaded_json_data["target_json"]
-            container_json = loaded_json_data["container_json"]
+            metadata_json = loaded_json_data["metadata_json"]
 
-            # Add total container amount into training data
-            target_json.insert(0, copy.deepcopy(container_json[0]))
+            # Add total container amount and report type into training data
+            target_json.insert(0, copy.deepcopy(metadata_json[0]))
+            target_json.insert(1, copy.deepcopy(metadata_json[1]))
 
             # Create a template JSON with all value fields set to None
             template_json = reset_value_fields(copy.deepcopy(target_json))
@@ -51,7 +52,7 @@ def create_dataset(
 
                 # Inject container number into the prompt
                 container_number = json.dumps(
-                    container_json[1]["value"], ensure_ascii=False
+                    metadata_json[1]["value"], ensure_ascii=False
                 )
 
                 if template_entry.get("field") == "Antall glass":

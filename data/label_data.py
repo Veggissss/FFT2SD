@@ -21,6 +21,9 @@ def write_json_file(file_path: str, data: dict) -> None:
 
 
 def get_valid_input(input_prompt, item: dict) -> str | float | int | bool:
+    """
+    Prompt the user for input and validate it based on the item type.
+    """
     try:
         labeled_input = input(input_prompt)
 
@@ -62,10 +65,10 @@ def get_valid_input(input_prompt, item: dict) -> str | float | int | bool:
 
 
 def label_data(
-    input_text_name: str,
+    report_type: str,
     input_text_path: str,
     input_json_path: str,
-    input_container_path: str,
+    input_metadata_path: str,
     output_dir_path: str,
 ) -> None:
     """
@@ -74,7 +77,7 @@ def label_data(
     """
     input_text = read_text_file(input_text_path)
     target_json = read_json_file(input_json_path)
-    container_json = read_json_file(input_container_path)
+    metadata_json = read_json_file(input_metadata_path)
 
     print(f"Input text:\n{input_text}\n")
 
@@ -89,18 +92,19 @@ def label_data(
             break
 
     # Update the total amount of containers present in the input text
-    container_json[0]["value"] = report_count
+    metadata_json[0]["value"] = report_type
+    metadata_json[1]["value"] = report_count
 
-    for container_index in range(report_count):
+    for container_index in range(1, report_count + 1):
         final_json = {}
         # Set the container number
-        container_json[1]["value"] = container_index + 1
+        metadata_json[2]["value"] = container_index
 
         # For every field in the JSON, fill out the value field
         for item in target_json:
             print("\n" * 5)
             print(f"Input text:\n{input_text}")
-            print(f"Glass nummer {container_index + 1}:")
+            print(f"Glass nummer {container_index}:")
 
             # Update the JSON with the valid labeled input
             input_prompt = f"Enter a value for {item['field']}.\n{item['type']}\n"
@@ -123,13 +127,13 @@ def label_data(
         # Combine input text and target JSON
         final_json["input_text"] = input_text
         final_json["target_json"] = target_json
-        final_json["container_json"] = container_json
+        final_json["metadata_json"] = metadata_json
         print(
             f"JSON Labeled:\n{json.dumps(final_json, indent=4, ensure_ascii=False)}\n"
         )
 
         # Save to file
-        json_file_name = input_text_name.replace(".txt", ".json")
+        json_file_name = report_type.replace(".txt", ".json")
         output_json_path = (
             f"{output_dir_path}/container_{container_index}_{json_file_name}"
         )
@@ -146,6 +150,12 @@ if __name__ == "__main__":
     # Output directory
     output_dir = os.path.join(SCRIPT_PATH, "test_data")
 
+    report_type_map = {
+        "klinisk": "generated-klinisk.json",
+        "makro": "generated-makroskopisk.json",
+        "mikro": "generated-mikroskopisk.json",
+    }
+
     # For every text case fill out the JSON values
     for text_file_name in os.listdir(input_text_dir):
         if not text_file_name.endswith(".txt"):
@@ -153,24 +163,21 @@ if __name__ == "__main__":
             continue
 
         text_path = os.path.join(input_text_dir, text_file_name)
-        json_container_path = os.path.join(input_json_dir, "generated-beholder.json")
+        metadata_path = os.path.join(input_json_dir, "generated-metadata.json")
 
-        if "klinisk" in text_file_name or "makro" in text_file_name:
-            json_path = os.path.join(input_json_dir, "generated-klinisk.json")
-
-        elif "mikro" in text_file_name:
-            json_path = os.path.join(input_json_dir, "generated-makroskopisk.json")
-
-        elif "diagn" in text_file_name:
-            json_path = os.path.join(input_json_dir, "generated-mikroskopisk.json")
-        else:
-            print(f"Could not find a matching JSON file for {text_file_name}.")
+        for key, value in report_type_map.items():
+            if key in text_file_name:
+                json_path = os.path.join(input_json_dir, value)
+                REPORT_TYPE = key
+                break
+        if json_path is None:
+            print(f"Could not find a matching report type JSON for {text_file_name}.")
             continue
 
         label_data(
-            text_file_name,
+            REPORT_TYPE,
             text_path,
             json_path,
-            json_container_path,
+            metadata_path,
             output_dir,
         )

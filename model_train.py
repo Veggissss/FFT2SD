@@ -93,7 +93,7 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     loader.tokenizer.save_pretrained(output_dir)
 
 
-def train(MODEL_TYPE="encoder-decoder"):
+def train(MODEL_TYPE="encoder"):
     # Load model and tokenizer.
     model_loader = ModelLoader(MODELS_DICT[MODEL_TYPE], MODEL_TYPE)
 
@@ -119,6 +119,7 @@ def train(MODEL_TYPE="encoder-decoder"):
     dataset, enums = dataset_loader.create_dataset(
         "data/test_data/", model_loader.model_type
     )
+    print(enums)
     example_count = len(dataset["input"])
     print(f"Number of examples: {example_count}")
 

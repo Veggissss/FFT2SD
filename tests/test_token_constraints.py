@@ -5,7 +5,7 @@ from config import MODELS_DICT
 
 
 def test_allowed_tokens_enum():
-    test_enums = ["Hello", "World", "Test", "59jfa9fjFJFj29"]
+    test_enums = ["Hello", "World", "Test", "59jfa9fjFJFj29", "null"]
     test_tokens = [AddedToken(enum, single_word=True) for enum in test_enums]
     tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT["encoder"])
     tokenizer.add_tokens(test_tokens)
@@ -19,7 +19,7 @@ def test_allowed_tokens_enum():
 
 
 def test_allowed_tokens_boolean():
-    test_booleans = ["true", "false"]
+    test_booleans = ["true", "false", "null"]
     tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT["encoder"])
     tokenizer.add_tokens(test_booleans)
     allowed_token_ids = get_allowed_tokens(tokenizer, "boolean")
@@ -32,7 +32,7 @@ def test_allowed_tokens_boolean():
 
 
 def test_allowed_tokens_int():
-    test_ints = ["1", "2", "3", "100", "1000"]
+    test_ints = ["1", "2", "3", "100", "1000", "null"]
     tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT["encoder"])
     tokenizer.add_tokens(test_ints)
     allowed_token_ids = get_allowed_tokens(tokenizer, "int")

@@ -1,6 +1,17 @@
 [
     {
         "id": 0,
+        "field": "Rapport type",
+        "type": "enum",
+        "enum": [
+            "klinisk",
+            "makroskopisk",
+            "mikroskopisk"
+        ],
+        "value": null
+    },
+    {
+        "id": 1,
         "field": "Antall glass",
         "type": "int",
         "unit": "stk",
