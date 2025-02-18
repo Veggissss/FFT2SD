@@ -1,9 +1,9 @@
 import os
-import json
 import copy
 from typing import Literal
 from datasets import Dataset
 from config import SYSTEM_PROMPT, CONTAINER_NUMBER_MASK
+from file_loader import load_json, json_to_str
 
 
 def create_dataset(
@@ -27,64 +27,59 @@ def create_dataset(
             continue
 
         # Load JSON file and process data
-        with open(os.path.join(dataset_path, filename), "r", encoding="utf-8") as f:
-            loaded_json_data = json.load(f)
+        loaded_json_data = load_json(os.path.join(dataset_path, filename))
 
-            # Text to extract information from
-            input_text_str = json.dumps(
-                loaded_json_data["input_text"], ensure_ascii=False
-            )
+        # Text to extract information from
+        input_text_str = json_to_str(loaded_json_data["input_text"], indent=1)
 
-            target_json = loaded_json_data["target_json"]
-            metadata_json = loaded_json_data["metadata_json"]
+        target_json = loaded_json_data["target_json"]
+        metadata_json = loaded_json_data["metadata_json"]
 
-            # Add total container amount and report type into training data
-            target_json.insert(0, copy.deepcopy(metadata_json[0]))
-            target_json.insert(1, copy.deepcopy(metadata_json[1]))
+        # Add total container amount and report type into training data
+        target_json.insert(0, copy.deepcopy(metadata_json[0]))
+        target_json.insert(1, copy.deepcopy(metadata_json[1]))
 
-            # Create a template JSON with all value fields set to None
-            template_json = reset_value_fields(copy.deepcopy(target_json))
+        # Create a template JSON with all value fields set to None
+        template_json = reset_value_fields(copy.deepcopy(target_json))
 
-            # Iterate through template and target JSON entries
-            for template_entry, target_entry in zip(template_json, target_json):
-                template_entry_str = json.dumps(template_entry, ensure_ascii=False)
-                target_entry_str = json.dumps(target_entry, ensure_ascii=False)
+        # Iterate through template and target JSON entries
+        for template_entry, target_entry in zip(template_json, target_json):
+            template_entry_str = json_to_str(template_entry)
+            target_entry_str = json_to_str(target_entry)
 
-                # Inject container number into the prompt
-                container_number = json.dumps(
-                    metadata_json[1]["value"], ensure_ascii=False
+            # Inject container number into the prompt
+            container_number = json_to_str(metadata_json[1]["value"])
+
+            if template_entry.get("field") == "Antall glass":
+                # Mask the container number only once
+                container_number = CONTAINER_NUMBER_MASK
+
+            if model_type in ["decoder", "encoder"]:
+                # Use target as input
+                input_text = SYSTEM_PROMPT.format(
+                    input_text=input_text_str,
+                    container_number=container_number,
+                    template_json=target_entry_str,
                 )
+                # Not used by the encoder and decoder models
+                # As the decoder uses next token prediction
+                # And the encoder uses random masked token prediction
+                target_text = "[UNUSED]"
+            else:
+                input_text = SYSTEM_PROMPT.format(
+                    input_text=input_text_str,
+                    container_number=container_number,
+                    template_json=template_entry_str,
+                )
+                target_text = target_entry_str
 
-                if template_entry.get("field") == "Antall glass":
-                    # Mask the container number only once
-                    container_number = CONTAINER_NUMBER_MASK
+            dataset_dict["input"].append(input_text)
+            dataset_dict["output"].append(target_text)
 
-                if model_type in ["decoder", "encoder"]:
-                    # Use target as input
-                    input_text = SYSTEM_PROMPT.format(
-                        input_text=input_text_str,
-                        container_number=container_number,
-                        template_json=target_entry_str,
-                    )
-                    # Not used by the encoder and decoder models
-                    # As the decoder uses next token prediction
-                    # And the encoder uses random masked token prediction
-                    target_text = "[UNUSED]"
-                else:
-                    input_text = SYSTEM_PROMPT.format(
-                        input_text=input_text_str,
-                        container_number=container_number,
-                        template_json=template_entry_str,
-                    )
-                    target_text = target_entry_str
-
-                dataset_dict["input"].append(input_text)
-                dataset_dict["output"].append(target_text)
-
-                if template_entry.get("type") == "enum":
-                    for enum in template_entry["enum"]:
-                        if str(enum) not in enums:
-                            enums.append(str(enum))
+            if template_entry.get("type") == "enum":
+                for enum in template_entry["enum"]:
+                    if str(enum) not in enums:
+                        enums.append(str(enum))
 
     # Convert dict to Hugging Face Dataset.
     return Dataset.from_dict(dataset_dict), enums

@@ -1,39 +1,32 @@
 from typing import Literal
-import json
 from flask import Flask, request, jsonify
 
 from config import MODELS_DICT, CONTAINER_NUMBER_MASK
 from model_loader import ModelLoader
+from file_loader import load_json, json_to_str
 
 app = Flask(__name__)
 
 # Global variable to store the loaded model
-IS_TRAINED = True
 model_loader = None
-
-
-def load_json(file_path: str) -> dict:
-    """Function to load a JSON file."""
-    with open(file_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+IS_TRAINED = True
 
 
 def load_model(model_type: Literal["decoder", "encoder", "encoder-decoder"]) -> str:
     """Function to load the specified LLM model based on type."""
     model_key = f"trained-{model_type}" if IS_TRAINED else model_type
+    model_name = MODELS_DICT[model_key]
 
     # Update the global model_loader variable
     global model_loader
-    model_loader = ModelLoader(MODELS_DICT[model_key], model_type)
+    model_loader = ModelLoader(model_name, model_type)
 
-    return f"Loaded model: {model_type}"
+    return f"Loaded model: {model_name} | {model_type}"
 
 
-def generate(
-    input_text: str, report_type: Literal["klinisk", "makroskopisk", "mikroskopisk"]
-) -> dict:
+def generate(input_text: str) -> dict | None:
     """Function to generate text using the loaded model."""
-    mask_token = (
+    mask_token: str = (
         model_loader.tokenizer.mask_token
         if model_loader.tokenizer.mask_token is not None
         else "null"
@@ -41,15 +34,23 @@ def generate(
 
     # Mask out the total amount of containers present in the input text
     metadata_json = load_json("data_model/out/generated-metadata.json")
-    metadata_json[1]["value"] = f"{mask_token}"
+    metadata_json[0]["value"] = mask_token
+    metadata_json[1]["value"] = mask_token
+
+    # Find out the report type based on the input text
+    filled_json = model_loader.generate_filled_json(
+        input_text, CONTAINER_NUMBER_MASK, json_to_str(metadata_json[0], indent=2)
+    )
+    report_type = filled_json.get("value", "null").strip()
+    print(f"Report type: {report_type}")
+    if report_type not in ["klinisk", "makroskopisk", "mikroskopisk"]:
+        print("ERROR: Invalid report type!")
+        return None
 
     # Find out how many containers there are in the input text
     filled_json = model_loader.generate_filled_json(
-        input_text,
-        CONTAINER_NUMBER_MASK,
-        json.dumps(metadata_json[1], ensure_ascii=False),
+        input_text, CONTAINER_NUMBER_MASK, json_to_str(metadata_json[1], indent=2)
     )
-
     if filled_json.get("value") is not None:
         try:
             total_containers = int(filled_json["value"])
@@ -59,7 +60,6 @@ def generate(
     else:
         print("ERROR: Could not find the container count!")
         return None
-
     print(f"Container count: {total_containers}")
     if total_containers < 1 or total_containers > 10:
         print("ERROR: Invalid container count!")
@@ -67,7 +67,7 @@ def generate(
 
     # Load the generated JSON template based on the report type
     template_json = load_json(f"data_model/out/generated-{report_type}.json")
-    final_json = {"input": input_text, "output": []}
+    final_json = {"input": input_text, "output": [], report_type: report_type}
 
     # Get the filled JSON for each container, 1 indexed
     for container_number in range(1, total_containers + 1):
@@ -75,7 +75,7 @@ def generate(
         for template_entry in template_json:
             # Mask out the value in the template
             template_entry["value"] = str(mask_token)
-            template_str = json.dumps(template_entry, indent=2, ensure_ascii=False)
+            template_str = json_to_str(template_entry, indent=2)
 
             # Generate filled JSON using the model
             filled_json = model_loader.generate_filled_json(
@@ -115,15 +115,7 @@ def generate_endpoint():
         print("Input text is required")
         return jsonify({"error": "Input text is required"}), 400
 
-    report_type = request.json.get("report_type")
-    if not report_type:
-        return (jsonify({"error": "Report type is required"}),)
-    if report_type not in ["klinisk", "makroskopisk", "mikroskopisk"]:
-        return jsonify({"error": "Invalid report type"}), 400
-
-    print(f"Input text: {input_text}")
-
-    final_json = generate(input_text, report_type)
+    final_json = generate(input_text)
     if final_json is None:
         return jsonify({"error": "Failed to generate structured data"}), 500
 

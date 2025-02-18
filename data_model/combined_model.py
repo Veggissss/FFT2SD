@@ -1,5 +1,5 @@
 import os
-from generate_data_model import save_json_file, load_json_file
+from generate_data_model import save_json, load_json
 
 # Directory of the script
 SCRIPT_PATH = os.path.dirname(__file__)
@@ -15,7 +15,7 @@ def load_and_combine_json_files(directory):
     for filename in os.listdir(directory):
         if filename.endswith(".json"):
             filepath = os.path.join(directory, filename)
-            data = load_json_file(filepath)
+            data = load_json(filepath)
 
             # Remove every value field in each JSON
             for entry in data:
@@ -34,4 +34,4 @@ if __name__ == "__main__":
     output_filepath = SCRIPT_PATH + "/figure/full-structure.json"
 
     combined_json = load_and_combine_json_files(out_directory)
-    save_json_file(output_filepath, combined_json)
+    save_json(output_filepath, combined_json)

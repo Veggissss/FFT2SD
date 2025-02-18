@@ -5,19 +5,22 @@ from data_model_enum import get_enum_fields
 SCRIPT_PATH = os.path.dirname(__file__)
 
 
-def read_text_file(file_path: str) -> str:
-    with open(file_path, "r", encoding="utf-8") as file:
+def load_file(filepath: str) -> str:
+    """Load text data as str from a given file."""
+    with open(filepath, "r", encoding="utf-8") as file:
         return file.read()
 
 
-def read_json_file(file_path: str) -> dict:
-    with open(file_path, "r", encoding="utf-8") as file:
+def load_json(filepath: str) -> dict:
+    """Load JSON data from a given file."""
+    with open(filepath, "r", encoding="utf-8") as file:
         return json.load(file)
 
 
-def write_json_file(file_path: str, data: dict) -> None:
-    with open(file_path, "w", encoding="utf-8") as file:
-        json.dump(data, file, indent=4, ensure_ascii=False)
+def save_json(data: dict, filepath: str, indent: int = 4) -> None:
+    """Save JSON data to a given file."""
+    with open(filepath, "w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=indent)
 
 
 def get_valid_input(input_prompt, item: dict) -> str | float | int | bool:
@@ -75,9 +78,9 @@ def label_data(
     Prompt the user to fill out the JSON values for a given text file.
     The labeled JSON is saved to the output directory.
     """
-    input_text = read_text_file(input_text_path)
-    target_json = read_json_file(input_json_path)
-    metadata_json = read_json_file(input_metadata_path)
+    input_text = load_file(input_text_path)
+    target_json = load_json(input_json_path)
+    metadata_json = load_json(input_metadata_path)
 
     print(f"Input text:\n{input_text}\n")
 
@@ -137,7 +140,7 @@ def label_data(
         output_json_path = (
             f"{output_dir_path}/container_{container_index}_{json_file_name}"
         )
-        write_json_file(output_json_path, final_json)
+        save_json(final_json, output_json_path)
 
 
 if __name__ == "__main__":
@@ -165,11 +168,13 @@ if __name__ == "__main__":
         text_path = os.path.join(input_text_dir, text_file_name)
         metadata_path = os.path.join(input_json_dir, "generated-metadata.json")
 
+        json_path = None
         for key, value in report_type_map.items():
             if key in text_file_name:
                 json_path = os.path.join(input_json_dir, value)
                 REPORT_TYPE = key
                 break
+
         if json_path is None:
             print(f"Could not find a matching report type JSON for {text_file_name}.")
             continue

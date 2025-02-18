@@ -19,16 +19,16 @@ ENUM_DIR_PATH = os.path.join(SCRIPT_PATH, "enum")
 OUT_DIR_PATH = os.path.join(SCRIPT_PATH, "out")
 
 
-def load_json_file(path: str) -> List[Dict[str, Any]]:
+def load_json(filepath: str) -> List[Dict[str, Any]]:
     """Load enum values from a JSON file."""
-    with open(path, "r", encoding="utf-8") as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def save_json_file(path: str, data: List[Dict[str, Any]]) -> None:
+def save_json(data: List[Dict[str, Any]], filepath: str, indent: int = 4) -> None:
     """Save enum values to a JSON file."""
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=indent)
 
 
 def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:
@@ -45,7 +45,7 @@ def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:
                 enum_file = os.path.join(ENUM_DIR_PATH, f"{enum_name}.json")
 
                 if os.path.exists(enum_file):
-                    enum_values = load_json_file(enum_file)
+                    enum_values = load_json(enum_file)
 
                     # Replace enum reference with enum values
                     # TODO: Optimize enum output while being within LLM token limits?
@@ -59,13 +59,13 @@ def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:
 def generate_data_model(input_json_file: str, output_json_file: str) -> None:
     """Main function to replace enum values and save the output."""
     # Load the original JSON data
-    data = load_json_file(input_json_file)
+    data = load_json(input_json_file)
 
     # Replace enum references
     replace_enum_references(data)
 
     # Save the modified JSON data
-    save_json_file(output_json_file, data)
+    save_json(data, output_json_file)
 
 
 if __name__ == "__main__":

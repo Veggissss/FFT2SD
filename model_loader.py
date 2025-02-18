@@ -76,8 +76,6 @@ class ModelLoader:
         amount_new_tokens = tokenized_template["input_ids"].shape[1]
         print(f"Max new decoder tokens: {amount_new_tokens}")
 
-        # Stop when the closing curly brace is generated
-
         # Generate output based on the strategy
         return self.strategy.generate(self, inputs, amount_new_tokens, template_str)
 
@@ -116,8 +114,6 @@ class ModelLoader:
                 else template_str
             ),
         )
-
-        print(prompt)
 
         # Generate the filled JSON based on the prompt
         output_text = self.__generate(prompt, template_str)

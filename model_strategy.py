@@ -1,5 +1,4 @@
 from abc import abstractmethod
-import json
 import torch
 from peft import PeftModel
 from transformers import (
@@ -13,6 +12,7 @@ from transformers import (
 
 from token_constraints import get_allowed_tokens
 from config import END_OF_PROMPT_MARKER, MODELS_DICT
+from file_loader import str_to_json
 
 
 class BaseModelStrategy:
@@ -55,7 +55,7 @@ class BaseModelStrategy:
         """
         Convert generated output text back into just a JSON.
         """
-        return json.loads(output_text.split(END_OF_PROMPT_MARKER)[-1])
+        return str_to_json(output_text.split(END_OF_PROMPT_MARKER)[-1])
 
 
 class EncoderDecoderStrategy(BaseModelStrategy):
@@ -94,7 +94,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
         )
 
     def output_to_json(self, output_text: str) -> dict:
-        return json.loads(output_text)
+        return str_to_json(output_text)
 
 
 class DecoderStrategy(BaseModelStrategy):
@@ -197,7 +197,7 @@ class EncoderStrategy(BaseModelStrategy):
         probabilities = torch.nn.functional.softmax(masked_token_logits, dim=-1)
 
         # Filter the allowed tokens' probabilities based on template type
-        template_json = json.loads(template_str)
+        template_json = str_to_json(template_str)
         template_type = template_json["type"]
 
         # If the template is an enum, get the allowed tokens
