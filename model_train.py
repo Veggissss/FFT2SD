@@ -9,7 +9,7 @@ from transformers import (
 )
 from datasets import Dataset
 from model_loader import ModelLoader
-from config import MODELS_DICT
+from enums import ModelType
 import dataset_loader
 
 
@@ -55,26 +55,27 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
         fp16=True,  # Mixed precision
     )
 
-    if loader.model_type == "encoder-decoder":
-        data_collator = DataCollatorForSeq2Seq(
-            tokenizer=loader.tokenizer,
-            return_tensors="pt",
-        )
-    elif loader.model_type == "encoder":
-        training_data = training_data.remove_columns(["labels"])
-        data_collator = DataCollatorForLanguageModeling(
-            tokenizer=loader.tokenizer,
-            mlm=True,
-            mlm_probability=0.15,
-            return_tensors="pt",
-        )
-    else:
-        training_data = training_data.remove_columns(["labels"])
-        data_collator = DataCollatorForLanguageModeling(
-            tokenizer=loader.tokenizer,
-            mlm=False,
-            return_tensors="pt",
-        )
+    match loader.model_type:
+        case ModelType.ENCODER_DECODER:
+            data_collator = DataCollatorForSeq2Seq(
+                tokenizer=loader.tokenizer,
+                return_tensors="pt",
+            )
+        case ModelType.ENCODER:
+            training_data = training_data.remove_columns(["labels"])
+            data_collator = DataCollatorForLanguageModeling(
+                tokenizer=loader.tokenizer,
+                mlm=True,
+                mlm_probability=0.15,
+                return_tensors="pt",
+            )
+        case ModelType.DECODER:
+            training_data = training_data.remove_columns(["labels"])
+            data_collator = DataCollatorForLanguageModeling(
+                tokenizer=loader.tokenizer,
+                mlm=False,
+                return_tensors="pt",
+            )
 
     trainer = Trainer(
         model=loader.model,
@@ -93,12 +94,16 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     loader.tokenizer.save_pretrained(output_dir)
 
 
-def train(MODEL_TYPE="encoder"):
-    # Load model and tokenizer.
-    model_loader = ModelLoader(MODELS_DICT[MODEL_TYPE], MODEL_TYPE)
+def train(model_type: ModelType) -> None:
+    """
+    Train the model using the provided dataset.
+    :param model_type: Model type to train.
+    """
+    # Load the untrained model and tokenizer.
+    model_loader = ModelLoader(model_type, is_trained=False)
 
     # Quantized models can't be trained directly.
-    if MODEL_TYPE == "decoder":
+    if model_loader.model_type == ModelType.DECODER:
         # Configure LoRA
         lora_config = LoraConfig(
             r=128,  # Rank of the LoRA layers
@@ -124,7 +129,10 @@ def train(MODEL_TYPE="encoder"):
 
     # Register enum strings present in dataset as new tokens.
     print(f"Number of tokens in the tokenizer before: {len(model_loader.tokenizer)}")
+
+    # Make sure all the used datatypes are present in the tokenizer
     enums.extend(["true", "false"])
+    print(f"New tokens: \n{enums}")
     new_tokens = [
         AddedToken(enum, single_word=True, rstrip=True, lstrip=True) for enum in enums
     ]
@@ -139,12 +147,12 @@ def train(MODEL_TYPE="encoder"):
 
     # Fix for: "CUDA Assertion `t >= 0 && t < n_classes` failed" for the ltg encoder and encoder-decoder models
     # The Classifier does not get resized when calling model.resize_token_embeddings() so needs to be manually re-initialized
-    if model_loader.model_type in ["encoder"]:
+    if model_loader.model_type == ModelType.ENCODER:
         model_loader.model.classifier.__init__(
             model_loader.model.config,
             model_loader.model.embedding.word_embedding.weight,
         )
-    elif model_loader.model_type in ["encoder-decoder"]:
+    elif model_loader.model_type == ModelType.ENCODER_DECODER:
         model_loader.model.classifier.__init__(model_loader.model.config)
 
     # Tokenize the dataset.
@@ -154,8 +162,10 @@ def train(MODEL_TYPE="encoder"):
     # training_data = tokenized_dataset.train_test_split(test_size=0.1)
 
     # Train/Fine-tune and save the model.
-    train_model(model_loader, tokenized_dataset, f"trained/{MODEL_TYPE}")
+    train_model(
+        model_loader, tokenized_dataset, f"trained/{model_loader.model_type.value}"
+    )
 
 
 if __name__ == "__main__":
-    train()
+    train(ModelType.ENCODER)

@@ -1,14 +1,12 @@
 import os
 import copy
-from typing import Literal
 from datasets import Dataset
 from config import SYSTEM_PROMPT, CONTAINER_NUMBER_MASK
 from file_loader import load_json, json_to_str
+from enums import ModelType
 
 
-def create_dataset(
-    dataset_path: str, model_type: Literal["decoder", "encoder", "encoder-decoder"]
-) -> tuple[Dataset, list]:
+def create_dataset(dataset_path: str, model_type: ModelType) -> tuple[Dataset, list]:
     """
     Create a Hugging Face Dataset from the JSON files in the specified directory.
     :param dataset_path: The path to the directory containing the JSON files.
@@ -54,7 +52,7 @@ def create_dataset(
                 # Mask the container number only once
                 container_number = CONTAINER_NUMBER_MASK
 
-            if model_type in ["decoder", "encoder"]:
+            if model_type in [ModelType.ENCODER, ModelType.DECODER]:
                 # Use target as input
                 input_text = SYSTEM_PROMPT.format(
                     input_text=input_text_str,
@@ -78,14 +76,17 @@ def create_dataset(
 
             if template_entry.get("type") == "enum":
                 for enum in template_entry["enum"]:
-                    if str(enum) not in enums:
+                    if not enum:
+                        # Replace None with the string "null"
+                        enum = "null"
+                    if enum not in enums:
                         enums.append(str(enum))
 
     # Convert dict to Hugging Face Dataset.
     return Dataset.from_dict(dataset_dict), enums
 
 
-def reset_value_fields(input_json: dict, key="value", value=None) -> dict:
+def reset_value_fields(input_json: list[dict], key="value", value=None) -> list[dict]:
     """
     Set all the value fields in the JSON to None.
     """

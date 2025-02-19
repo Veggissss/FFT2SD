@@ -1,10 +1,10 @@
 import json
-from typing import Literal
-from transformers import StoppingCriteriaList
 import torch
+from transformers import StoppingCriteriaList
 
 from token_constraints import StopOnToken
-from config import SYSTEM_PROMPT
+from config import SYSTEM_PROMPT, MODELS_DICT
+from enums import ModelType
 from model_strategy import (
     BaseModelStrategy,
     EncoderDecoderStrategy,
@@ -16,40 +16,46 @@ from model_strategy import (
 class ModelLoader:
     """
     Class to load and generate from a transformer model and its tokenizer with the specified architecture type.
-
     Attributes:
-        model_name (str): The name of the model to load.
-        model_type (Literal["decoder", "encoder", "encoder-decoder"]): The type of the model architecture.
+        model_type (ModelType): The type of model architecture.
+        is_trained (bool): Flag indicating if the model is pre-trained.
+        model_name (str): The name of the model.
         device (torch.device): The device to run the model on (CPU or GPU).
-        model (AutoModel): The loaded transformer model.
-        tokenizer (AutoTokenizer): The tokenizer associated with the model.
+        strategy (BaseModelStrategy): The strategy for handling the model based on its type.
+        model: The loaded transformer model.
+        tokenizer: The tokenizer associated with the model.
+        stopping_criteria (StoppingCriteriaList): Criteria to stop the generation process.
     """
 
     def __init__(
         self,
-        model_name: str,
-        model_type: Literal["decoder", "encoder", "encoder-decoder"],
+        model_type: ModelType,
+        is_trained: bool,
     ):
-        self.model_name = model_name
         self.model_type = model_type
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+        # Find the model name based on the model type and training status
+        self.is_trained = is_trained
+        model_key = f"trained-{model_type.value}" if is_trained else model_type.value
+        self.model_name = MODELS_DICT[model_key]
+
         # Load the model architecture specific handler
         self.strategy: BaseModelStrategy = {
-            "encoder-decoder": EncoderDecoderStrategy,
-            "decoder": DecoderStrategy,
-            "encoder": EncoderStrategy,
+            ModelType.ENCODER_DECODER: EncoderDecoderStrategy,
+            ModelType.DECODER: DecoderStrategy,
+            ModelType.ENCODER: EncoderStrategy,
         }[model_type]()
 
         # Load model with corresponding tokenizer
         self.model, self.tokenizer = self.strategy.load(self)
 
-        # Set stopping criteria to json end [Not used for encoder model]
+        # Set stopping criteria to json end (Not used for encoder model)
         self.stopping_criteria = StoppingCriteriaList(
             [StopOnToken(self.tokenizer, "}")]
         )
 
-        print(f"Model loaded: {model_name}")
+        print(f"Model loaded: {self.model_name}")
         print(f"Device: {self.device}")
 
     def __generate(self, prompt: str, template_str: str) -> str:
@@ -110,7 +116,7 @@ class ModelLoader:
             # Strip the value field if the model is a decoder speed up generation
             template_json=(
                 template_str.split('"value":')[0] + '"value": '
-                if self.model_type == "decoder"
+                if self.model_type == ModelType.DECODER
                 else template_str
             ),
         )

@@ -1,10 +1,14 @@
 import pytest
 import json
 import dataset_loader
+from enums import ModelType
+
+# Test data path
+DATA_PATH = "data/test_data"
 
 
 def test_dataset_loader_decoder():
-    dataset, enums = dataset_loader.create_dataset("data/test_data", "decoder")
+    dataset, enums = dataset_loader.create_dataset(DATA_PATH, ModelType.DECODER)
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
 
@@ -16,7 +20,7 @@ def test_dataset_loader_decoder():
 
 
 def test_dataset_loader_encoder():
-    dataset, enums = dataset_loader.create_dataset("data/test_data", "encoder")
+    dataset, enums = dataset_loader.create_dataset(DATA_PATH, ModelType.ENCODER)
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
 
@@ -28,11 +32,12 @@ def test_dataset_loader_encoder():
 
 
 def test_dataset_loader_encoder_decoder():
-    dataset, enums = dataset_loader.create_dataset("data/test_data", "encoder-decoder")
+    dataset, enums = dataset_loader.create_dataset(DATA_PATH, ModelType.ENCODER_DECODER)
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
 
     # Confirm that the correct answer is not filled out
+    print(dataset["input"][0])
     assert "null" in dataset["input"][0]
 
     # Assert that the output is a json with a filled out value
