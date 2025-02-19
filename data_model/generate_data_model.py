@@ -1,7 +1,6 @@
 from typing import Union, List, Dict, Any
-import json
 import os
-
+import sys
 
 # Enum reference string and separator
 ENUM_IDENTIFIER = "REF_ENUM"
@@ -13,22 +12,14 @@ VALUE_PLACEHOLDER = None
 # Directory of the script
 SCRIPT_PATH = os.path.dirname(__file__)
 
+# Add project root directory to sys.path for imports
+sys.path.append(os.path.abspath(os.path.join(SCRIPT_PATH, "..")))
+from file_loader import load_json, save_json
+
 # Directory where JSON files are stored
 STRUCT_DIR_PATH = os.path.join(SCRIPT_PATH, "struct")
 ENUM_DIR_PATH = os.path.join(SCRIPT_PATH, "enum")
 OUT_DIR_PATH = os.path.join(SCRIPT_PATH, "out")
-
-
-def load_json(filepath: str) -> List[Dict[str, Any]]:
-    """Load enum values from a JSON file."""
-    with open(filepath, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def save_json(data: List[Dict[str, Any]], filepath: str, indent: int = 4) -> None:
-    """Save enum values to a JSON file."""
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=indent)
 
 
 def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:

@@ -1,5 +1,9 @@
 import os
-import json
+import sys
+
+# Add project root directory to sys.path for imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from file_loader import load_json
 
 
 def load_enum_json(enum_name: str) -> dict:
@@ -16,12 +20,10 @@ def load_enum_json(enum_name: str) -> dict:
             continue
 
         filepath = os.path.join(folder_path, filename)
-        with open(filepath, "r", encoding="utf-8") as file:
-            data = json.load(file)
-
-            for item in data:
-                if item.get("value", None) == enum_name:
-                    return data
+        data = load_json(filepath)
+        for item in data:
+            if item.get("value", None) == enum_name:
+                return data
 
     return {}
 

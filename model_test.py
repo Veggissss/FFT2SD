@@ -1,6 +1,6 @@
 from model_loader import ModelLoader
 from enums import ModelType
-from file_loader import load_json
+from file_loader import load_json, json_to_str
 import server
 
 if __name__ == "__main__":
@@ -12,3 +12,4 @@ if __name__ == "__main__":
     input_text = test_data["input_text"]
 
     out = server.generate(input_text)
+    print(json_to_str(out))

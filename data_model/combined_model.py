@@ -1,8 +1,12 @@
 import os
-from generate_data_model import save_json, load_json
+import sys
 
 # Directory of the script
 SCRIPT_PATH = os.path.dirname(__file__)
+
+# Add project root directory to sys.path for imports
+sys.path.append(os.path.abspath(os.path.join(SCRIPT_PATH, "..")))
+from file_loader import load_json, save_json
 
 
 def load_and_combine_json_files(directory):
@@ -34,4 +38,4 @@ if __name__ == "__main__":
     output_filepath = SCRIPT_PATH + "/figure/full-structure.json"
 
     combined_json = load_and_combine_json_files(out_directory)
-    save_json(output_filepath, combined_json)
+    save_json(combined_json, output_filepath)

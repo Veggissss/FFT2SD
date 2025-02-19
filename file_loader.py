@@ -21,3 +21,9 @@ def json_to_str(data: dict, indent: int = 4) -> str:
 def str_to_json(json_str: str) -> dict:
     """Convert a JSON string to a dictionary."""
     return json.loads(json_str)
+
+
+def load_text_file(filepath: str) -> str:
+    """Load text data as str from a given file."""
+    with open(filepath, "r", encoding="utf-8") as file:
+        return file.read()

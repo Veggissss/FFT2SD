@@ -1,17 +1,4 @@
 {
-    "beholder": [
-        {
-            "id": 0,
-            "field": "Antall glass",
-            "type": "int",
-            "unit": "stk"
-        },
-        {
-            "id": 128,
-            "field": "Beholder-ID",
-            "type": "string"
-        }
-    ],
     "klinisk": [
         {
             "id": 100,
@@ -129,6 +116,29 @@
         {
             "id": 109,
             "field": "Makroskopisk beskrivelse",
+            "type": "string"
+        }
+    ],
+    "metadata": [
+        {
+            "id": 0,
+            "field": "Rapport type",
+            "type": "enum",
+            "enum": [
+                "klinisk",
+                "makroskopisk",
+                "mikroskopisk"
+            ]
+        },
+        {
+            "id": 1,
+            "field": "Antall glass",
+            "type": "int",
+            "unit": "stk"
+        },
+        {
+            "id": 128,
+            "field": "Beholder-ID",
             "type": "string"
         }
     ],

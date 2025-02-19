@@ -20,7 +20,7 @@
                 "T67000",
                 "T67920"
             ],
-            "value": "T67300"
+            "value": null
         },
         {
             "id": 108,
@@ -34,13 +34,13 @@
                 "P13409",
                 "P2070A"
             ],
-            "value": "P13409"
+            "value": null
         },
         {
             "id": 109,
             "field": "Makroskopisk beskrivelse",
             "type": "string",
-            "value": "2"
+            "value": "gryn"
         }
     ],
     "metadata_json": [
@@ -53,14 +53,14 @@
                 "makroskopisk",
                 "mikroskopisk"
             ],
-            "value": "makro"
+            "value": "makroskopisk"
         },
         {
             "id": 1,
             "field": "Antall glass",
             "type": "int",
             "unit": "stk",
-            "value": 2
+            "value": 3
         },
         {
             "id": 128,
