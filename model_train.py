@@ -167,4 +167,9 @@ def train(model_type: ModelType) -> None:
 
 
 if __name__ == "__main__":
-    train(ModelType.ENCODER)
+    TRAIN_ALL_TYPES = True
+    if TRAIN_ALL_TYPES:
+        for model_type in ModelType:
+            train(model_type)
+    else:
+        train(ModelType.ENCODER)
