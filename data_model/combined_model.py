@@ -23,8 +23,25 @@ def load_and_combine_json_files(directory):
 
             # Remove every value field in each JSON
             for entry in data:
+                if "id" in entry:
+                    del entry["id"]
                 if "value" in entry:
                     del entry["value"]
+
+                # Shorten enum list if it's too long to fit in the figure better
+                if "enum" in entry:
+                    enum_list_as_string = ""
+                    enum_list = []
+                    for i, enum in enumerate(entry["enum"]):
+                        enum_list_as_string += str(enum)
+
+                        if i == len(entry["enum"]) - 1 or len(enum_list_as_string) > 21:
+                            enum_list.append(enum_list_as_string)
+                            enum_list_as_string = ""
+                        elif i < len(entry["enum"]) - 1:
+                            enum_list_as_string += ", "
+
+                    entry["enum"] = enum_list
 
             # Make "generated-name.json" be just "name"
             name = filename.split("-")[1].split(".")[0]

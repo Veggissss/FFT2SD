@@ -16,9 +16,8 @@ The generated data models have a "value" field which is set to null. This is goi
 Update: After using improved test data the spitting of prompts seems necessary. Now each json entry in the model is prompted individually instead of the whole model per prompt. This increases generation times, but is necessary for the output to not get cut off which due to the relatively small max length of the used models (~512 tokens). Other models with larger context length might be used to prevent this issue, but availability of such open source models and which are pre-trained on norwegian makes it out of scope for this project.
 
 ## UML Diagram of Structured Model
-Generated using [Code2Diagram.com](https://www.code2diagram.com/console):
-
-![UML of Structured Data Model](data_model/figure/full-structure.svg)
+Generated figure using [omute.net](https://omute.net/editor) [[git]](https://github.com/AykutSarac/jsoncrack.com):
+![UML of Structured Data Model](data_model/figure/data_model_figure.svg)
 
 ## Data Collection Process
 Data extraction will start after approval, early 2025.
@@ -65,7 +64,7 @@ An overview of how the dataset is structured, along with training and the evalua
 - TODO: Evaluation metrics presented as graphical, tables etc.
 
 ## Investigate
-- See if end of sentence marker impacts different models.
+- See if end of sentence marker and prompt impacts the different models.
 - Encoder: 
     * Extra label specific masked training
     * One mask to many tokens. (String comments etc)
