@@ -2,6 +2,31 @@
 
 master-project.wip.exe.zip.lib.rar
 
+## Project Structure Overview
+- **model_loader.py**: ModelLoader class for managing loading and generating output from the models.
+- **model_strategy.py**: Containing model architecture specific logic for encoder, decoder and encoder-decoder models.
+- **dataset_loader.py**: Loads the labeled JSON data, creates a prompt for every field in the JSON and stores it as a *HuggingFace Dataset*. Also finds all the unique enum definitions in the dataset which will be added as separate tokens.
+- **model_train.py**: Training script that adds enum definitions as new tokens and trains/fine-tunes the models based on their architecture.
+- **data/**: Dataset management
+    * **batch/**: The full unlabeled text data real world pathology reports. ***##WIP##***
+    * **labeled_data/**: The fully labeled data from *batch* in separated json form. ***##WIP##***
+    * **example_batch/**: Small sample of pathology reports (missing 'klinisk' info).
+    * **test_data/**: The labeled test data from *example_batch*, used for initial development.
+    * **label_data.py** Simple data labeling program that takes user input and generates training data.
+- **data_model/**: Data Model based on the [pathology spreadsheet](#data-model)
+    * **generate_data_model.py**: Fill in each model *struct* where every entry gets a *null* "value" field and enum definitions are filled in using the enum.
+    * **struct/**: Containing all the base field for every report type and metadata with reference strings to enums such as *"REF_ENUM;Lokasjon"*.
+    * **enum/**: Contains all enum definitions.
+    * **figure/**: Combining the full data model and representing it as a more readable svg figure.
+    * **out/**: Output directory of the filled model *struct*
+- **utils/**: Decoupled configurations, definitions and help functions.
+    - **config.py**: Constant definitions, including the definition of the used HuggingFace models. *Change the MODELS_DICT if you want to train a different HuggingFace model.*
+    - **enums.py**: Containing enum definitions mappings for model and report type.
+    - **token_constraints.py**: Generation constraints for stopping auto regressive models and finding allowed unmask tokens for the encoder model.
+    - **file_loader.py**: Helping functions for handling json and text files.
+- **server.py**: Simple Flask API for using the models with POST requests. Request paths for "/load_model" and "/generate".
+- **tests/**: Folder containing *pytest* unit tests
+
 ## Data Model
 The data model is based upon the [strukturert-rekvisisjon-og-svarrapport-for-patologirapportering-0.76.xlsx](https://www.kreftregisteret.no/globalassets/tarmkreftscreening/dokumenter/kvalitetsmanualen/vedlegg/strukturert-rekvisisjon-og-svarrapport-for-patologirapportering-0.76.xlsx) spreadsheet. 
 Info of the different fields can be found inside the spreadsheet as well as [Here](https://www.kreftregisteret.no/screening/tarmscreening/for-helsepersonell/kvalitetsmanual/kapittel-11-laboratorieprosedyre-for-patologitjenesten).
@@ -17,6 +42,7 @@ Update: After using improved test data the spitting of prompts seems necessary. 
 
 ## UML Diagram of Structured Model
 Generated figure using [omute.net](https://omute.net/editor) [[git]](https://github.com/AykutSarac/jsoncrack.com):
+This is a simplified figure where some enum values are grouped and "id" and "value": null is removed for readability.
 ![UML of Structured Data Model](data_model/figure/data_model_figure.svg)
 
 ## Data Collection Process
@@ -68,7 +94,7 @@ An overview of how the dataset is structured, along with training and the evalua
 - Encoder: 
     * Extra label specific masked training
     * One mask to many tokens. (String comments etc)
-- 
+- Create simple frontend UI to illustrate the use of the server.py API.
 
 ## Libraries
 - pytest: Unit testing
