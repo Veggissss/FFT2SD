@@ -120,12 +120,12 @@ def format_enum_options(enum_codes: list[str]) -> str:
     Get a user friendly string representation of the available enum options.
     :param enum_codes: List of codes such as M09401.
     """
-    enum_names = get_enum_fields(enum_codes, "name")
-    enum_groups = get_enum_fields(enum_codes, "group")
+    enum_names = get_enum_fields(enum_codes[0], "name") or []
+    enum_groups = get_enum_fields(enum_codes[0], "group")
     formatted_options = ""
     for index, option in enumerate(enum_names):
         group = None
-        if len(enum_groups) > 0:
+        if enum_groups:
             group = enum_groups[index]
 
         prefix = f"[{group}] " if group else ""

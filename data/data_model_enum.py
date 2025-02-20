@@ -6,12 +6,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from file_loader import load_json
 
 
-def load_enum_json(enum_name: str) -> dict:
+def load_enum_json(enum_name: str) -> dict | None:
     """
-    Loads all JSON files from the 'enum' directory and returns their contents as a list of dictionaries.
-
-    Returns:
-        dict: A list of dictionaries containing the data from each JSON file in the 'enum' directory.
+    Searches all JSON files from the 'enum' directory and returns the full json containing the given enum.
+    :param enum_name: The name of the enum to search for.
+    :return: The full JSON containing the enum. Can be an empty dictionary.
     """
     folder_path = os.path.join(os.path.dirname(__file__), "../data_model/enum")
     for filename in os.listdir(folder_path):
@@ -24,23 +23,21 @@ def load_enum_json(enum_name: str) -> dict:
         for item in data:
             if item.get("value", None) == enum_name:
                 return data
+    return None
 
-    return {}
 
-
-def get_enum_fields(enums: list[str], field: str = "name") -> list[str]:
+def get_enum_fields(enum: str, field: str = "name") -> list[str] | None:
     """
     Retrieves the human readable name of a code enum.
-    Args:
-        enum (str): The value of the enumeration to look up.
-    Returns:
-        str: The name of the enumeration if found, otherwise None.
+    :param enums (str): The enum to look up (example "T65520").
+    :param field (str): The field to look up in the enum.
+    :return (list[str]): The list of enum fields containing readable terms like "terminale ileum". Can be None.
     """
-    enum_json = load_enum_json(enums[0])
+    enum_json = load_enum_json(enum) or {}
 
     result = []
     for entry in enum_json:
         if entry.get(field, None) is None:
-            return []
+            return None
         result.append(entry.get(field))
     return result
