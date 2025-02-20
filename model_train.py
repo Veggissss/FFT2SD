@@ -25,7 +25,7 @@ def tokenize_dataset(tokenizer: AutoTokenizer, text_data: Dataset) -> Dataset:
             data["input"],
             text_target=data["output"],
             padding=True,
-            return_tensors="pt",  # NumPy is faster here: https://huggingface.co/docs/datasets/nlp_process#map
+            return_tensors="np",  # NumPy is faster here: https://huggingface.co/docs/datasets/nlp_process#map
         ),
         batched=True,
     )
@@ -40,12 +40,13 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     """
     # Remove untokenized input and output columns.
     training_data = training_data.remove_columns(["input", "output"])
+    training_data = training_data.train_test_split(test_size=0.1)
 
     # Define training arguments.
     training_args = TrainingArguments(
         output_dir=output_dir,
-        eval_strategy="no",  # Set to "epoch"
-        num_train_epochs=5,  # Make selectable along with other training params
+        eval_strategy="epoch",
+        num_train_epochs=5,  # TODO: Make selectable along with other training params
         # learning_rate=2e-4,
         # weight_decay=0.01,
         per_device_train_batch_size=1,
@@ -80,9 +81,9 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     trainer = Trainer(
         model=loader.model,
         args=training_args,
-        train_dataset=training_data,
+        train_dataset=training_data["train"],
+        eval_dataset=training_data["test"],
         processing_class=loader.tokenizer,
-        # eval_dataset= # Add evaluation dataset and set eval_strategy to "epoch"
         data_collator=data_collator,
     )
 
@@ -158,8 +159,6 @@ def train(model_type: ModelType) -> None:
     # Tokenize the dataset.
     tokenized_dataset = tokenize_dataset(model_loader.tokenizer, dataset)
     print(tokenized_dataset)
-
-    # training_data = tokenized_dataset.train_test_split(test_size=0.1)
 
     # Train/Fine-tune and save the model.
     train_model(

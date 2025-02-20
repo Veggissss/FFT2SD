@@ -1,10 +1,5 @@
-# Definitions of different models
+# Definitions of Hugging Face models
 MODELS_DICT: dict[str, str] = {
-    # Trained local models
-    "trained-encoder-decoder": "trained/encoder-decoder",
-    "trained-decoder": "trained/decoder",
-    "trained-encoder": "trained/encoder",
-    # Hugging Face models
     "encoder-decoder": "ltg/nort5-small",
     "decoder": "norallm/normistral-7b-warm",
     "encoder": "ltg/norbert3-base",

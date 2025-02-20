@@ -1,4 +1,6 @@
 from abc import abstractmethod
+from typing import TYPE_CHECKING
+
 import torch
 from peft import PeftModel
 from transformers import (
@@ -14,6 +16,9 @@ from token_constraints import get_allowed_tokens
 from config import END_OF_PROMPT_MARKER, MODELS_DICT
 from file_loader import str_to_json
 
+if TYPE_CHECKING:
+    from model_loader import ModelLoader
+
 
 class BaseModelStrategy:
     """
@@ -25,7 +30,7 @@ class BaseModelStrategy:
         self._tokenizer = None
 
     @abstractmethod
-    def load(self, model_loader) -> tuple[AutoModel, AutoTokenizer]:
+    def load(self, model_loader: "ModelLoader") -> tuple[AutoModel, AutoTokenizer]:
         """
         Load the model and tokenizer for the specific model type.
         """
@@ -36,7 +41,7 @@ class BaseModelStrategy:
 
     def generate(
         self,
-        model_loader,
+        model_loader: "ModelLoader",
         inputs: dict[str, torch.Tensor],
         amount_new_tokens: int,
         template_str: str = None,
@@ -64,7 +69,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
     Sequence-to-sequence model with encoder and decoder.
     """
 
-    def load(self, model_loader) -> None:
+    def load(self, model_loader: "ModelLoader") -> None:
         # Load tokenizer
         super().load(model_loader)
 
@@ -114,15 +119,15 @@ class DecoderStrategy(BaseModelStrategy):
             bnb_4bit_compute_dtype="float16",  # Reduce memory further
         )
 
-        # Load the model, if its already trained using peft, then load the untrained base model.
+        # Load the untrained base model.
         model = AutoModelForCausalLM.from_pretrained(
-            MODELS_DICT[model_loader.model_type.replace("trained-", "")],
+            MODELS_DICT[model_loader.model_type.value],
             quantization_config=q_config,
             low_cpu_mem_usage=True,
-            device_map="auto",
+            device_map="auto",  # Use the best device, model.to() not needed
         )
 
-        if "trained" in model_loader.model_name:
+        if model_loader.is_trained:
             # Resize to fit the trained model's token embeddings
             model.resize_token_embeddings(len(self._tokenizer))
 

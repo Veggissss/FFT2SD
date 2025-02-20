@@ -33,12 +33,14 @@ class ModelLoader:
         is_trained: bool,
     ):
         self.model_type = model_type
+        self.is_trained = is_trained
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # Find the model name based on the model type and training status
-        self.is_trained = is_trained
-        model_key = f"trained-{model_type.value}" if is_trained else model_type.value
-        self.model_name = MODELS_DICT[model_key]
+        # Use either a trained local model or a Hugging Face model
+        if is_trained:
+            self.model_name = f"trained/{model_type.value}"
+        else:
+            self.model_name = MODELS_DICT[model_type.value]
 
         # Load the model architecture specific handler
         self.strategy: BaseModelStrategy = {
