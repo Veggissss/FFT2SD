@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from typing import TYPE_CHECKING
-
 import torch
 from peft import PeftModel
 from transformers import (
@@ -11,12 +10,11 @@ from transformers import (
     AutoModelForMaskedLM,
     BitsAndBytesConfig,
 )
+from utils.token_constraints import get_allowed_tokens
+from utils.config import END_OF_PROMPT_MARKER, MODELS_DICT
+from utils.file_loader import str_to_json
 
-from token_constraints import get_allowed_tokens
-from config import END_OF_PROMPT_MARKER, MODELS_DICT
-from file_loader import str_to_json
-
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # just for type definition
     from model_loader import ModelLoader
 
 

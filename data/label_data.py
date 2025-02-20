@@ -2,13 +2,13 @@ import os
 import sys
 from data_model_enum import get_enum_fields
 
-SCRIPT_PATH = os.path.dirname(__file__)
 
 # Add project root directory to sys.path for imports
+SCRIPT_PATH = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(SCRIPT_PATH, "..")))
 
-from file_loader import load_text_file, load_json, save_json, json_to_str
-from enums import ReportType
+from utils.file_loader import load_text_file, load_json, save_json, json_to_str
+from utils.enums import ReportType
 
 
 def get_valid_input(input_prompt, item: dict) -> str | int | bool | None:

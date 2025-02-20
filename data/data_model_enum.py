@@ -3,7 +3,7 @@ import sys
 
 # Add project root directory to sys.path for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from file_loader import load_json
+from utils.file_loader import load_json
 
 
 def load_enum_json(enum_name: str) -> dict | None:

@@ -6,7 +6,7 @@ SCRIPT_PATH = os.path.dirname(__file__)
 
 # Add project root directory to sys.path for imports
 sys.path.append(os.path.abspath(os.path.join(SCRIPT_PATH, "../..")))
-from file_loader import load_json, save_json
+from utils.file_loader import load_json, save_json
 
 
 def load_and_combine_json_files(directory):

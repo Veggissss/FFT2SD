@@ -9,7 +9,7 @@ from transformers import (
 )
 from datasets import Dataset
 from model_loader import ModelLoader
-from enums import ModelType
+from utils.enums import ModelType
 import dataset_loader
 
 
@@ -25,6 +25,7 @@ def tokenize_dataset(tokenizer: AutoTokenizer, text_data: Dataset) -> Dataset:
             data["input"],
             text_target=data["output"],
             padding=True,
+            return_special_tokens_mask=True,
             return_tensors="np",  # NumPy is faster here: https://huggingface.co/docs/datasets/nlp_process#map
         ),
         batched=True,
@@ -46,10 +47,10 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     training_args = TrainingArguments(
         output_dir=output_dir,
         eval_strategy="epoch",
-        num_train_epochs=5,  # TODO: Make selectable along with other training params
+        num_train_epochs=50,  # TODO: Make selectable along with other training params
         # learning_rate=2e-4,
         # weight_decay=0.01,
-        per_device_train_batch_size=1,
+        per_device_train_batch_size=3,
         per_device_eval_batch_size=1,
         logging_dir="./logs",
         logging_steps=10,
@@ -167,9 +168,9 @@ def train(model_type: ModelType) -> None:
 
 
 if __name__ == "__main__":
-    TRAIN_ALL_TYPES = True
-    if TRAIN_ALL_TYPES:
+    TRAIN_ALL_TYPES = False
+    if not TRAIN_ALL_TYPES:
+        train(ModelType.ENCODER)
+    else:
         for model_type in ModelType:
             train(model_type)
-    else:
-        train(ModelType.ENCODER)

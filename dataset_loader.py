@@ -1,9 +1,9 @@
 import os
 import copy
 from datasets import Dataset
-from config import SYSTEM_PROMPT, CONTAINER_NUMBER_MASK
-from file_loader import load_json, json_to_str
-from enums import ModelType
+from utils.file_loader import load_json, json_to_str
+from utils.enums import ModelType
+from utils.config import SYSTEM_PROMPT, CONTAINER_NUMBER_MASK
 
 
 def create_dataset(dataset_path: str, model_type: ModelType) -> tuple[Dataset, list]:

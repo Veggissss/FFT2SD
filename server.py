@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
 
-from config import CONTAINER_NUMBER_MASK
 from model_loader import ModelLoader
-from enums import ModelType, ReportType
-from file_loader import load_json, json_to_str
+from utils.config import CONTAINER_NUMBER_MASK
+from utils.enums import ModelType, ReportType
+from utils.file_loader import load_json, json_to_str
 from dataset_loader import reset_value_fields
 
 app = Flask(__name__)

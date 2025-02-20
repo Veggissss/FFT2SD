@@ -1,10 +1,11 @@
+from typing import Generator
 import pytest
 from flask.testing import FlaskClient
 import server
 
 
 @pytest.fixture
-def client() -> FlaskClient:
+def client() -> Generator[FlaskClient, None, None]:
     server.app.config["TESTING"] = True
     with server.app.test_client() as client:
         yield client
@@ -27,14 +28,19 @@ def test_load_model_endpoint(client: FlaskClient):
 def test_generate_endpoint(client: FlaskClient):
     # Test without loading model
     server.model_loader = None
-    response = client.post("/generate", json={"input_text": "Sample input text"})
+    response = client.post("/generate", json={"input_text": "text"})
     assert response.status_code == 400
     assert "Model is not loaded!" in response.json["error"]
 
     # Load the model for testing
     client.post("/load_model", json={"model_type": "encoder"})
 
-    response = client.post("/generate", json={"input_text": "Sample input text"})
+    response = client.post(
+        "/generate",
+        json={
+            "input_text": "3 glass, merket 1 - 3\n1: 4  gryn i #1\n2: 3  gryn i #2\n3: 7  gryn i #3"
+        },
+    )
     assert response.status_code == 200
     assert "input" in response.json
     assert "output" in response.json

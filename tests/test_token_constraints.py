@@ -1,7 +1,7 @@
 import pytest
 from transformers import AutoTokenizer, AddedToken
-from token_constraints import get_allowed_tokens
-from config import MODELS_DICT
+from utils.token_constraints import get_allowed_tokens
+from utils.config import MODELS_DICT
 
 
 def test_allowed_tokens_enum():

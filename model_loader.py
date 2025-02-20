@@ -2,9 +2,9 @@ import json
 import torch
 from transformers import StoppingCriteriaList
 
-from token_constraints import StopOnToken
-from config import SYSTEM_PROMPT, MODELS_DICT
-from enums import ModelType
+from utils.token_constraints import StopOnToken
+from utils.config import SYSTEM_PROMPT, MODELS_DICT
+from utils.enums import ModelType
 from model_strategy import (
     BaseModelStrategy,
     EncoderDecoderStrategy,

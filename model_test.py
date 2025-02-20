@@ -1,6 +1,6 @@
 from model_loader import ModelLoader
-from enums import ModelType
-from file_loader import load_json, json_to_str
+from utils.enums import ModelType
+from utils.file_loader import load_json, json_to_str
 import server
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import pytest
 import json
 import dataset_loader
-from enums import ModelType
+from utils.enums import ModelType
 
 # Test data path
 DATA_PATH = "data/test_data"
