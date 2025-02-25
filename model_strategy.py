@@ -97,6 +97,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
         )
 
     def output_to_json(self, output_text: str) -> dict:
+        # Add the output value to the template JSON
         return str_to_json(output_text)
 
 
@@ -204,11 +205,14 @@ class EncoderStrategy(BaseModelStrategy):
         template_type = template_json["type"]
 
         # If the template is an enum, get the allowed tokens
-        template_enums = template_json.get("enum", None)
-
+        template_enums = None
+        if "enum" in template_json:
+            template_enums = [enum["value"] for enum in template_json["enum"]]
         # Get allowed tokens
         allowed_token_ids = get_allowed_tokens(
-            model_loader.tokenizer, template_type, template_enums
+            model_loader.tokenizer,
+            template_type,
+            template_enums,
         )
 
         # Check if allowed tokens are empty, and if so, use the model's output without filtering

@@ -64,23 +64,28 @@ def create_dataset(dataset_path: str, model_type: ModelType) -> tuple[Dataset, l
                 # And the encoder uses random masked token prediction
                 target_text = "[UNUSED]"
             else:
+                # Encoder-decoder model
                 input_text = SYSTEM_PROMPT.format(
                     input_text=input_text_str,
                     container_number=container_number,
                     template_json=template_entry_str,
                 )
-                target_text = target_entry_str
+                # Just the value field for shorter generation and less tokens
+                target_text = json_to_str({"value": target_entry["value"]})
 
             dataset_dict["input"].append(input_text)
             dataset_dict["output"].append(target_text)
 
             if template_entry.get("type") == "enum":
                 for enum in template_entry["enum"]:
-                    if not enum:
-                        # Replace None with the string "null"
-                        enum = "null"
-                    if enum not in enums:
-                        enums.append(str(enum))
+                    enum_value = enum["value"]
+                    # Replace None with the string "null"
+                    if not enum_value:
+                        enum_value = "null"
+
+                    # If enum is new, add it to the list
+                    if enum_value not in enums:
+                        enums.append(str(enum_value))
 
     # Convert dict to Hugging Face Dataset.
     return Dataset.from_dict(dataset_dict), enums

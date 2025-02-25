@@ -117,11 +117,12 @@ class ModelLoader:
             container_number=container_number,
             # Strip the value field if the model is a decoder speed up generation
             template_json=(
-                template_str.split('"value":')[0] + '"value": '
+                template_str.rsplit('"value":', 1)[0] + '"value": '
                 if self.model_type == ModelType.DECODER
                 else template_str
             ),
         )
+        print(f"Prompt:\n{prompt}\n")
 
         # Generate the filled JSON based on the prompt
         output_text = self.__generate(prompt, template_str)

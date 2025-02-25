@@ -48,9 +48,9 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
         output_dir=output_dir,
         eval_strategy="epoch",
         num_train_epochs=50,  # TODO: Make selectable along with other training params
-        # learning_rate=2e-4,
-        # weight_decay=0.01,
-        per_device_train_batch_size=3,
+        learning_rate=2e-4,
+        weight_decay=0.01,
+        per_device_train_batch_size=1,
         per_device_eval_batch_size=1,
         logging_dir="./logs",
         logging_steps=10,
@@ -159,7 +159,9 @@ def train(model_type: ModelType) -> None:
 
     # Tokenize the dataset.
     tokenized_dataset = tokenize_dataset(model_loader.tokenizer, dataset)
-    print(tokenized_dataset)
+    # Find the longest tensor in the tokenized_dataset["inputs"] column
+    max_length = max(len(tensor) for tensor in tokenized_dataset["input_ids"])
+    print(f"Longest tensor length in 'input_ids' column: {max_length}")
 
     # Train/Fine-tune and save the model.
     train_model(
@@ -170,7 +172,7 @@ def train(model_type: ModelType) -> None:
 if __name__ == "__main__":
     TRAIN_ALL_TYPES = False
     if not TRAIN_ALL_TYPES:
-        train(ModelType.ENCODER)
+        train(ModelType.ENCODER_DECODER)
     else:
         for model_type in ModelType:
             train(model_type)

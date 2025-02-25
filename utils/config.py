@@ -20,13 +20,13 @@ Parameters:
 - template_json: The JSON template to fill in.
 """
 SYSTEM_PROMPT = (
-    "Gitt teksten: \n'{input_text}'.\nGlass nummer {container_number}.\nFyll ut den manglede verdien for feltet \"value\". Behold JSON strukturen: "
+    "Gitt teksten: '{input_text}'.\nGlass nummer {container_number}.\nFyll ut den manglede verdien for JSON feltet \"value\": "
     + END_OF_PROMPT_MARKER
-    + " {template_json}"
+    + "\n{template_json}"
 )
 
 """
-Used for masking out "Glass nummer X" in the input prompt.
+Used for masking out "Glass nummer X." in the input prompt.
 Only used for when asking for glass amount in training and inference.
 """
 CONTAINER_NUMBER_MASK = "?"

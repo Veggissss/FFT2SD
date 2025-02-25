@@ -115,7 +115,7 @@ The project will focus on using open source models that already have been traine
 
 These models will be fine-tuned to extract medical information from the medical prose text and fill out the `null` fields from a JSON formatted data model. 
 The models result will be compared with a pre-filled correct labeled data model corresponding to the given input.
-The model will then use back-propagation to adjust its weights by using a loss function.
+The model will then use back-propagation to adjust its weights by using the calculated loss.
 
 An overview of how the dataset is structured, along with training and the evaluation process:
 
