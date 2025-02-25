@@ -96,7 +96,7 @@
         },
         {
             "field": "Beholder-ID",
-            "type": "string"
+            "type": "int"
         }
     ],
     "mikroskopisk": [

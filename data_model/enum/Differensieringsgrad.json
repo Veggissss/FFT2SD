@@ -1,14 +1,14 @@
 [
     {
         "id": 1,
-        "name": "Lavgradig histologisk differensiering"
+        "value": "Lavgradig histologisk differensiering"
     },
     {
         "id": 2,
-        "name": "Høygradig histologisk differensiering"
+        "value": "Høygradig histologisk differensiering"
     },
     {
         "id": 3,
-        "name": "Differensieringsgrad kan ikke vurderes"
+        "value": "Differensieringsgrad kan ikke vurderes"
     }
 ]

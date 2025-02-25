@@ -4,9 +4,15 @@
         "field": "Rapport type",
         "type": "enum",
         "enum": [
-            "klinisk",
-            "makroskopisk",
-            "mikroskopisk"
+            {
+                "value": "klinisk"
+            },
+            {
+                "value": "makroskopisk"
+            },
+            {
+                "value": "mikroskopisk"
+            }
         ],
         "value": null
     },
@@ -20,7 +26,7 @@
     {
         "id": 128,
         "field": "Beholder-ID",
-        "type": "string",
+        "type": "int",
         "value": null
     }
 ]

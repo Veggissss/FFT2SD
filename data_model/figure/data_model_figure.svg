@@ -3984,7 +3984,7 @@
 			<use xlink:href="#SVGID_551_"  style="overflow:visible;"/>
 		</clipPath>
 		<g class="st282">
-			<text transform="matrix(1 0 0 1 81.4661 266.9865)" class="st19 st6 st15">&quot;string&quot;</text>
+			<text transform="matrix(1 0 0 1 81.4661 266.9865)" class="st19 st6 st15">&quot;int&quot;</text>
 		</g>
 	</g>
 </g>

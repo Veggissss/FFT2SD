@@ -33,7 +33,8 @@ def load_and_combine_json_files(directory):
                     enum_list_as_string = ""
                     enum_list = []
                     for i, enum in enumerate(entry["enum"]):
-                        enum_list_as_string += str(enum)
+                        enum_value = enum["value"]
+                        enum_list_as_string += str(enum_value)
 
                         if i == len(entry["enum"]) - 1 or len(enum_list_as_string) > 21:
                             enum_list.append(enum_list_as_string)

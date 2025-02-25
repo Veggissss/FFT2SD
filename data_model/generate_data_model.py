@@ -39,9 +39,9 @@ def replace_enum_references(data: Union[List[Any], Dict[str, Any]]) -> None:
                     enum_values = load_json(enum_file)
 
                     # Replace enum reference with enum values
-                    # TODO: Optimize enum output while being within LLM token limits?
                     data[key] = [
-                        enum.get("value", enum.get("name")) for enum in enum_values
+                        {k: v for k, v in enum.items() if k != "id"}
+                        for enum in enum_values
                     ]
                 else:
                     print(f"Warning: Enum file {enum_file} not found!")

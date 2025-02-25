@@ -4,7 +4,10 @@
         "field": "Prøvekategori",
         "type": "enum",
         "enum": [
-            "P06020"
+            {
+                "name": "tarmscreening",
+                "value": "P06020"
+            }
         ],
         "value": null
     },
@@ -13,19 +16,58 @@
         "field": "Lokasjon klinikk",
         "type": "enum",
         "enum": [
-            "T65520",
-            "T67100",
-            "T67200",
-            "T67300",
-            "T67400",
-            "T67500",
-            "T67600",
-            "T67700",
-            "T68200",
-            "T68000",
-            "T69000",
-            "T67000",
-            "T67920"
+            {
+                "name": "terminale ileum",
+                "value": "T65520"
+            },
+            {
+                "name": "coecum",
+                "value": "T67100"
+            },
+            {
+                "name": "colon ascendens",
+                "value": "T67200"
+            },
+            {
+                "name": "høyre colonfleksur",
+                "value": "T67300"
+            },
+            {
+                "name": "colon transversum",
+                "value": "T67400"
+            },
+            {
+                "name": "venstre colonfleksur",
+                "value": "T67500"
+            },
+            {
+                "name": "colon descendens",
+                "value": "T67600"
+            },
+            {
+                "name": "colon sigmoideum",
+                "value": "T67700"
+            },
+            {
+                "name": "rectosigmoid",
+                "value": "T68200"
+            },
+            {
+                "name": "rectum",
+                "value": "T68000"
+            },
+            {
+                "name": "anus",
+                "value": "T69000"
+            },
+            {
+                "name": "colon",
+                "value": "T67000"
+            },
+            {
+                "name": "colon og rectum",
+                "value": "T67920"
+            }
         ],
         "value": null
     },
@@ -41,14 +83,30 @@
         "field": "Uttaksmetode klinikk",
         "type": "enum",
         "enum": [
-            "Biopsitang",
-            "Kald slynge in toto",
-            "Kald slynge piecemeal",
-            "Diatermislynge in toto",
-            "Diatermislynge piecemeal",
-            "Endoskopisk submucosal disseksjon (ESD)",
-            "Endoskopisk mucosal reseksjon (EMR)",
-            "Annen metode"
+            {
+                "value": "Biopsitang"
+            },
+            {
+                "value": "Kald slynge in toto"
+            },
+            {
+                "value": "Kald slynge piecemeal"
+            },
+            {
+                "value": "Diatermislynge in toto"
+            },
+            {
+                "value": "Diatermislynge piecemeal"
+            },
+            {
+                "value": "Endoskopisk submucosal disseksjon (ESD)"
+            },
+            {
+                "value": "Endoskopisk mucosal reseksjon (EMR)"
+            },
+            {
+                "value": "Annen metode"
+            }
         ],
         "value": null
     },
@@ -57,13 +115,34 @@
         "field": "Makroskopisk utseende",
         "type": "enum",
         "enum": [
-            "Is",
-            "Ip",
-            "IIa",
-            "IIb",
-            "IIc",
-            "III",
-            null
+            {
+                "name": "Stilket",
+                "value": "Is"
+            },
+            {
+                "name": "Høy bredbaset",
+                "value": "Ip"
+            },
+            {
+                "name": "Lav bredbaset",
+                "value": "IIa"
+            },
+            {
+                "name": "Flat",
+                "value": "IIb"
+            },
+            {
+                "name": "Nedsunket",
+                "value": "IIc"
+            },
+            {
+                "name": "Nedsunket ulcerert",
+                "value": "III"
+            },
+            {
+                "name": "Ikke relevant",
+                "value": null
+            }
         ],
         "value": null
     },
