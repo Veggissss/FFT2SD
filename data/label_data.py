@@ -19,7 +19,7 @@ def get_valid_input(input_prompt, item: dict) -> str | int | bool | None:
         labeled_input = input(input_prompt)
 
         # Allow for empty input to set it as null
-        if labeled_input == "":
+        if labeled_input.lower() in ["", "null", "none"]:
             return None
 
         # If the field is an enum, check if the input is valid
@@ -31,7 +31,7 @@ def get_valid_input(input_prompt, item: dict) -> str | int | bool | None:
                     if input_index < 0 or input_index >= len(item["enum"]):
                         print(f"Invalid input! Must be one of {item['enum']}")
                         return get_valid_input(input_prompt, item)
-                    labeled_input = item["enum"][input_index]
+                    labeled_input = item["enum"][input_index]["value"]
 
             case "int":
                 labeled_input = int(labeled_input)
@@ -120,16 +120,21 @@ def format_enum_options(enum_codes: list[str]) -> str:
     Get a user friendly string representation of the available enum options.
     :param enum_codes: List of codes such as M09401.
     """
-    enum_names = get_enum_fields(enum_codes[0], "name") or []
-    enum_groups = get_enum_fields(enum_codes[0], "group")
     formatted_options = ""
-    for index, option in enumerate(enum_names):
-        group = None
-        if enum_groups:
-            group = enum_groups[index]
+    for index, option in enumerate(enum_codes):
+        value = option["value"]  # Value should always be present
+        name = option["name"] if "name" in option else ""
+        group = option["group"] if "group" in option else None
 
-        prefix = f"[{group}] " if group else ""
-        formatted_options += f"{prefix}{option} (Valg nummer: {index})\n"
+        if group:
+            formatted_options += f"[{group}] "
+        if name:
+            formatted_options += f"{name} "
+        else:
+            formatted_options += f"{value} "
+
+        formatted_options += f"(Valg nummer: {index})\n"
+
     return formatted_options
 
 
@@ -140,9 +145,8 @@ def save_labeled_json(
     Save the final labeled JSON to a file in the output directory.
     """
     filename = input_text_path.split("\\")[-1].replace(".txt", "")
-    output_json_path = f"{output_dir_path}/{filename}_{container_index}.json"
     print(f"JSON Labeled:\n{json_to_str(final_json)}\n")
-    save_json(final_json, output_json_path)
+    save_json(final_json, f"{output_dir_path}/{filename}_{container_index}.json")
 
 
 if __name__ == "__main__":
@@ -161,27 +165,30 @@ if __name__ == "__main__":
             print(f"Skipping non-text file: {text_filename}")
             continue
 
-        text_path = os.path.join(input_text_dir, text_filename)
-        metadata_path = os.path.join(input_json_dir, "generated-metadata.json")
-
         json_path = None
-        for report in ReportType:
-            # Make it so that mikro.txt is matched with mikroskopisk
-            if report.value[:5] in text_filename:
-                json_path = os.path.join(
-                    input_json_dir, f"generated-{report.value}.json"
-                )
-                report_name = report.value
-                break
+        report_name = None
+        if "klinisk" in text_filename:
+            report_name = ReportType.KLINISK.value
+        elif "makro" in text_filename:
+            report_name = ReportType.MAKROSKOPISK.value
+        elif "diag" in text_filename:
+            report_name = ReportType.MIKROSKOPISK.value
 
-        if json_path is None or report_name is None:
+        if report_name is None:
             print(f"Could not find a matching report type JSON for {text_filename}.")
+            continue
+
+        output_json_path = os.path.join(
+            output_dir, text_filename.replace(".txt", "_1.json")
+        )
+        if os.path.exists(output_json_path):
+            print(f"Output file already exists for {text_filename}. Skipping.")
             continue
 
         label_data(
             report_name,
-            text_path,
-            json_path,
-            metadata_path,
+            os.path.join(input_text_dir, text_filename),
+            os.path.join(input_json_dir, f"generated-{report_name}.json"),
+            os.path.join(input_json_dir, "generated-metadata.json"),
             output_dir,
         )

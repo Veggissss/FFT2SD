@@ -97,7 +97,7 @@
             "id": 109,
             "field": "Makroskopisk beskrivelse",
             "type": "string",
-            "value": "4 gryn"
+            "value": "3 gryn"
         }
     ],
     "metadata_json": [
@@ -129,7 +129,7 @@
             "id": 128,
             "field": "Beholder-ID",
             "type": "int",
-            "value": 1
+            "value": 2
         }
     ]
 }
