@@ -13,7 +13,7 @@ def save_json(data: dict, filepath: str, indent: int = 4) -> None:
         json.dump(data, file, ensure_ascii=False, indent=indent)
 
 
-def json_to_str(data: dict, indent: int = 4) -> str:
+def json_to_str(data: dict, indent: None | int = 4) -> str:
     """Convert JSON data to a string."""
     return json.dumps(data, ensure_ascii=False, indent=indent)
 
@@ -23,7 +23,7 @@ def str_to_json(json_str: str) -> dict:
     return json.loads(json_str)
 
 
-def load_text_file(filepath: str) -> str:
-    """Load text data as str from a given file."""
+def load_text(filepath: str) -> str:
+    """Load text data as str from a given .txt file."""
     with open(filepath, "r", encoding="utf-8") as file:
         return file.read()

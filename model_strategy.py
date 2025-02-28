@@ -11,7 +11,7 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from utils.token_constraints import get_allowed_tokens
-from utils.config import END_OF_PROMPT_MARKER, MODELS_DICT
+from utils.config import JSON_START_MARKER, MODELS_DICT
 from utils.file_loader import str_to_json
 
 if TYPE_CHECKING:  # just for type definition
@@ -58,7 +58,7 @@ class BaseModelStrategy:
         """
         Convert generated output text back into just a JSON.
         """
-        return str_to_json(output_text.split(END_OF_PROMPT_MARKER)[-1])
+        return str_to_json(output_text.split(JSON_START_MARKER)[-1])
 
 
 class EncoderDecoderStrategy(BaseModelStrategy):

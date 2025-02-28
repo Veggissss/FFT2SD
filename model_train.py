@@ -9,6 +9,7 @@ from transformers import (
 )
 from datasets import Dataset
 from model_loader import ModelLoader
+from utils.config import JSON_START_MARKER, JSON_END_MARKER
 from utils.enums import ModelType
 import dataset_loader
 
@@ -50,7 +51,7 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
         num_train_epochs=50,  # TODO: Make selectable along with other training params
         learning_rate=2e-4,
         weight_decay=0.01,
-        per_device_train_batch_size=1,
+        per_device_train_batch_size=3,
         per_device_eval_batch_size=1,
         logging_dir="./logs",
         logging_steps=10,
@@ -141,7 +142,12 @@ def train(model_type: ModelType) -> None:
 
     # Add tokens to the tokenizer.
     model_loader.tokenizer.add_tokens(new_tokens)
-    model_loader.tokenizer.add_special_tokens({"pad_token": "<PAD>"})
+    model_loader.tokenizer.add_special_tokens(
+        {
+            "pad_token": "<PAD>",
+            "additional_special_tokens": [JSON_START_MARKER, JSON_END_MARKER],
+        }
+    )
 
     # Resize the model's token embeddings to fit the new tokens.
     model_loader.model.resize_token_embeddings(len(model_loader.tokenizer))
@@ -172,7 +178,7 @@ def train(model_type: ModelType) -> None:
 if __name__ == "__main__":
     TRAIN_ALL_TYPES = False
     if not TRAIN_ALL_TYPES:
-        train(ModelType.ENCODER_DECODER)
+        train(ModelType.DECODER)
     else:
         for model_type in ModelType:
             train(model_type)

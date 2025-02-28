@@ -12,8 +12,12 @@ def test_dataset_loader_decoder():
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
 
+    # Check that the enums contain the correct values for null and not None
+    assert not "None" in enums
+    assert "null" in enums
+
     # Check that the output column is not used
-    assert dataset["output"][0] == "[UNUSED]"
+    assert dataset["output"][0] == "[UNUSED BY THE DECODER TYPE]"
 
     print(dataset["input"][0])
     print(dataset["output"][0])
@@ -24,8 +28,12 @@ def test_dataset_loader_encoder():
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
 
+    # Check that the enums contain the correct values for null and not None
+    assert not "None" in enums
+    assert "null" in enums
+
     # Check that the output column is not used
-    assert dataset["output"][0] == "[UNUSED]"
+    assert dataset["output"][0] == "[UNUSED BY THE ENCODER TYPE]"
 
     print(dataset["input"][0])
     print(dataset["output"][0])
@@ -35,6 +43,10 @@ def test_dataset_loader_encoder_decoder():
     dataset, enums = dataset_loader.create_dataset(DATA_PATH, ModelType.ENCODER_DECODER)
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
+
+    # Check that the enums contain the correct values for null and not None
+    assert not "None" in enums
+    assert "null" in enums
 
     # Confirm that the correct answer is not filled out
     print(dataset["input"][0])

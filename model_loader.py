@@ -2,6 +2,7 @@ import json
 import torch
 from transformers import StoppingCriteriaList
 
+from utils.file_loader import json_to_str
 from utils.token_constraints import StopOnToken
 from utils.config import SYSTEM_PROMPT, MODELS_DICT
 from utils.enums import ModelType
@@ -102,24 +103,32 @@ class ModelLoader:
         return filled_json
 
     def generate_filled_json(
-        self, input_text: str, container_number: str, template_str: str
+        self, input_text: str, container_number: str, template_entry: dict
     ) -> dict:
         """
         Fill out the JSON values based on the input text.
         :param model_loader: ModelLoader object with the loaded model and tokenizer.
         :param text: Input text to extract information from.
-        :param json_template: JSON template with fields to be filled.
+        :param template_entry: JSON template with value field to be filled.
         :return: JSON with filled values.
         """
+        # Convert JSON template to string to be used in generation with enum field
+        template_str = json_to_str(template_entry, indent=None)
+
+        # Remove enum field from prompt to save tokens
+        if template_entry.get("enum"):
+            del template_entry["enum"]
+
+        prompt_template_str = json_to_str(template_entry, indent=None)
         # Convert JSON template to a string to include in the prompt.
         prompt = SYSTEM_PROMPT.format(
             input_text=input_text,
             container_number=container_number,
             # Strip the value field if the model is a decoder speed up generation
             template_json=(
-                template_str.rsplit('"value":', 1)[0] + '"value": '
+                prompt_template_str.rsplit('"value":', 1)[0] + '"value": '
                 if self.model_type == ModelType.DECODER
-                else template_str
+                else prompt_template_str
             ),
         )
         print(f"Prompt:\n{prompt}\n")

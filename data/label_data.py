@@ -1,13 +1,11 @@
 import os
 import sys
-from data_model_enum import get_enum_fields
-
 
 # Add project root directory to sys.path for imports
 SCRIPT_PATH = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(SCRIPT_PATH, "..")))
 
-from utils.file_loader import load_text_file, load_json, save_json, json_to_str
+from utils.file_loader import load_text, load_json, save_json, json_to_str
 from utils.enums import ReportType
 
 
@@ -76,7 +74,7 @@ def label_data(
     Prompt the user to fill out the JSON values for a given text file.
     The labeled JSON is saved to the output directory.
     """
-    input_text = load_text_file(input_text_path)
+    input_text = load_text(input_text_path)
     target_json = load_json(input_json_path)
     metadata_json = load_json(input_metadata_path)
 

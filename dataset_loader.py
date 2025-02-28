@@ -3,97 +3,162 @@ import copy
 from datasets import Dataset
 from utils.file_loader import load_json, json_to_str
 from utils.enums import ModelType
-from utils.config import SYSTEM_PROMPT, CONTAINER_NUMBER_MASK
+from utils.config import SYSTEM_PROMPT, CONTAINER_NUMBER_MASK, DATA_MODEL_OUTPUT_FOLDER
 
 
 def create_dataset(dataset_path: str, model_type: ModelType) -> tuple[Dataset, list]:
     """
-    Create a Hugging Face Dataset from the JSON files in the specified directory.
-    :param dataset_path: The path to the directory containing the JSON files.
-    :param model_type: The type of model architecture - 'encoder', 'encoder-decoder', or 'decoder'.
-    :return: Hugging Face Dataset.
+    Create a Hugging Face Dataset from the labeled JSON files in the dataset path.
+    :param dataset_path: Path to the dataset files.
+    :param model_type: Model type to train.
+    :return: Tuple of the dataset and the enum values.
     """
-    # Dataset dictionary
-    dataset_dict = {
-        "input": [],
-        "output": [],
-    }
+    dataset_dict = {"input": [], "output": []}
     enums = []
-    for filename in os.listdir(dataset_path):
-        if not filename.endswith(".json"):
-            print(f"Skipping non-JSON file: {filename}")
-            continue
 
-        # Load JSON file and process data
-        loaded_json_data = load_json(os.path.join(dataset_path, filename))
+    for filename in filter(lambda f: f.endswith(".json"), os.listdir(dataset_path)):
+        file_path = os.path.join(dataset_path, filename)
+        processed_data = process_json_file(file_path, model_type, enums)
+        dataset_dict["input"].extend(processed_data["input"])
+        dataset_dict["output"].extend(processed_data["output"])
 
-        # Text to extract information from
-        input_text_str = json_to_str(loaded_json_data["input_text"], indent=1)
+    for filename in filter(
+        lambda f: f.endswith(".json"), os.listdir(DATA_MODEL_OUTPUT_FOLDER)
+    ):
+        file_path = os.path.join(DATA_MODEL_OUTPUT_FOLDER, filename)
+        processed_data = process_enum_file(file_path, model_type)
+        dataset_dict["input"].extend(processed_data["input"])
+        dataset_dict["output"].extend(processed_data["output"])
 
-        target_json = loaded_json_data["target_json"]
-        metadata_json = loaded_json_data["metadata_json"]
+    return Dataset.from_dict(dataset_dict), enums
 
-        # Add total container amount and report type into training data
-        target_json.insert(0, copy.deepcopy(metadata_json[0]))
-        target_json.insert(1, copy.deepcopy(metadata_json[1]))
 
-        # Create a template JSON with all value fields set to None
-        template_json = reset_value_fields(copy.deepcopy(target_json))
+def process_json_file(file_path: str, model_type: ModelType, enums: list) -> dict:
+    """
+    Process a single JSON file and extract input-output pairs for the dataset.
+    """
+    dataset_entries = {"input": [], "output": []}
 
-        # Iterate through template and target JSON entries
-        for template_entry, target_entry in zip(template_json, target_json):
-            template_entry_str = json_to_str(template_entry)
-            target_entry_str = json_to_str(target_entry)
+    data = load_json(file_path)
+    input_text = json_to_str(data["input_text"], indent=1)
+    metadata_json = data["metadata_json"]
+    target_json = [copy.deepcopy(item) for item in metadata_json[:2]] + data[
+        "target_json"
+    ]
 
-            # Inject container number into the prompt
+    # Create a copy with values reset to None
+    template_json = reset_value_fields(copy.deepcopy(target_json))
+
+    for template_entry, target_entry in zip(template_json, target_json):
+        if template_entry.get("type") == "enum":
+            # Save all unique enum values
+            for enum in template_entry["enum"]:
+                enum_value = str(enum.get("value"))
+                # Replace python None with JSON null value
+                if enum_value == "None":
+                    enum_value = "null"
+                if enum_value not in enums:
+                    enums.append(enum_value)
+            # Remove the enum form input and output to save a lot of tokens/max_length
+            del target_entry["enum"]
+            del template_entry["enum"]
+
+        if template_entry.get("field") == "Antall glass":
+            container_number = CONTAINER_NUMBER_MASK
+        else:
             container_number = json_to_str(metadata_json[1]["value"])
 
-            if template_entry.get("field") == "Antall glass":
-                # Mask the container number only once
-                container_number = CONTAINER_NUMBER_MASK
+        add_prompt_entry(
+            dataset_entries,
+            model_type,
+            input_text,
+            container_number,
+            target_entry["value"],
+            target_entry,
+            template_entry,
+        )
 
-            if model_type in [ModelType.ENCODER, ModelType.DECODER]:
-                # Use target as input
-                input_text = SYSTEM_PROMPT.format(
-                    input_text=input_text_str,
-                    container_number=container_number,
-                    template_json=target_entry_str,
-                )
-                # Not used by the encoder and decoder models
-                # As the decoder uses next token prediction
-                # And the encoder uses random masked token prediction
-                target_text = "[UNUSED]"
-            else:
-                # Encoder-decoder model
-                input_text = SYSTEM_PROMPT.format(
-                    input_text=input_text_str,
-                    container_number=container_number,
-                    template_json=template_entry_str,
-                )
-                # Just the value field for shorter generation and less tokens
-                target_text = json_to_str({"value": target_entry["value"]})
+    return dataset_entries
 
-            dataset_dict["input"].append(input_text)
-            dataset_dict["output"].append(target_text)
 
-            if template_entry.get("type") == "enum":
-                for enum in template_entry["enum"]:
-                    enum_value = enum["value"]
-                    # Replace None with the string "null"
-                    if not enum_value:
-                        enum_value = "null"
+def add_prompt_entry(
+    dataset_dict: dict,
+    model_type: ModelType,
+    input_text: str,
+    container_number: str,
+    correct_value: str,
+    target_entry: dict,
+    template_entry: dict,
+) -> None:
+    """
+    Format and add the input-output pair to the dataset based on the model type.
+    """
+    input_prompt = SYSTEM_PROMPT.format(
+        input_text=input_text,
+        container_number=container_number,
+        template_json=json_to_str(
+            (
+                target_entry
+                if model_type in [ModelType.ENCODER, ModelType.DECODER]
+                else template_entry
+            ),
+            indent=None,
+        ),
+    )
+    target_text = (
+        f"[UNUSED BY THE {model_type.value} TYPE]".upper()
+        if model_type in [ModelType.ENCODER, ModelType.DECODER]
+        else json_to_str({"value": correct_value}, indent=None)
+    )
 
-                    # If enum is new, add it to the list
-                    if enum_value not in enums:
-                        enums.append(str(enum_value))
+    dataset_dict["input"].append(input_prompt)
+    dataset_dict["output"].append(target_text)
 
-    # Convert dict to Hugging Face Dataset.
-    return Dataset.from_dict(dataset_dict), enums
+
+def process_enum_file(file_path: str, model_type: ModelType) -> dict:
+    """
+    Process a single JSON file to extract enum-based dataset entries.
+    """
+    dataset_entries = {"input": [], "output": []}
+
+    target_json = load_json(file_path)
+    template_json = reset_value_fields(copy.deepcopy(target_json))
+
+    for template_entry, target_entry in zip(template_json, target_json):
+        if template_entry.get("type") != "enum":
+            continue
+
+        for enum_dict in template_entry["enum"]:
+            prompt = ""
+            if enum_dict.get("group"):
+                prompt += f"[{enum_dict['group']}] "
+            if enum_dict.get("name"):
+                prompt += enum_dict["name"]
+            if prompt == "":
+                continue
+
+            correct_enum = enum_dict["value"]
+            if "enum" in template_entry:
+                del template_entry["enum"]
+            if "enum" in target_entry:
+                del target_entry["enum"]
+
+            add_prompt_entry(
+                dataset_entries,
+                model_type,
+                prompt,
+                CONTAINER_NUMBER_MASK,
+                correct_enum,
+                target_entry,
+                template_entry,
+            )
+
+    return dataset_entries
 
 
 def reset_value_fields(input_json: list[dict], key="value", value=None) -> list[dict]:
     """
-    Set all the value fields in the JSON to None.
+    Set all value fields in the JSON to None.
     """
     for item in input_json:
         item[key] = value

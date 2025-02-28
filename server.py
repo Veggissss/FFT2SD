@@ -1,9 +1,10 @@
+import copy
 from flask import Flask, request, jsonify
 
 from model_loader import ModelLoader
 from utils.config import CONTAINER_NUMBER_MASK
 from utils.enums import ModelType, ReportType
-from utils.file_loader import load_json, json_to_str
+from utils.file_loader import load_json
 from dataset_loader import reset_value_fields
 
 app = Flask(__name__)
@@ -29,10 +30,11 @@ def fill_json(input_text: str, container_str: str, template_entry: dict) -> dict
     if model_loader.model_type == ModelType.ENCODER:
         mask_token = model_loader.tokenizer.mask_token
     template_entry = reset_value_fields([template_entry], value=mask_token)[0]
-    template_str = json_to_str(template_entry, indent=2)
 
     # Generate filled JSON using the model
-    return model_loader.generate_filled_json(input_text, container_str, template_str)
+    return model_loader.generate_filled_json(
+        input_text, container_str, copy.deepcopy(template_entry)
+    )
 
 
 def generate(input_text: str) -> dict | None:
