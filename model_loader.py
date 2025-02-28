@@ -3,7 +3,7 @@ import torch
 from transformers import StoppingCriteriaList
 
 from utils.file_loader import json_to_str
-from utils.token_constraints import StopOnToken
+from token_constraints import StopOnToken
 from utils.config import SYSTEM_PROMPT, MODELS_DICT
 from utils.enums import ModelType
 from model_strategy import (
@@ -88,7 +88,7 @@ class ModelLoader:
         # Generate output based on the strategy
         return self.strategy.generate(self, inputs, amount_new_tokens, template_str)
 
-    def __output_to_json(self, output_text: str) -> dict:
+    def __output_to_json(self, output_text: str, template_str: str) -> dict:
         """
         Convert the model output text to a JSON object.
         :param output_text: Model output text to convert.
@@ -96,7 +96,7 @@ class ModelLoader:
         """
         filled_json = {}
         try:
-            filled_json = self.strategy.output_to_json(output_text)
+            filled_json = self.strategy.output_to_json(output_text, template_str)
         except json.JSONDecodeError:
             print("Failed to parse model output into JSON. Raw output:", output_text)
 
@@ -131,10 +131,12 @@ class ModelLoader:
                 else prompt_template_str
             ),
         )
-        print(f"Prompt:\n{prompt}\n")
+        # print(f"Prompt:\n{prompt}\n")
 
         # Generate the filled JSON based on the prompt
         output_text = self.__generate(prompt, template_str)
 
+        # print(f"Output:\n{output_text}\n")
+
         # Convert model output text to JSON
-        return self.__output_to_json(output_text)
+        return self.__output_to_json(output_text, template_str)

@@ -134,8 +134,9 @@ def process_enum_file(file_path: str, model_type: ModelType) -> dict:
                 prompt += f"[{enum_dict['group']}] "
             if enum_dict.get("name"):
                 prompt += enum_dict["name"]
+            # If enum has no group or name, use the value as prompt
             if prompt == "":
-                continue
+                prompt = enum_dict["value"]
 
             correct_enum = enum_dict["value"]
             if "enum" in template_entry:

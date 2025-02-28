@@ -1,4 +1,4 @@
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model, PeftModel
 from transformers import (
     Trainer,
     TrainingArguments,
@@ -9,7 +9,7 @@ from transformers import (
 )
 from datasets import Dataset
 from model_loader import ModelLoader
-from utils.config import JSON_START_MARKER, JSON_END_MARKER
+from utils.config import JSON_START_MARKER
 from utils.enums import ModelType
 import dataset_loader
 
@@ -42,17 +42,18 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     """
     # Remove untokenized input and output columns.
     training_data = training_data.remove_columns(["input", "output"])
-    training_data = training_data.train_test_split(test_size=0.1)
+    training_data = training_data.train_test_split(test_size=0.01)
 
     # Define training arguments.
     training_args = TrainingArguments(
         output_dir=output_dir,
-        eval_strategy="epoch",
-        num_train_epochs=50,  # TODO: Make selectable along with other training params
+        num_train_epochs=30,  # TODO: Make selectable along with other training params
         learning_rate=2e-4,
         weight_decay=0.01,
-        per_device_train_batch_size=3,
+        per_device_train_batch_size=4,
         per_device_eval_batch_size=1,
+        eval_strategy="steps",
+        eval_steps=100,
         logging_dir="./logs",
         logging_steps=10,
         fp16=True,  # Mixed precision
@@ -97,45 +98,29 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     loader.tokenizer.save_pretrained(output_dir)
 
 
-def train(model_type: ModelType) -> None:
+def apply_peft(model_loader: ModelLoader) -> PeftModel:
     """
-    Train the model using the provided dataset.
-    :param model_type: Model type to train.
+    Apply the PEFT model to the decoder model.
     """
-    # Load the untrained model and tokenizer.
-    model_loader = ModelLoader(model_type, is_trained=False)
-
-    # Quantized models can't be trained directly.
-    if model_loader.model_type == ModelType.DECODER:
-        # Configure LoRA
-        lora_config = LoraConfig(
-            r=128,  # Rank of the LoRA layers
-            lora_alpha=256,  # Scaling factor
-            lora_dropout=0.1,  # Dropout for LoRA
-            bias="none",  # No bias in LoRA layers
-            task_type="CAUSAL_LM",
-        )
-
-        # Apply PEFT to the decoder model
-        peft_model = get_peft_model(model_loader.model, lora_config)
-        peft_model.print_trainable_parameters()
-
-        # Use the PEFT model for training
-        model_loader.model = peft_model
-
-    # Load the test dataset.
-    dataset, enums = dataset_loader.create_dataset(
-        "data/test_data/", model_loader.model_type
+    # Configure LoRA
+    lora_config = LoraConfig(
+        r=128,  # Rank of the LoRA layers
+        lora_alpha=256,  # Scaling factor
+        lora_dropout=0.1,  # Dropout for LoRA
+        bias="none",  # No bias in LoRA layers
+        task_type="CAUSAL_LM",
     )
-    example_count = len(dataset["input"])
-    print(f"Number of examples: {example_count}")
+    peft_model = get_peft_model(model_loader.model, lora_config)
+    peft_model.print_trainable_parameters()
+    return peft_model
 
-    # Register enum strings present in dataset as new tokens.
-    print(f"Number of tokens in the tokenizer before: {len(model_loader.tokenizer)}")
 
+def add_tokens_to_tokenizer(model_loader: ModelLoader, enums: list[str]) -> None:
+    """
+    Add the used datatypes to the tokenizer and resize the model's token embeddings.
+    """
     # Make sure all the used datatypes are present in the tokenizer
-    enums.extend(["true", "false"])
-    print(f"New tokens: \n{enums}")
+    enums.extend(["true", "false", JSON_START_MARKER, "field", "type", "value"])
     new_tokens = [
         AddedToken(enum, single_word=True, rstrip=True, lstrip=True) for enum in enums
     ]
@@ -145,13 +130,11 @@ def train(model_type: ModelType) -> None:
     model_loader.tokenizer.add_special_tokens(
         {
             "pad_token": "<PAD>",
-            "additional_special_tokens": [JSON_START_MARKER, JSON_END_MARKER],
         }
     )
 
     # Resize the model's token embeddings to fit the new tokens.
     model_loader.model.resize_token_embeddings(len(model_loader.tokenizer))
-    print(f"Number of tokens in the tokenizer: {len(model_loader.tokenizer)}")
 
     # Fix for: "CUDA Assertion `t >= 0 && t < n_classes` failed" for the ltg encoder and encoder-decoder models
     # The Classifier does not get resized when calling model.resize_token_embeddings() so needs to be manually re-initialized
@@ -163,8 +146,30 @@ def train(model_type: ModelType) -> None:
     elif model_loader.model_type == ModelType.ENCODER_DECODER:
         model_loader.model.classifier.__init__(model_loader.model.config)
 
+
+def train(model_type: ModelType) -> None:
+    """
+    Train the model using the provided dataset.
+    :param model_type: Model type to train.
+    """
+    # Load the untrained model and tokenizer.
+    model_loader = ModelLoader(model_type, is_trained=False)
+
+    # Quantized models can't be trained directly.
+    if model_loader.model_type == ModelType.DECODER:
+        model_loader.model = apply_peft(model_loader)
+
+    # Load the test dataset.
+    dataset, enums = dataset_loader.create_dataset(
+        "data/test_data/", model_loader.model_type
+    )
+
+    add_tokens_to_tokenizer(model_loader, enums)
+    print(f"Number of tokens in the tokenizer: {len(model_loader.tokenizer)}")
+
     # Tokenize the dataset.
     tokenized_dataset = tokenize_dataset(model_loader.tokenizer, dataset)
+
     # Find the longest tensor in the tokenized_dataset["inputs"] column
     max_length = max(len(tensor) for tensor in tokenized_dataset["input_ids"])
     print(f"Longest tensor length in 'input_ids' column: {max_length}")

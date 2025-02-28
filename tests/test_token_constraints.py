@@ -1,6 +1,6 @@
 import pytest
 from transformers import AutoTokenizer, AddedToken
-from utils.token_constraints import get_allowed_tokens
+from token_constraints import get_allowed_tokens
 from utils.config import MODELS_DICT
 
 

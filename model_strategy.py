@@ -9,10 +9,12 @@ from transformers import (
     AutoModelForCausalLM,
     AutoModelForMaskedLM,
     BitsAndBytesConfig,
+    LogitsProcessorList,
 )
-from utils.token_constraints import get_allowed_tokens
+from token_constraints import get_allowed_tokens, log_token_probabilities
 from utils.config import JSON_START_MARKER, MODELS_DICT
 from utils.file_loader import str_to_json
+from token_constraints import TokenTypeConstraintProcessor
 
 if TYPE_CHECKING:  # just for type definition
     from model_loader import ModelLoader
@@ -25,7 +27,7 @@ class BaseModelStrategy:
 
     def __init__(self):
         # Transfer tokenizer from abstract to implemented load method
-        self._tokenizer = None
+        self.tokenizer = None
 
     @abstractmethod
     def load(self, model_loader: "ModelLoader") -> tuple[AutoModel, AutoTokenizer]:
@@ -33,7 +35,7 @@ class BaseModelStrategy:
         Load the model and tokenizer for the specific model type.
         """
         # Load the corresponding model's tokenizer
-        self._tokenizer = AutoTokenizer.from_pretrained(
+        self.tokenizer = AutoTokenizer.from_pretrained(
             model_loader.model_name, trust_remote_code=True
         )
 
@@ -54,11 +56,31 @@ class BaseModelStrategy:
         """
         raise NotImplementedError
 
-    def output_to_json(self, output_text: str) -> dict:
+    def output_to_json(self, output_text: str, template_str: str) -> dict:
         """
         Convert generated output text back into just a JSON.
         """
         return str_to_json(output_text.split(JSON_START_MARKER)[-1])
+
+    def get_type_allowed_tokens(self, template_str: str) -> list[int]:
+        """
+        Get the allowed tokens based on the template type.
+        :param template_str: The untokenized template as a JSON string.
+        :return: List of token IDs that are allowed for the given template type.
+        """
+        template_json = str_to_json(template_str)
+        template_type = template_json["type"]
+
+        # If the template is an enum, get the allowed tokens
+        template_enums = None
+        if "enum" in template_json:
+            template_enums = [enum["value"] for enum in template_json["enum"]]
+        # Get allowed tokens
+        return get_allowed_tokens(
+            self.tokenizer,
+            template_type,
+            template_enums,
+        )
 
 
 class EncoderDecoderStrategy(BaseModelStrategy):
@@ -76,7 +98,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
         )
         model.to(model_loader.device)
 
-        return model, self._tokenizer
+        return model, self.tokenizer
 
     def generate(
         self,
@@ -85,20 +107,41 @@ class EncoderDecoderStrategy(BaseModelStrategy):
         amount_new_tokens,
         template_str=None,
     ) -> str:
+        logits_processor = LogitsProcessorList(
+            [
+                TokenTypeConstraintProcessor(
+                    self.tokenizer, self.get_type_allowed_tokens(template_str)
+                )
+            ]
+        )
         output_ids = model_loader.model.generate(
             input_ids=inputs["input_ids"],
             attention_mask=inputs["attention_mask"],
-            # eos_token_id=8,
             max_new_tokens=amount_new_tokens,
+            logits_processor=logits_processor,
             stopping_criteria=model_loader.stopping_criteria,
         )
         return model_loader.tokenizer.decode(
             output_ids.squeeze(), skip_special_tokens=True
         )
 
-    def output_to_json(self, output_text: str) -> dict:
+    def output_to_json(self, output_text: str, template_str: str) -> dict:
+        # Parse output text to JSON and clean string values
+        cleaned_data = {}
+        for key, value in str_to_json(output_text).items():
+            if isinstance(key, str):
+                key = key.strip()
+            if isinstance(value, str):
+                value = value.strip()
+                # Convert null strings back to None
+                if value == "null":
+                    value = None
+            cleaned_data[key] = value
+
         # Add the output value to the template JSON
-        return str_to_json(output_text)
+        template_json = str_to_json(template_str)
+        template_json["value"] = cleaned_data["value"]
+        return template_json
 
 
 class DecoderStrategy(BaseModelStrategy):
@@ -128,7 +171,7 @@ class DecoderStrategy(BaseModelStrategy):
 
         if model_loader.is_trained:
             # Resize to fit the trained model's token embeddings
-            model.resize_token_embeddings(len(self._tokenizer))
+            model.resize_token_embeddings(len(self.tokenizer))
 
             # Load the PEFT model
             model = PeftModel.from_pretrained(
@@ -136,7 +179,7 @@ class DecoderStrategy(BaseModelStrategy):
                 model_loader.model_name,
             )
 
-        return model, self._tokenizer
+        return model, self.tokenizer
 
     def generate(
         self,
@@ -147,11 +190,18 @@ class DecoderStrategy(BaseModelStrategy):
     ) -> str:
         # Generate decoder output
         inputs.pop("token_type_ids", None)
-
+        logits_processor = LogitsProcessorList(
+            [
+                TokenTypeConstraintProcessor(
+                    self.tokenizer, self.get_type_allowed_tokens(template_str)
+                )
+            ]
+        )
         output_ids = model_loader.model.generate(
             **inputs,
             max_new_tokens=amount_new_tokens,
             stopping_criteria=model_loader.stopping_criteria,
+            logits_processor=logits_processor,
         )
         return model_loader.tokenizer.decode(
             output_ids[0],
@@ -175,7 +225,7 @@ class EncoderStrategy(BaseModelStrategy):
         )
         model.to(model_loader.device)
 
-        return model, self._tokenizer
+        return model, self.tokenizer
 
     def generate(
         self,
@@ -194,59 +244,35 @@ class EncoderStrategy(BaseModelStrategy):
             inputs.input_ids == model_loader.tokenizer.mask_token_id
         )[1].item()
 
-        # Get logits for the masked token
-        masked_token_logits = logits[0, masked_index]
+        # Get logits for the masked token [batch_size, vocab_size]
+        masked_logits = logits[:, masked_index]
 
-        # Apply softmax to convert logits to probabilities
-        probabilities = torch.nn.functional.softmax(masked_token_logits, dim=-1)
+        # Get allowed tokens based on the template
+        allowed_token_ids = self.get_type_allowed_tokens(template_str)
 
-        # Filter the allowed tokens' probabilities based on template type
-        template_json = str_to_json(template_str)
-        template_type = template_json["type"]
-
-        # If the template is an enum, get the allowed tokens
-        template_enums = None
-        if "enum" in template_json:
-            template_enums = [enum["value"] for enum in template_json["enum"]]
-        # Get allowed tokens
-        allowed_token_ids = get_allowed_tokens(
-            model_loader.tokenizer,
-            template_type,
-            template_enums,
+        # Log allowed token probabilities
+        log_token_probabilities(
+            model_loader.tokenizer, masked_logits, allowed_token_ids
         )
 
-        # Check if allowed tokens are empty, and if so, use the model's output without filtering
-        if not allowed_token_ids:
-            print("No allowed tokens found! Using the highest probability tokens.")
-            allowed_token_ids = probabilities.topk(10).indices.tolist()
+        # Convert logits to probabilities for token selection
+        masked_prob = torch.nn.functional.softmax(masked_logits[0], dim=-1)
 
-        # Get token probabilities for allowed tokens
+        # Get probabilities for allowed tokens
         allowed_token_probabilities = [
-            (token_id, probabilities[token_id].item()) for token_id in allowed_token_ids
+            (token_id, masked_prob[token_id].item()) for token_id in allowed_token_ids
         ]
-
-        # Print top-k tokens with their probabilities
-        top_k = sorted(allowed_token_probabilities, key=lambda x: x[1], reverse=True)[
-            :10
-        ]
-        print("Top tokens and their probabilities:")
-        for token_id, prob in top_k:
-            token = model_loader.tokenizer.decode(token_id)
-            print(f"Token: {token}, Probability: {prob:.4f}")
 
         # Select the allowed token with the highest probability
         predicted_token_id = max(allowed_token_probabilities, key=lambda x: x[1])[0]
-
-        # Convert token ID back to token
-        predicted_token = model_loader.tokenizer.decode(predicted_token_id)
 
         # Replace the [MASK] token with the predicted token in the original sequence
         input_ids = inputs.input_ids[0].tolist()
         input_ids[masked_index] = predicted_token_id
 
-        print(f"Predicted token: {predicted_token}")
+        print(f"Predicted token: {model_loader.tokenizer.decode(predicted_token_id)}")
 
-        # Convert the input_ids with the unmasked id back to text
+        # Return the decoded text
         return model_loader.tokenizer.decode(
             input_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
         )
