@@ -120,7 +120,7 @@ def add_tokens_to_tokenizer(model_loader: ModelLoader, enums: list[str]) -> None
     Add the used datatypes to the tokenizer and resize the model's token embeddings.
     """
     # Make sure all the used datatypes are present in the tokenizer
-    enums.extend(["true", "false", JSON_START_MARKER, "field", "type", "value"])
+    enums.extend(["true", "false", JSON_START_MARKER, "id", "field", "type", "value"])
     new_tokens = [
         AddedToken(enum, single_word=True, rstrip=True, lstrip=True) for enum in enums
     ]

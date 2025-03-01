@@ -37,13 +37,14 @@ def fill_json(input_text: str, container_str: str, template_entry: dict) -> dict
     )
 
 
-def generate(input_text: str) -> dict | None:
+def generate(input_text: str) -> list[dict] | None:
     """Function to generate text using the loaded model."""
 
     # Load metadata template to determine the report type and container count
     metadata_json = load_json("data_model/out/generated-metadata.json")
     report_json = metadata_json[0]
     glass_amount_json = metadata_json[1]
+    container_id_json = metadata_json[2]
 
     # Find out the report type based on the input text
     report_type = fill_json(input_text, CONTAINER_NUMBER_MASK, report_json).get("value")
@@ -67,16 +68,25 @@ def generate(input_text: str) -> dict | None:
     template_json = load_json(f"data_model/out/generated-{report_type.strip()}.json")
 
     # Get the filled JSON for each container, 1 indexed
-    final_json = {"input": input_text, "output": [], "report_type": report_type.strip()}
+    reports = []
     for container_number in range(1, total_containers + 1):
-        container_json = {f"glass {container_number}": []}
-        for template_entry in template_json:
-            # Generate filled JSON using the model
-            filled_json = fill_json(input_text, container_number, template_entry)
-            container_json[f"glass {container_number}"].append(filled_json)
-        final_json["output"].append(container_json)
+        glass_amount_json["value"] = total_containers
+        report_json["value"] = report_type
+        container_id_json["value"] = container_number
+        generated_report = {
+            "input_text": input_text,
+            "target_json": [],
+            "metadata_json": copy.deepcopy(metadata_json),
+        }
 
-    return final_json
+        # Generate filled JSON using the model
+        for template_entry in template_json:
+            filled_json = fill_json(input_text, container_number, template_entry)
+            generated_report["target_json"].append(filled_json)
+
+        reports.append(generated_report)
+
+    return reports
 
 
 @app.route("/load_model", methods=["POST"])

@@ -36,7 +36,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                 text = self.tokenizer.decode(input_ids[0], skip_special_tokens=True)
 
                 # Check for ': "' indicating that a enum or other constrained token is expected
-                if ":" in text and text.rstrip().endswith('"'):
+                if "value" in text and ":" in text and text.rstrip().endswith('"'):
                     # Constrain token values to be filled out
                     scores += self._handle_state(
                         scores,

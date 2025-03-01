@@ -11,10 +11,13 @@ from transformers import (
     BitsAndBytesConfig,
     LogitsProcessorList,
 )
-from token_constraints import get_allowed_tokens, log_token_probabilities
+from token_constraints import (
+    get_allowed_tokens,
+    log_token_probabilities,
+    TokenTypeConstraintProcessor,
+)
 from utils.config import JSON_START_MARKER, MODELS_DICT
 from utils.file_loader import str_to_json
-from token_constraints import TokenTypeConstraintProcessor
 
 if TYPE_CHECKING:  # just for type definition
     from model_loader import ModelLoader
