@@ -14,6 +14,7 @@ from transformers import (
 from token_constraints import (
     get_allowed_tokens,
     log_token_probabilities,
+    add_score_mask,
     TokenTypeConstraintProcessor,
 )
 from utils.config import JSON_START_MARKER, MODELS_DICT
@@ -240,6 +241,7 @@ class EncoderStrategy(BaseModelStrategy):
         # Forward pass to get logits
         with torch.no_grad():
             outputs = model_loader.model(**inputs)
+            # [batch_size, seq_length, vocab_size]
             logits = outputs.logits
 
         # Find the masked token position
@@ -248,34 +250,24 @@ class EncoderStrategy(BaseModelStrategy):
         )[1].item()
 
         # Get logits for the masked token [batch_size, vocab_size]
-        masked_logits = logits[:, masked_index]
+        masked_scores = logits[:, masked_index]
 
         # Get allowed tokens based on the template
         allowed_token_ids = self.get_type_allowed_tokens(template_str)
 
         # Log allowed token probabilities
         log_token_probabilities(
-            model_loader.tokenizer, masked_logits, allowed_token_ids
+            model_loader.tokenizer, masked_scores, allowed_token_ids
         )
 
-        # Convert logits to probabilities for token selection
-        masked_prob = torch.nn.functional.softmax(masked_logits[0], dim=-1)
+        # Add a mask to the scores based on the allowed token IDs
+        masked_scores = add_score_mask(masked_scores, allowed_token_ids)
 
-        # Get probabilities for allowed tokens
-        allowed_token_probabilities = [
-            (token_id, masked_prob[token_id].item()) for token_id in allowed_token_ids
-        ]
+        # Inject the predicted token back into the input
+        # inputs.input_ids: [batch_size, seq_length]
+        input_ids = inputs.input_ids[0]
+        input_ids[masked_index] = torch.argmax(masked_scores).item()
 
-        # Select the allowed token with the highest probability
-        predicted_token_id = max(allowed_token_probabilities, key=lambda x: x[1])[0]
-
-        # Replace the [MASK] token with the predicted token in the original sequence
-        input_ids = inputs.input_ids[0].tolist()
-        input_ids[masked_index] = predicted_token_id
-
-        print(f"Predicted token: {model_loader.tokenizer.decode(predicted_token_id)}")
-
-        # Return the decoded text
         return model_loader.tokenizer.decode(
             input_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
         )

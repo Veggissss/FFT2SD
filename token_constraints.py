@@ -38,45 +38,22 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                 # Check for ': "' indicating that a enum or other constrained token is expected
                 if "value" in text and ":" in text and text.rstrip().endswith('"'):
                     # Constrain token values to be filled out
-                    scores += self._handle_state(
-                        scores,
-                        self.allowed_token_ids,
-                        GenerationState.AWAITING_QUOTE,
-                    )
+                    scores = add_score_mask(scores, self.allowed_token_ids)
+                    self.state = GenerationState.AWAITING_QUOTE
                     # Log probabilities
                     log_token_probabilities(
                         self.tokenizer, scores, self.allowed_token_ids
                     )
             case GenerationState.AWAITING_QUOTE:
                 # After the value token, allow only closing quote
-                scores += self._handle_state(
-                    scores,
-                    self.quote_token_id,
-                    GenerationState.AWAITING_END_BRACKET,
-                )
+                scores = add_score_mask(scores, self.quote_token_id)
+                self.state = GenerationState.AWAITING_END_BRACKET
 
             case GenerationState.AWAITING_END_BRACKET:
                 # After closing quote, allow only closing brace
-                scores += self._handle_state(
-                    scores,
-                    self.bracket_end_token_id,
-                    None,
-                )
+                scores = add_score_mask(scores, self.bracket_end_token_id)
+                self.state = None
         return scores
-
-    def _handle_state(
-        self,
-        scores: torch.LongTensor,
-        allowed_ids: list[int] | int,
-        next_state: GenerationState | None,
-    ):
-        """
-        Apply a mask to the scores based on the allowed token IDs and update the state.
-        """
-        mask = torch.full_like(scores, float("-inf"))
-        mask[:, allowed_ids] = 0
-        self.state = next_state
-        return mask
 
 
 class StopOnToken(StoppingCriteria):
@@ -90,6 +67,18 @@ class StopOnToken(StoppingCriteria):
 
     def __call__(self, input_ids, scores, **kwargs):
         return input_ids[0, -1].item() == self.stop_token_id
+
+
+def add_score_mask(
+    scores: torch.LongTensor, allowed_ids: list[int] | int
+) -> torch.Tensor:
+    """
+    Apply a mask to the scores based on the allowed token IDs.
+    """
+    mask = torch.full_like(scores, float("-inf"))
+    mask[:, allowed_ids] = 0
+    scores += mask
+    return scores
 
 
 def log_token_probabilities(

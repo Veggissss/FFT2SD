@@ -37,7 +37,7 @@ class ReportType(BaseEnum):
 
 class GenerationState(Enum):
     """
-    Enum class to represent the state of the generation process.
+    Enum class to represent the states of the restricted token generation.
     """
 
     WAITING = 0
