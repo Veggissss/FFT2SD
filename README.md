@@ -122,13 +122,22 @@ An overview of how the dataset is structured, along with training and the evalua
 ![Training overview](figures/LLM.DataFlow.drawio.svg)
 
 ### Tokenization
-- Added enums to tokenizer.
+Just before the training/fine-tuning process begins, new tokens from the dataset are added to the tokenizer.
+The added tokens are enum values that can be used by the model to fill out the JSON.
+By making each enum a single word token it makes it possible for the encoder model to unmask the value without having the token being split up into multiple tokens.
+It also simplifies the process of allowing certain tokens as the `enum` field that specifies which values are allowed in the `value` field since each token will have a single dedicated id.
+The model's embeddings (and classifier manual fix for ltg encoder/encoder-decoder) are resized to fit the new tokens.
+
+### Restricted tokens
+By reducing the possible allowed tokens the model can produce, the chances that an invalid token is generated is reduced.
+This is done by setting the score values for the non allowed tokens to -inf, when unmasking for encoder models and by using a `LogitsProcessor` for autoregressive models (encoder-decoder & decoder). 
+This `LogitsProcessor` triggers when the `value` field, a `:` and a `"` is generated.
+The constrainted `LogitsProcessor` also force closes the `"` and generates a `}` which will stop the generation due to the `StoppingCriteria`. (See `token_constraints.py` for full implementation)
 
 ### Encoder 
 - Masked learning
-- Allowed tokens filtering
-- *Single token restriction*
 - Differ from NER
+- Limitation: *Single token restriction*
 
 ### Decoder
 - Casual learning
@@ -137,14 +146,14 @@ An overview of how the dataset is structured, along with training and the evalua
 
 ### Encoder-Decoder
 - Sequence to Sequence
+- Only output a single JSON field to save tokens.
 
 ## Evaluation of Models
 - Separate from training
 - TODO: Evaluation metrics presented as graphical, tables etc.
 
 ## Investigate
-- See if end of sentence marker and prompt impacts the different models.
 - Encoder: 
     * Extra label specific masked training
     * One mask to many tokens. (String comments etc)
-- Create simple frontend UI to illustrate the use of the server.py API.
+- Create simple frontend UI to illustrate the use of the server.py API and to implement labeling correction (feedback loop).
