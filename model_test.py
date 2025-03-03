@@ -1,5 +1,5 @@
 from model_loader import ModelLoader
-from utils.enums import ModelType
+from utils.enums import ModelType, ReportType
 from utils.file_loader import load_text, json_to_str
 import server
 
@@ -9,7 +9,7 @@ if __name__ == "__main__":
     server.model_loader = ModelLoader(MODEL_TYPE, IS_TRAINED)
 
     # Simple manual test
-    CASE_NUMBER = 1
+    CASE_NUMBER = 3
     TEXT_TYPES = ["klinisk_oppl", "makro", "diagn"]
     TEXT_INDEX = 0
 
@@ -18,5 +18,5 @@ if __name__ == "__main__":
     )
     print(input_text)
 
-    out = server.generate(input_text)
+    out = server.generate(input_text, ReportType.KLINISK, 1)
     print(json_to_str(out))

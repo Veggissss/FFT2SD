@@ -37,7 +37,9 @@ def fill_json(input_text: str, container_str: str, template_entry: dict) -> dict
     )
 
 
-def generate(input_text: str) -> list[dict] | None:
+def generate(
+    input_text: str, report_type: ReportType = None, total_containers: int = None
+) -> list[dict] | None:
     """Function to generate text using the loaded model."""
 
     # Load metadata template to determine the report type and container count
@@ -46,32 +48,37 @@ def generate(input_text: str) -> list[dict] | None:
     glass_amount_json = metadata_json[1]
     container_id_json = metadata_json[2]
 
-    # Find out the report type based on the input text
-    report_type = fill_json(input_text, CONTAINER_NUMBER_MASK, report_json).get("value")
-    if not report_type or report_type.strip() not in ReportType.get_enum_map():
-        print("ERROR: Invalid report type!")
-        return None
-
-    # Find out the total number of containers based on the input text
-    try:
-        total_containers = int(
-            fill_json(input_text, CONTAINER_NUMBER_MASK, glass_amount_json).get("value")
-        )
-        if total_containers < 1 or total_containers > 10:
-            print("ERROR: Invalid container count!")
+    # Determine report type if not provided
+    if not report_type:
+        filled_report = fill_json(input_text, CONTAINER_NUMBER_MASK, report_json)
+        report_type_str = filled_report.get("value", "").strip()
+        if not report_type_str or report_type_str not in ReportType.get_enum_map():
+            print("ERROR: Invalid report type!")
             return None
-    except (ValueError, TypeError) as e:
-        print(f"ERROR: Could not parse the container count! {e}")
-        return None
+        report_type = ReportType(report_type_str)
+
+    # Determine total containers if not provided
+    if not total_containers:
+        filled_container = fill_json(
+            input_text, CONTAINER_NUMBER_MASK, glass_amount_json
+        )
+        total_containers = filled_container.get("value")
+        if not total_containers or not str(total_containers).isdigit():
+            print("ERROR: Could not parse the container count!")
+            return None
+        total_containers = int(total_containers)
+        if total_containers < 1 or total_containers > 10:
+            print("ERROR: container count out of range!")
+            return None
 
     # Load the generated JSON template based on the report type
-    template_json = load_json(f"data_model/out/generated-{report_type.strip()}.json")
+    template_json = load_json(f"data_model/out/generated-{report_type.value}.json")
 
     # Get the filled JSON for each container, 1 indexed
     reports = []
     for container_number in range(1, total_containers + 1):
         glass_amount_json["value"] = total_containers
-        report_json["value"] = report_type
+        report_json["value"] = report_type.value
         container_id_json["value"] = container_number
         generated_report = {
             "input_text": input_text,
@@ -118,7 +125,12 @@ def generate_endpoint():
         print("Input text is required")
         return jsonify({"error": "Input text is required"}), 400
 
-    final_json = generate(input_text)
+    # Get optional parameters
+    report_type_str: str | None = request.json.get("report_type")
+    report_type = ReportType(report_type_str) if report_type_str else None
+    total_containers: int | None = request.json.get("total_containers")
+
+    final_json = generate(input_text, report_type, total_containers)
     if final_json is None:
         return jsonify({"error": "Failed to generate structured data"}), 500
 
