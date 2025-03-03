@@ -64,7 +64,21 @@ class BaseModelStrategy:
         """
         Convert generated output text back into just a JSON.
         """
-        return str_to_json(output_text.split(JSON_START_MARKER)[-1])
+        output_json = str_to_json(output_text.split(JSON_START_MARKER)[-1])
+
+        # Clean and convert string values to appropriate types
+        if isinstance(output_json.get("value"), str):
+            output_json["value"] = output_json["value"].strip()
+
+            type_mapping = {"null": None, "true": True, "false": False}
+            if output_json["value"] in type_mapping:
+                output_json["value"] = type_mapping[output_json["value"]]
+            elif output_json["value"].isdigit():
+                output_json["value"] = int(output_json["value"])
+        # Add possible enum values back to the output JSON
+        if output_json.get("type") == "enum":
+            output_json["enum"] = str_to_json(template_str)["enum"]
+        return output_json
 
     def get_type_allowed_tokens(self, template_str: str) -> list[int]:
         """
@@ -125,9 +139,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
             logits_processor=logits_processor,
             stopping_criteria=model_loader.stopping_criteria,
         )
-        return model_loader.tokenizer.decode(
-            output_ids.squeeze(), skip_special_tokens=True
-        )
+        return model_loader.tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
     def output_to_json(self, output_text: str, template_str: str) -> dict:
         # Parse output text to JSON and clean string values

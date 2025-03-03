@@ -126,7 +126,7 @@ class ModelLoader:
             container_number=container_number,
             # Strip the value field if the model is a decoder speed up generation
             template_json=(
-                prompt_template_str.rsplit('"value":', 1)[0] + '"value": '
+                prompt_template_str.rsplit('"value"', 1)[0] + '"value"'
                 if self.model_type == ModelType.DECODER
                 else prompt_template_str
             ),

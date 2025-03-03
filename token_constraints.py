@@ -22,37 +22,52 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         self.tokenizer = tokenizer
         self.allowed_token_ids = allowed_token_ids
 
-        self.quote_token_id = tokenizer.encode('"', add_special_tokens=False)[0]
-        self.bracket_end_token_id = tokenizer.encode("}", add_special_tokens=False)[0]
+        # Identifying sequence of tokens that indicate the value field
+        self.value_token_id = tokenizer.convert_tokens_to_ids("value")
+        self.null_token_id = tokenizer.convert_tokens_to_ids("null")
+        self.colon_token_id = tokenizer.convert_tokens_to_ids(":")
+        self.quote_token_id = tokenizer.convert_tokens_to_ids('"')
+        self.quote2_token_id = tokenizer.convert_tokens_to_ids(' "')
+        self.bracket_end_token_id = tokenizer.convert_tokens_to_ids("}")
+
         self.state = GenerationState.WAITING
 
     def __call__(self, input_ids, scores):
         # Originally for string, only the null token is in allowed_token_ids, so give no constraints
-        if len(self.allowed_token_ids) <= 1:
+        if len(self.allowed_token_ids) <= 1 or input_ids.shape[1] < 5:
             return scores
+
+        last_token_id = input_ids[0, -1].item()
         match self.state:
             case GenerationState.WAITING:
-                # Decode text up to current point to check context
-                text = self.tokenizer.decode(input_ids[0], skip_special_tokens=True)
-
-                # Check for ': "' indicating that a enum or other constrained token is expected
-                if "value" in text and ":" in text and text.rstrip().endswith('"'):
-                    # Constrain token values to be filled out
-                    scores = add_score_mask(scores, self.allowed_token_ids)
-                    self.state = GenerationState.AWAITING_QUOTE
-                    # Log probabilities
-                    log_token_probabilities(
-                        self.tokenizer, scores, self.allowed_token_ids
+                # See if "value": is generated (There might be separators before value)
+                recent_tokens = input_ids[0, -5:].tolist()
+                if (
+                    last_token_id == self.colon_token_id
+                    and self.value_token_id in recent_tokens
+                ):
+                    self.state = GenerationState.AWAIT_VALUE
+                    return add_score_mask(
+                        scores, [self.quote_token_id, self.quote2_token_id]
                     )
+
+            case GenerationState.AWAIT_VALUE:
+                # If the last token is a quote, allow only the restricted value token
+                self.state = GenerationState.AWAITING_QUOTE
+                scores = add_score_mask(scores, self.allowed_token_ids)
+                log_token_probabilities(self.tokenizer, scores, self.allowed_token_ids)
+                return scores
+
             case GenerationState.AWAITING_QUOTE:
-                # After the value token, allow only closing quote
-                scores = add_score_mask(scores, self.quote_token_id)
                 self.state = GenerationState.AWAITING_END_BRACKET
+                return add_score_mask(
+                    scores, [self.quote_token_id, self.quote2_token_id]
+                )
 
             case GenerationState.AWAITING_END_BRACKET:
-                # After closing quote, allow only closing brace
-                scores = add_score_mask(scores, self.bracket_end_token_id)
                 self.state = None
+                return add_score_mask(scores, self.bracket_end_token_id)
+
         return scores
 
 
@@ -131,7 +146,10 @@ def get_allowed_tokens(
             if enums is None:
                 raise ValueError("Enums must be provided for enum token type.")
             for enum in enums:
-                token_id = tokenizer.convert_tokens_to_ids(str(enum))
+                enum_str = str(enum)
+                if enum_str == "None":
+                    continue
+                token_id = tokenizer.convert_tokens_to_ids(enum_str)
                 allowed_token_ids.append(token_id)
         case "boolean":
             for token_id in range(tokenizer.vocab_size):
