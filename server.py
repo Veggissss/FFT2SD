@@ -1,17 +1,24 @@
 import copy
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 from model_loader import ModelLoader
 from utils.config import CONTAINER_NUMBER_MASK
 from utils.enums import ModelType, ReportType
-from utils.file_loader import load_json
+from utils.file_loader import load_json, save_json
 from dataset_loader import reset_value_fields
 
 app = Flask(__name__)
 
+# Enable CORS for all endpoints
+CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*"])
+
 # Global variable to store the loaded model
 model_loader = None
+# If to use the trained model or directly from huggingface specified in utils/config.py
 IS_TRAINED = True
+# Keeps track of the amount of corrected JSONs
+corrected_count = 0
 
 
 def load_model(model_type: ModelType) -> str:
@@ -130,11 +137,30 @@ def generate_endpoint():
     report_type = ReportType(report_type_str) if report_type_str else None
     total_containers: int | None = request.json.get("total_containers")
 
-    final_json = generate(input_text, report_type, total_containers)
-    if final_json is None:
+    reports = generate(input_text, report_type, total_containers)
+    if reports is None:
         return jsonify({"error": "Failed to generate structured data"}), 500
 
-    return jsonify(final_json)
+    return jsonify(reports)
+
+
+@app.route("/correct", methods=["POST"])
+def correct_endpoint():
+    """Endpoint to save the corrected JSON by the user."""
+    reports: list[dict] = request.json
+    if not reports:
+        return jsonify({"error": "No reports provided"}), 400
+
+    # Save every JSON in the list as a separate file
+    for report in reports:
+        report_type = report["metadata_json"][0]["value"]
+        global corrected_count
+        save_json(
+            report, f"data/corrected/{corrected_count}_corrected_{report_type}.json"
+        )
+        corrected_count += 1
+
+    return jsonify({"message": "Correctly labeled JSON saved!"})
 
 
 if __name__ == "__main__":
