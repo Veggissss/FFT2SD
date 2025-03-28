@@ -134,7 +134,9 @@ def generate_endpoint():
 
     # Get optional parameters
     report_type_str: str | None = request.json.get("report_type")
-    report_type = ReportType(report_type_str) if report_type_str else None
+    report_type = None
+    if report_type_str and report_type_str in ReportType.get_enum_map():
+        report_type = ReportType(report_type_str)
     total_containers: int | None = request.json.get("total_containers")
 
     reports = generate(input_text, report_type, total_containers)
