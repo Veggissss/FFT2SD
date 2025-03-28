@@ -100,14 +100,16 @@ function App() {
   return (
     <>
       <h1 className="app-title">Pathology Report Labeler</h1>
+      <div className="model-panel">
+        <select value={modelType} onChange={(e) => setModelType(e.target.value)}>
+          <option value="encoder">Encoder</option>
+          <option value="encoder-decoder">Encoder-Decoder</option>
+          <option value="decoder">Decoder</option>
+        </select>
+        <button onClick={handleLoadModel} className="action-button">Load Model</button>
+      </div>
       <div className="app-container">
         <div className="left-panel">
-          <select value={modelType} onChange={(e) => setModelType(e.target.value)}>
-            <option value="encoder">Encoder</option>
-            <option value="encoder-decoder">Encoder-Decoder</option>
-            <option value="decoder">Decoder</option>
-          </select>
-          <button onClick={handleLoadModel} className="action-button">Load Model</button>
           <select value={reportType} onChange={(e) => setReportType(e.target.value)}>
             <option value="auto">Report Type (Auto)</option>
             <option value="klinisk">Klinisk</option>
@@ -146,11 +148,11 @@ function App() {
             />
           </div>
           <div className="navigation-controls">
-            <button onClick={handlePrevious} disabled={currentIndex === 0 || jsonList.length === 0}>Previous</button>
+            <button onClick={handlePrevious} disabled={currentIndex === 0 || jsonList.length === 0}>Prev</button>
             <span>{jsonList.length > 0 ? `${currentIndex + 1} / ${jsonList.length}` : 'No data'}</span>
             <button onClick={handleNext} disabled={currentIndex === jsonList.length - 1 || jsonList.length === 0}>Next</button>
           </div>
-          <button onClick={handleCorrect} className="action-button">Correct</button>
+          <button onClick={handleCorrect} className="action-button" disabled={jsonList.length === 0}>Correct</button>
         </div>
       </div>
     </>
