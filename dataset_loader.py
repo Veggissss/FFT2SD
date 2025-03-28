@@ -148,7 +148,7 @@ def process_enum_file(file_path: str, model_type: ModelType) -> dict:
                 dataset_entries,
                 model_type,
                 prompt,
-                CONTAINER_NUMBER_MASK,
+                "1",
                 correct_enum,
                 target_entry,
                 template_entry,
