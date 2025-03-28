@@ -106,7 +106,7 @@ function App() {
           <option value="encoder-decoder">Encoder-Decoder</option>
           <option value="decoder">Decoder</option>
         </select>
-        <button onClick={handleLoadModel} className="action-button">Load Model</button>
+        <button onClick={handleLoadModel} className="action-button">1. Load Model</button>
       </div>
       <div className="app-container">
         <div className="left-panel">
@@ -128,7 +128,7 @@ function App() {
             placeholder="Report text..."
             className="input-textarea"
           />
-          <button onClick={handleGenerate} className="action-button">Generate</button>
+          <button onClick={handleGenerate} className="action-button">2. Generate</button>
         </div>
         <div className="right-panel">
           <div className="editor-container">
@@ -152,7 +152,7 @@ function App() {
             <span>{jsonList.length > 0 ? `${currentIndex + 1} / ${jsonList.length}` : 'No data'}</span>
             <button onClick={handleNext} disabled={currentIndex === jsonList.length - 1 || jsonList.length === 0}>Next</button>
           </div>
-          <button onClick={handleCorrect} className="action-button" disabled={jsonList.length === 0}>Correct</button>
+          <button onClick={handleCorrect} className="action-button" disabled={jsonList.length === 0}>3. Submit Correction</button>
         </div>
       </div>
     </>
