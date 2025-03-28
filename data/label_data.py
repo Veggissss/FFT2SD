@@ -5,7 +5,7 @@ import sys
 SCRIPT_PATH = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(SCRIPT_PATH, "..")))
 
-from utils.file_loader import load_text, load_json, save_json, json_to_str
+from utils.file_loader import load_json, save_json, json_to_str
 from utils.enums import ReportType
 
 
@@ -59,13 +59,16 @@ def get_labeled_value(item: dict) -> str | int | bool | None:
     input_prompt = f"Enter a value for {item['field']}.\n{item['type']}\n"
     if "enum" in item:
         input_prompt += format_enum_options(item["enum"])
+    if "unit" in item:
+        input_prompt += f"Enhet: {item['unit']}\n"
 
     return get_valid_input(input_prompt + ": ", item)
 
 
 def label_data(
     report_type_name: str,
-    input_text_path: str,
+    input_text: str,
+    case_id: str,
     input_json_path: str,
     input_metadata_path: str,
     output_dir_path: str,
@@ -74,7 +77,6 @@ def label_data(
     Prompt the user to fill out the JSON values for a given text file.
     The labeled JSON is saved to the output directory.
     """
-    input_text = load_text(input_text_path)
     target_json = load_json(input_json_path)
     metadata_json = load_json(input_metadata_path)
 
@@ -110,7 +112,9 @@ def label_data(
             item["value"] = get_labeled_value(item)
             final_json["target_json"].append(item)
 
-        save_labeled_json(final_json, input_text_path, output_dir_path, container_index)
+        save_labeled_json(
+            final_json, report_type_name, case_id, container_index, output_dir_path
+        )
 
 
 def format_enum_options(enum_codes: list[str]) -> str:
@@ -137,56 +141,83 @@ def format_enum_options(enum_codes: list[str]) -> str:
 
 
 def save_labeled_json(
-    final_json: dict, input_text_path: str, output_dir_path: str, container_index: int
+    final_json: dict,
+    report_type_name: str,
+    case_id: str,
+    container_index: int,
+    output_dir_path: str,
 ) -> None:
     """
     Save the final labeled JSON to a file in the output directory.
     """
-    filename = input_text_path.split("\\")[-1].replace(".txt", "")
     print(f"JSON Labeled:\n{json_to_str(final_json)}\n")
-    save_json(final_json, f"{output_dir_path}/{filename}_{container_index}.json")
+    save_json(
+        final_json,
+        f"{output_dir_path}\\{report_type_name}_{case_id}_{container_index}.json",
+    )
 
 
 if __name__ == "__main__":
-    # Dir with text files to be labeled
-    input_text_dir = os.path.join(SCRIPT_PATH, "example_batch")
-
     # Generated structured json files from data_model/out/
     input_json_dir = os.path.join(SCRIPT_PATH, "../data_model/out")
 
     # Output directory
-    output_dir = os.path.join(SCRIPT_PATH, "test_data")
+    output_dir = os.path.join(SCRIPT_PATH, "labeled_data")
 
-    # For every text case fill out the JSON values
-    for text_filename in os.listdir(input_text_dir):
-        if not text_filename.endswith(".txt"):
-            print(f"Skipping non-text file: {text_filename}")
+    # Load the large batch JSON data
+    dataset_json: list[dict] = load_json(
+        os.path.join(SCRIPT_PATH, "large_batch/export_2025-03-17.json")
+    )
+
+    # Calculate 10% of the dataset ~40 samples
+    sample_size = int(len(dataset_json) * 0.1)
+    dataset_json = dataset_json[:sample_size]
+    print(f"Sampling {sample_size} cases from the dataset.")
+
+    # Store the labeled ids to avoid re-labeling the same cases
+    ids_json_path = os.path.join(SCRIPT_PATH, "large_batch/labeled_ids.json")
+    ids: list[str] = load_json(ids_json_path)
+
+    for dataset_case in dataset_json:
+        if dataset_case["id"] in ids:
             continue
-
-        json_path = None
-        report_name = None
-        if "klinisk" in text_filename:
-            report_name = ReportType.KLINISK.value
-        elif "makro" in text_filename:
-            report_name = ReportType.MAKROSKOPISK.value
-        elif "diag" in text_filename:
-            report_name = ReportType.MIKROSKOPISK.value
-
-        if report_name is None:
-            print(f"Could not find a matching report type JSON for {text_filename}.")
-            continue
-
-        output_json_path = os.path.join(
-            output_dir, text_filename.replace(".txt", "_1.json")
-        )
-        if os.path.exists(output_json_path):
-            print(f"Output file already exists for {text_filename}. Skipping.")
-            continue
+        ids.append(dataset_case["id"])
 
         label_data(
-            report_name,
-            os.path.join(input_text_dir, text_filename),
-            os.path.join(input_json_dir, f"generated-{report_name}.json"),
+            ReportType.KLINISK.value,
+            dataset_case["kliniske_opplysninger"],
+            dataset_case["id"],
+            os.path.join(input_json_dir, f"generated-{ReportType.KLINISK.value}.json"),
             os.path.join(input_json_dir, "generated-metadata.json"),
             output_dir,
         )
+        label_data(
+            ReportType.MAKROSKOPISK.value,
+            dataset_case["makrobeskrivelse"],
+            dataset_case["id"],
+            os.path.join(
+                input_json_dir, f"generated-{ReportType.MAKROSKOPISK.value}.json"
+            ),
+            os.path.join(input_json_dir, "generated-metadata.json"),
+            output_dir,
+        )
+
+        # Combine mikroskopisk and diagnose text
+        micro_text = dataset_case["mikrobeskrivelse"]
+        if dataset_case["diagnose"] is not None:
+            micro_text += "\n" + dataset_case["diagnose"]
+
+        label_data(
+            ReportType.KLINISK.value,
+            micro_text,
+            dataset_case["id"],
+            os.path.join(
+                input_json_dir, f"generated-{ReportType.MIKROSKOPISK.value}.json"
+            ),
+            os.path.join(input_json_dir, "generated-metadata.json"),
+            output_dir,
+        )
+
+        # Finished labeling case
+        print(f"Finished labeling case {dataset_case['id']}")
+        save_json(ids, ids_json_path)
