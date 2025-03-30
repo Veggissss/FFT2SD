@@ -10,22 +10,24 @@ function App() {
   const [totalContainers, setTotalContainers] = useState(null)
   const [jsonList, setJsonList] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-
+  const [useFormInput, setUseFormInput] = useState(false);
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
   const handleLoadModel = async () => {
-    const response = await fetch('http://localhost:5000/load_model', {
+    const response = await fetch(`${apiBaseUrl}/load_model`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ model_type: modelType }),
     });
+    setJsonList([]);
     const data = await response.json();
     setOutputText(JSON.stringify(data, null, 2));
   };
 
   const handleGenerate = async () => {
-    const response = await fetch('http://localhost:5000/generate', {
+    const response = await fetch(`${apiBaseUrl}/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -80,7 +82,7 @@ function App() {
       setJsonList(updatedJsonList);
 
       // Send the entire updated list to the '/correct' endpoint
-      const response = await fetch('http://localhost:5000/correct', {
+      const response = await fetch(`${apiBaseUrl}/correct`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,6 +97,82 @@ function App() {
     } catch (error) {
       alert('Invalid JSON format. Please correct before proceeding.');
     }
+  };
+
+  const handleToggleChange = (checked) => {
+    if (!checked) { // Switching to JSON mode
+      setUseFormInput(false);
+    } else { // Switching to Form mode
+      try {
+        // Parse the current JSON editor content and update the state
+        const updatedJson = JSON.parse(outputText);
+        const updatedJsonList = [...jsonList];
+        updatedJsonList[currentIndex] = updatedJson;
+        setJsonList(updatedJsonList);
+        setUseFormInput(true);
+      } catch (error) {
+        alert('Invalid JSON format. Please correct before switching to form mode.');
+        return;
+      }
+    }
+  };
+
+  const renderFormInput = () => {
+    if (!jsonList.length || !jsonList[currentIndex]?.target_json) return null;
+
+    const currentItem = jsonList[currentIndex];
+    const targetJson = currentItem.target_json;
+
+    const handleFieldChange = (index, newValue) => {
+      const updatedJsonList = [...jsonList];
+      updatedJsonList[currentIndex].target_json[index].value = newValue;
+      setJsonList(updatedJsonList);
+      setOutputText(JSON.stringify(updatedJsonList[currentIndex], null, 2));
+    };
+
+    return (
+      <div className="form-container">
+        {targetJson.map((item, index) => (
+          <div key={index} className={`form-item ${item.type === 'boolean' ? 'boolean-input' : ''}`}>
+            <label>{item.field}</label>
+            {item.type === 'enum' ? (
+              <select
+                value={item.value || ''}
+                onChange={(e) => handleFieldChange(index, e.target.value)}
+              >
+                <option value="">Select an option</option>
+                {item.enum.map((option, optIndex) => (
+                  <option key={optIndex} value={option.value}>
+                    {option.name || option.value}
+                    {option.group ? ` (${option.group})` : ''}
+                  </option>
+                ))}
+              </select>
+            ) : item.type === 'int' ? (
+              <input
+                type="number"
+                value={item.value || ''}
+                onChange={(e) => handleFieldChange(index, e.target.value ? parseInt(e.target.value) : null)}
+                placeholder="Enter a number"
+              />
+            ) : item.type === 'boolean' ? (
+              <input
+                type="checkbox"
+                checked={item.value || false}
+                onChange={(e) => handleFieldChange(index, e.target.checked)}
+              />
+            ) : (
+              <input
+                type="text"
+                value={item.value || ''}
+                onChange={(e) => handleFieldChange(index, e.target.value)}
+                placeholder="Enter text"
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -131,21 +209,38 @@ function App() {
           <button onClick={handleGenerate} className="action-button">2. Generate</button>
         </div>
         <div className="right-panel">
+          <div className="editor-toggle">
+            <h4>Form Input: </h4>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={useFormInput}
+                onChange={(e) => handleToggleChange(e.target.checked)}
+              />
+              <span className="slider round"></span>
+            </label>
+          </div>
           <div className="editor-container">
-            <Editor
-              height="100%"
-              defaultLanguage="json"
-              value={outputText}
-              onChange={setOutputText}
-              theme="vs-dark"
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                wordWrap: 'on',
-                scrollBeyondLastLine: false,
-                automaticLayout: true
-              }}
-            />
+            {useFormInput ? (
+              renderFormInput()
+            ) : (
+              <Editor
+                height="100%"
+                defaultLanguage="json"
+                value={outputText}
+                onChange={setOutputText}
+                theme="vs-dark"
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  wordWrap: 'on',
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  lineNumbers: 'on',
+                  lineNumbersMinChars: 3
+                }}
+              />
+            )}
           </div>
           <div className="navigation-controls">
             <button onClick={handlePrevious} disabled={currentIndex === 0 || jsonList.length === 0}>Prev</button>
