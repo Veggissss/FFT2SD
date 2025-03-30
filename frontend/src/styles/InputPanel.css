@@ -1,0 +1,22 @@
+.input-textarea {
+    width: 100%;
+    margin-bottom: 1rem;
+    min-height: 2.8rem;
+    height: 10rem;
+    max-height: 47vh;
+    overflow: hidden;
+    resize: vertical;
+}
+
+/* Small width screens */
+@media (max-width: 768px) {
+    .left-panel {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .input-textarea {
+        height: 15vh;
+    }
+}

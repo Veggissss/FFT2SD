@@ -1,0 +1,59 @@
+export interface TargetJsonItem {
+    field: string;
+    type: 'string' | 'int' | 'enum' | 'boolean';
+    value: string | number | boolean | null;
+    enum?: Array<{
+        value: string;
+        name?: string;
+        group?: string;
+    }>;
+}
+
+export interface JsonItem {
+    target_json: TargetJsonItem[];
+}
+
+export interface LoadingState {
+    loadModel: boolean;
+    generate: boolean;
+    correct: boolean;
+}
+
+export interface OutputPanelProps {
+    useFormInput: boolean;
+    onToggleChange: (checked: boolean) => void;
+    outputText: string;
+    onOutputChange: (value: string | undefined) => void;
+    currentItem: JsonItem | null;
+    onFieldChange: (index: number, value: string | number | boolean | null) => void;
+    currentIndex: number;
+    totalItems: number;
+    onPrevious: () => void;
+    onNext: () => void;
+    onCorrect: () => void;
+    isLoading: LoadingState;
+    isDisabled: boolean;
+}
+
+export interface FormEditorProps {
+    targetJson: TargetJsonItem[];
+    onFieldChange: (index: number, value: string | number | boolean | null) => void;
+}
+
+export interface InputPanelProps {
+    reportType: string;
+    totalContainers: number | null;
+    inputText: string;
+    onReportTypeChange: (value: string) => void;
+    onTotalContainersChange: (value: number | null) => void;
+    onInputTextChange: (value: string) => void;
+    onGenerate: () => void;
+    isLoading: boolean;
+}
+
+export interface ModelPanelProps {
+    modelType: string;
+    onModelTypeChange: (value: string) => void;
+    onLoadModel: () => void;
+    isLoading: boolean;
+} 
