@@ -1,11 +1,12 @@
 .editor-container {
     width: 100%;
-    height: 55vh;
+    height: 50vh;
     margin-bottom: 1rem;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     min-width: 500px;
+    overflow: hidden;
+    resize: vertical;
 }
 
 .editor-toggle {

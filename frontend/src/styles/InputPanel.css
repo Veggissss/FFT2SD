@@ -1,9 +1,9 @@
 .input-textarea {
     width: 100%;
     margin-bottom: 1rem;
-    min-height: 2.8rem;
-    height: 10rem;
-    max-height: 47vh;
+    min-height: 5vh;
+    height: 30vh;
+    max-height: 50vh;
     overflow: hidden;
     resize: vertical;
 }

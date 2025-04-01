@@ -1,3 +1,4 @@
+import uuid
 import copy
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -17,8 +18,10 @@ CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*"])
 model_loader = None
 # If to use the trained model or directly from huggingface specified in utils/config.py
 IS_TRAINED = True
-# Keeps track of the amount of corrected JSONs
-corrected_count = 0
+
+# Unlabeled dataset path
+UNLABELED_BATCH_PATH = "data/large_batch/export_2025-03-17.json"
+LABELED_IDS_PATH = "data/large_batch/labeled_ids.json"
 
 
 def load_model(model_type: ModelType) -> str:
@@ -146,23 +149,79 @@ def generate_endpoint():
     return jsonify(reports)
 
 
-@app.route("/correct", methods=["POST"])
-def correct_endpoint():
+@app.route("/correct/<string:report_id>", methods=["POST"])
+def correct_endpoint(report_id: str):
     """Endpoint to save the corrected JSON by the user."""
     reports: list[dict] = request.json
     if not reports:
         return jsonify({"error": "No reports provided"}), 400
 
+    if not report_id or report_id == "":
+        report_id = str(uuid.uuid4())
+
+    # Check if the report is already labeled
+    labeled_ids_json: dict = load_json(LABELED_IDS_PATH)
+
     # Save every JSON in the list as a separate file
+    count = 1
     for report in reports:
         report_type = report["metadata_json"][0]["value"]
-        global corrected_count
-        save_json(
-            report, f"data/corrected/{corrected_count}_corrected_{report_type}.json"
-        )
-        corrected_count += 1
+
+        # Verify if the report type is valid
+        if report_type not in ReportType.get_enum_map():
+            return jsonify({"error": "Invalid report type"}), 400
+
+        save_json(report, f"data/corrected/{report_type}_{report_id}_{count}.json")
+        labeled_ids_json[report_id] = {report_type: True}
+        count += 1
+
+    # Update the labeled IDs JSON
+    save_json(labeled_ids_json, LABELED_IDS_PATH)
 
     return jsonify({"message": "Correctly labeled JSON saved!"})
+
+
+@app.route("/unlabeled/<string:report_type_str>", methods=["GET"])
+def unlabeled_endpoint(report_type_str: str):
+    """Endpoint to get the unlabeled JSON files."""
+    unlabeled_batch_json: list[dict] = load_json(UNLABELED_BATCH_PATH)
+    labeled_ids_json: dict = load_json(LABELED_IDS_PATH)
+
+    if report_type_str and report_type_str in ReportType.get_enum_map():
+        report_type = ReportType(report_type_str)
+    else:
+        # Get default report type if not provided
+        report_type = ReportType.MIKROSKOPISK
+
+    for dataset_case in unlabeled_batch_json:
+        if dataset_case["id"] in labeled_ids_json:
+            # Ignore the cases where the report type for the case is labeled
+            if labeled_ids_json[dataset_case["id"]][report_type.value]:
+                continue
+
+        # Get the report text based on the report type using match statement
+        match report_type:
+            case ReportType.KLINISK:
+                report_text = dataset_case["kliniske_opplysninger"]
+            case ReportType.MAKROSKOPISK:
+                report_text = dataset_case["makrobeskrivelse"]
+            case ReportType.MIKROSKOPISK:
+                report_text = dataset_case["mikrobeskrivelse"]
+                if dataset_case["diagnose"] is not None:
+                    report_text += "\n" + dataset_case["diagnose"]
+
+        # Format the report text
+        report_text = report_text.strip().replace("\r", "\n")
+
+        return jsonify(
+            {
+                "id": dataset_case["id"],
+                "report_type": report_type.value,
+                "text": report_text,
+            }
+        )
+
+    return jsonify({"error": "No unlabeled cases found!"}), 404
 
 
 if __name__ == "__main__":

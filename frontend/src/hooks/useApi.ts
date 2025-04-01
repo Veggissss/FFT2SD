@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { JsonItem, LoadingState } from '../types';
+import { JsonItem, LoadingState, LabeledJsonItem as UnlabeledJsonItem } from '../types';
 
 const useApi = () => {
     const [isLoading, setIsLoading] = useState<LoadingState>({
@@ -9,6 +9,13 @@ const useApi = () => {
     });
 
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+    const getUnlabeled = async (reportType: string): Promise<UnlabeledJsonItem> => {
+        const response = await fetch(`${apiBaseUrl}/unlabeled/${reportType}`, {
+            method: 'GET'
+        });
+        return await response.json();
+    }
 
     const loadModel = async (modelType: string): Promise<JsonItem> => {
         setIsLoading(prev => ({ ...prev, loadModel: true }));
@@ -50,10 +57,10 @@ const useApi = () => {
         }
     };
 
-    const submitCorrection = async (jsonList: JsonItem[]): Promise<JsonItem> => {
+    const submitCorrection = async (jsonList: JsonItem[], report_id: string): Promise<JsonItem> => {
         setIsLoading(prev => ({ ...prev, correct: true }));
         try {
-            const response = await fetch(`${apiBaseUrl}/correct`, {
+            const response = await fetch(`${apiBaseUrl}/correct/${report_id}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -70,7 +77,8 @@ const useApi = () => {
         isLoading,
         loadModel,
         generateReport,
-        submitCorrection
+        submitCorrection,
+        getUnlabeled
     };
 };
 

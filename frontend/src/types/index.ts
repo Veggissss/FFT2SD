@@ -9,6 +9,12 @@ export interface TargetJsonItem {
     }>;
 }
 
+export interface LabeledJsonItem {
+    id: string,
+    report_type: string,
+    text: string
+}
+
 export interface JsonItem {
     target_json: TargetJsonItem[];
 }
@@ -48,6 +54,7 @@ export interface InputPanelProps {
     onTotalContainersChange: (value: number | null) => void;
     onInputTextChange: (value: string) => void;
     onGenerate: () => void;
+    onGetUnlabeled: () => void;
     isLoading: boolean;
 }
 

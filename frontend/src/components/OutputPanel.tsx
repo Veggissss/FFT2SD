@@ -78,7 +78,7 @@ const OutputPanel = ({
                 className="action-button"
                 disabled={isDisabled || isLoading.correct || totalItems <= 0}
             >
-                {isLoading.correct ? 'Submitting...' : '3. Submit Correction'}
+                {isLoading.correct ? 'Submitting...' : '4. Submit Correction'}
             </button>
         </div>
     );

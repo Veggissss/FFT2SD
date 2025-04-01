@@ -15,9 +15,10 @@ function App() {
     const [jsonList, setJsonList] = useState<JsonItem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [useFormInput, setUseFormInput] = useState(false);
+    const [report_id, setReportId] = useState('')
 
     // API hooks
-    const { isLoading, loadModel, generateReport, submitCorrection } = useApi();
+    const { isLoading, loadModel, generateReport, submitCorrection, getUnlabeled } = useApi();
 
     const handleLoadModel = async () => {
         try {
@@ -78,7 +79,7 @@ function App() {
             updatedJsonList[currentIndex] = JSON.parse(outputText);
             setJsonList(updatedJsonList);
 
-            const data = await submitCorrection(updatedJsonList);
+            const data = await submitCorrection(updatedJsonList, report_id);
             setJsonList([]);
             setOutputText(JSON.stringify(data, null, 2));
         } catch (error) {
@@ -89,6 +90,13 @@ function App() {
             }
         }
     };
+
+    const handleGetUnlabeled = async () => {
+        const unlabeledJson = await getUnlabeled(reportType);
+        setReportId(unlabeledJson.id);
+        setInputText(unlabeledJson.text);
+        setReportType(unlabeledJson.report_type);
+    }
 
     const handleToggleChange = (checked: boolean) => {
         if (!checked) {
@@ -138,6 +146,7 @@ function App() {
                     onTotalContainersChange={setTotalContainers}
                     onInputTextChange={setInputText}
                     onGenerate={handleGenerate}
+                    onGetUnlabeled={handleGetUnlabeled}
                     isLoading={isLoading.generate}
                 />
 

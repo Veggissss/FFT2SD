@@ -80,11 +80,13 @@ def label_data(
     target_json = load_json(input_json_path)
     metadata_json = load_json(input_metadata_path)
 
+    input_text = input_text.replace("\r", "\n").strip()
+
     print(f"Input text:\n{input_text}\n")
 
     while True:
         report_count = get_valid_input(
-            "How many containers/Beholder-IDs are there?\n: ", {"type": "int"}
+            "How many containers/samples are there?\n: ", {"type": "int"}
         )
         if report_count is None:
             print("Invalid input. Please enter a positive integer.")
@@ -108,7 +110,7 @@ def label_data(
         for item in target_json:
             print("\n" * 5)
             print(f"Input text:\n{input_text}")
-            print(f"Glass nummer {container_index}:")
+            print(f"\n|| Glass nummer {container_index} ||\n")
             item["value"] = get_labeled_value(item)
             final_json["target_json"].append(item)
 
@@ -176,12 +178,11 @@ if __name__ == "__main__":
 
     # Store the labeled ids to avoid re-labeling the same cases
     ids_json_path = os.path.join(SCRIPT_PATH, "large_batch/labeled_ids.json")
-    ids: list[str] = load_json(ids_json_path)
+    labeled_ids_json: dict = load_json(ids_json_path)
 
     for dataset_case in dataset_json:
-        if dataset_case["id"] in ids:
+        if dataset_case["id"] in labeled_ids_json:
             continue
-        ids.append(dataset_case["id"])
 
         label_data(
             ReportType.KLINISK.value,
@@ -208,7 +209,7 @@ if __name__ == "__main__":
             micro_text += "\n" + dataset_case["diagnose"]
 
         label_data(
-            ReportType.KLINISK.value,
+            ReportType.MIKROSKOPISK.value,
             micro_text,
             dataset_case["id"],
             os.path.join(
@@ -220,4 +221,9 @@ if __name__ == "__main__":
 
         # Finished labeling case
         print(f"Finished labeling case {dataset_case['id']}")
-        save_json(ids, ids_json_path)
+        labeled_ids_json[dataset_case["id"]] = {
+            "klinisk": True,
+            "makroskopisk": True,
+            "mikroskopisk": True,
+        }
+        save_json(labeled_ids_json, ids_json_path)

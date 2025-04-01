@@ -9,6 +9,7 @@ const InputPanel = ({
     onTotalContainersChange,
     onInputTextChange,
     onGenerate,
+    onGetUnlabeled,
     isLoading
 }: InputPanelProps) => {
     return (
@@ -23,6 +24,13 @@ const InputPanel = ({
                 <option value="makroskopisk">Makroskopisk</option>
                 <option value="mikroskopisk">Mikroskopisk</option>
             </select>
+            <button
+                onClick={onGetUnlabeled}
+                className="action-button"
+                disabled={isLoading}
+            >
+                2. Get Unlabeled
+            </button>
             <select
                 value={totalContainers || ''}
                 onChange={(e) => onTotalContainersChange(e.target.value === '' ? null : Number(e.target.value))}
@@ -40,12 +48,13 @@ const InputPanel = ({
                 className="input-textarea"
                 disabled={isLoading}
             />
+
             <button
                 onClick={onGenerate}
                 className="action-button"
                 disabled={isLoading}
             >
-                {isLoading ? 'Generating...' : '2. Generate'}
+                {isLoading ? 'Generating...' : '3. Generate'}
             </button>
         </div>
     );
