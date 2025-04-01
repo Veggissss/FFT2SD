@@ -15,7 +15,7 @@ function App() {
     const [jsonList, setJsonList] = useState<JsonItem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [useFormInput, setUseFormInput] = useState(false);
-    const [report_id, setReportId] = useState('')
+    const [report_id, setReportId] = useState<string | null>(null)
 
     // API hooks
     const { isLoading, loadModel, generateReport, submitCorrection, getUnlabeled } = useApi();
@@ -117,6 +117,10 @@ function App() {
 
     const handleFieldChange = (index: number, newValue: string | number | boolean | null) => {
         const updatedJsonList = [...jsonList];
+
+        // Replace empty strings with null value.
+        newValue = newValue === "" ? null : newValue;
+
         updatedJsonList[currentIndex].target_json[index].value = newValue;
         setJsonList(updatedJsonList);
         setOutputText(JSON.stringify(updatedJsonList[currentIndex], null, 2));

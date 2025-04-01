@@ -29,7 +29,7 @@ const InputPanel = ({
                 className="action-button"
                 disabled={isLoading}
             >
-                2. Get Unlabeled
+                2. Get Unlabeled Case ({reportType})
             </button>
             <select
                 value={totalContainers || ''}

@@ -57,9 +57,10 @@ const useApi = () => {
         }
     };
 
-    const submitCorrection = async (jsonList: JsonItem[], report_id: string): Promise<JsonItem> => {
+    const submitCorrection = async (jsonList: JsonItem[], report_id: string | null): Promise<JsonItem> => {
         setIsLoading(prev => ({ ...prev, correct: true }));
         try {
+            // Allow for path/null for no id.
             const response = await fetch(`${apiBaseUrl}/correct/${report_id}`, {
                 method: 'POST',
                 headers: {
