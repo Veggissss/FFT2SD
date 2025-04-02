@@ -17,7 +17,7 @@ from token_constraints import (
     add_score_mask,
     TokenTypeConstraintProcessor,
 )
-from utils.config import JSON_START_MARKER, MODELS_DICT
+from utils.config import JSON_START_MARKER, MODELS_DICT, REDUCE_NULL_BIAS
 from utils.file_loader import str_to_json
 
 if TYPE_CHECKING:  # just for type definition
@@ -264,6 +264,10 @@ class EncoderStrategy(BaseModelStrategy):
 
         # Get logits for the masked token [batch_size, vocab_size]
         masked_scores = logits[:, masked_index]
+
+        # Decrease preference for null token
+        null_token_id = self.tokenizer.convert_tokens_to_ids("null")
+        masked_scores[:, null_token_id] -= REDUCE_NULL_BIAS
 
         # Get allowed tokens based on the template
         allowed_token_ids = self.get_type_allowed_tokens(template_str)

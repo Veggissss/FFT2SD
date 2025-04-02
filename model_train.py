@@ -47,10 +47,10 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     # Define training arguments.
     training_args = TrainingArguments(
         output_dir=output_dir,
-        num_train_epochs=30,  # TODO: Make selectable along with other training params
-        learning_rate=2e-4,
+        num_train_epochs=200,  # TODO: Make selectable along with other training params
+        learning_rate=3e-5,
         weight_decay=0.01,
-        per_device_train_batch_size=4,
+        per_device_train_batch_size=8,
         per_device_eval_batch_size=1,
         eval_strategy="steps",
         eval_steps=100,
@@ -147,6 +147,13 @@ def add_tokens_to_tokenizer(model_loader: ModelLoader, enums: list[str]) -> None
         model_loader.model.classifier.__init__(model_loader.model.config)
 
 
+def reinitialize_weights(module):
+    """Reinitialize the weights of the model's layers."""
+    if hasattr(module, "reset_parameters"):
+        module.reset_parameters()
+        print(f"Reinitialized weights for {module.__class__.__name__}")
+
+
 def train(model_type: ModelType) -> None:
     """
     Train the model using the provided dataset.
@@ -161,7 +168,7 @@ def train(model_type: ModelType) -> None:
 
     # Load the test dataset.
     dataset, enums = dataset_loader.create_dataset(
-        "data/test_data/", model_loader.model_type
+        "data/labeled_data/", model_loader.model_type
     )
 
     add_tokens_to_tokenizer(model_loader, enums)
@@ -174,6 +181,9 @@ def train(model_type: ModelType) -> None:
     max_length = max(len(tensor) for tensor in tokenized_dataset["input_ids"])
     print(f"Longest tensor length in 'input_ids' column: {max_length}")
 
+    # TODO: compare with removing learned weights
+    # model_loader.model.apply(reinitialize_weights)
+
     # Train/Fine-tune and save the model.
     train_model(
         model_loader, tokenized_dataset, f"trained/{model_loader.model_type.value}"
@@ -181,9 +191,9 @@ def train(model_type: ModelType) -> None:
 
 
 if __name__ == "__main__":
-    TRAIN_ALL_TYPES = False
+    TRAIN_ALL_TYPES = True
     if not TRAIN_ALL_TYPES:
-        train(ModelType.DECODER)
+        train(ModelType.ENCODER)
     else:
         for model_type in ModelType:
             train(model_type)

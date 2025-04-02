@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoTokenizer, StoppingCriteria, LogitsProcessor
 from utils.enums import GenerationState
-from utils.config import DEBUG_MODE_ENABLED
+from utils.config import DEBUG_MODE_ENABLED, REDUCE_NULL_BIAS
 
 
 class TokenTypeConstraintProcessor(LogitsProcessor):
@@ -36,6 +36,9 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         # Originally for string, only the null token is in allowed_token_ids, so give no constraints
         if len(self.allowed_token_ids) <= 1 or input_ids.shape[1] < 5:
             return scores
+
+        # Decrease preference for null token
+        scores[:, self.null_token_id] -= REDUCE_NULL_BIAS
 
         last_token_id = input_ids[0, -1].item()
         match self.state:

@@ -1,12 +1,13 @@
 # Definitions of Hugging Face models
 MODELS_DICT: dict[str, str] = {
-    "encoder-decoder": "ltg/nort5-small",
+    "encoder-decoder": "ltg/nort5-large",
     "decoder": "norallm/normistral-7b-warm",
-    "encoder": "ltg/norbert3-base",
+    "encoder": "ltg/norbert3-large",
 }
 DATA_MODEL_OUTPUT_FOLDER = "data_model/out"
 
 DEBUG_MODE_ENABLED = True
+REDUCE_NULL_BIAS = 2.0
 
 """
 Mark the end of the model prompt and before the template JSON in the prompt.
