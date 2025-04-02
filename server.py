@@ -156,7 +156,8 @@ def correct_endpoint(report_id: str):
     if not reports:
         return jsonify({"error": "No reports provided"}), 400
 
-    if not report_id or report_id == "":
+    if not report_id or report_id == "null":
+        # Generate a new report ID if not provided
         report_id = str(uuid.uuid4())
 
     # Check if the report is already labeled
@@ -208,7 +209,7 @@ def unlabeled_endpoint(report_type_str: str):
             case ReportType.MIKROSKOPISK:
                 report_text = dataset_case["mikrobeskrivelse"]
                 if dataset_case["diagnose"] is not None:
-                    report_text += "\n" + dataset_case["diagnose"]
+                    report_text += "\n\n" + dataset_case["diagnose"]
 
         # Format the report text
         report_text = report_text.strip().replace("\r", "\n")

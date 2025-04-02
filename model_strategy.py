@@ -60,6 +60,25 @@ class BaseModelStrategy:
         """
         raise NotImplementedError
 
+    def clean_json(self, output_json: dict) -> dict:
+        """
+        Clean the JSON output by removing leading/trailing spaces and converting string values to appropriate types.
+        """
+        cleaned_data = {}
+        for key, value in output_json.items():
+            if isinstance(key, str):
+                key = key.strip()
+            if isinstance(value, str):
+                value = value.strip()
+                # Convert null strings back to None
+                type_mapping = {"null": None, "true": True, "false": False}
+                if value in type_mapping:
+                    value = type_mapping[value]
+                elif value.isdigit():
+                    value = int(value)
+            cleaned_data[key] = value
+        return cleaned_data
+
     def output_to_json(self, output_text: str, template_str: str) -> dict:
         """
         Convert generated output text back into just a JSON.
@@ -67,18 +86,13 @@ class BaseModelStrategy:
         output_json = str_to_json(output_text.split(JSON_START_MARKER)[-1])
 
         # Clean and convert string values to appropriate types
-        if isinstance(output_json.get("value"), str):
-            output_json["value"] = output_json["value"].strip()
+        cleaned_data = self.clean_json(output_json)
 
-            type_mapping = {"null": None, "true": True, "false": False}
-            if output_json["value"] in type_mapping:
-                output_json["value"] = type_mapping[output_json["value"]]
-            elif output_json["value"].isdigit():
-                output_json["value"] = int(output_json["value"])
         # Add possible enum values back to the output JSON
-        if output_json.get("type") == "enum":
-            output_json["enum"] = str_to_json(template_str)["enum"]
-        return output_json
+        if cleaned_data.get("type") == "enum":
+            cleaned_data["enum"] = str_to_json(template_str)["enum"]
+
+        return cleaned_data
 
     def get_type_allowed_tokens(self, template_str: str) -> list[int]:
         """
@@ -143,16 +157,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
 
     def output_to_json(self, output_text: str, template_str: str) -> dict:
         # Parse output text to JSON and clean string values
-        cleaned_data = {}
-        for key, value in str_to_json(output_text).items():
-            if isinstance(key, str):
-                key = key.strip()
-            if isinstance(value, str):
-                value = value.strip()
-                # Convert null strings back to None
-                if value == "null":
-                    value = None
-            cleaned_data[key] = value
+        cleaned_data = self.clean_json(str_to_json(output_text))
 
         # Add the output value to the template JSON
         template_json = str_to_json(template_str)
@@ -172,16 +177,12 @@ class DecoderStrategy(BaseModelStrategy):
 
         q_config = BitsAndBytesConfig(
             load_in_4bit=True,  # Use 4-bit quantization
-            bnb_4bit_quant_type="nf4",  # NormalFloat4 (recommended for LLMs)
-            bnb_4bit_use_double_quant=True,  # Double quantization
-            bnb_4bit_compute_dtype="float16",  # Reduce memory further
         )
 
         # Load the untrained base model.
         model = AutoModelForCausalLM.from_pretrained(
             MODELS_DICT[model_loader.model_type.value],
             quantization_config=q_config,
-            low_cpu_mem_usage=True,
             device_map="auto",  # Use the best device, model.to() not needed
         )
 
