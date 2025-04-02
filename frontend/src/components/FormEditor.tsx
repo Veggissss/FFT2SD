@@ -5,79 +5,63 @@ const FormEditor = ({ targetJson, onFieldChange }: FormEditorProps) => {
     if (!targetJson) return null;
 
     const shouldShowField = (item: any, jsonList: any[]) => {
-        // Check if field should be shown based on values defined before
         const id = item.id;
 
-        // From klinisk model
-        const consideredRemoved: boolean | null | undefined = jsonList.find(j => j.id === 105)?.value;
+        // Extract relevant values from jsonList
+        const getValue = (fieldId: number) => jsonList.find(j => j.id === fieldId)?.value;
 
-        // From macroscopic model
-        const sampleMaterial: string | undefined = jsonList.find(j => j.id === 108)?.value;
+        const consideredRemoved: boolean | null | undefined = getValue(105);
+        const macroscopicLook: string | undefined = getValue(104)
+        const sampleMaterial: string | undefined = getValue(108);
+        const diagnosis: string = getValue(109);
+        const infiltrationDepth: string = getValue(113);
+        const haggittLevel: string = getValue(114);
 
-        // Microscopic model (always present for the field cases)
-        const diagnosis: string = jsonList.find(j => j.id === 109)?.value;
-        const infiltrationDepth: string = jsonList.find(j => j.id === 113)?.value;
-        const haggittLevel: string = jsonList.find(j => j.id == 114)?.value;
+        const isConditionMet = (arr: string[], value: string | undefined) => value === undefined || arr.includes(value ?? '');
+
+        // Diagnosis-based conditions
+        const relevantDiagnoses = ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'];
+        const extendedDiagnoses = [...relevantDiagnoses, 'M82112', 'M82632', 'M82612', 'M82102', 'M82142', 'M82131', 'M82132'];
+        const isDiagnosisRelevant = isConditionMet(relevantDiagnoses, diagnosis);
 
         switch (id) {
-            case 110:
-                // Differensieringsgrad
-                return ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 111:
-                // Karsinomets største diameter
-                return (!sampleMaterial || ['P13400'].includes(sampleMaterial) && (consideredRemoved !== false)) ||
-                    (!sampleMaterial || ['P13402', 'P13405', 'P13409'].includes(sampleMaterial)) &&
-                    ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 112:
-                // Lymfekarinnvekst
-                return ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 118:
-                // Venekarinnvekst
-                return ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 113:
-                // Infiltrasjonsdybde 
-                return ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 114:
-                // Haggit-klassifikasjon
-                return (infiltrationDepth === 'pT1' && (!sampleMaterial || ['P13402', 'P13405'].includes(sampleMaterial))) ||
-                    (!sampleMaterial || ['P13409'].includes(sampleMaterial) && jsonList.find(j => j.id === 104)?.value === 'Is') &&
-                    ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 120:
-                // Sm-klassifikasjon
-                return infiltrationDepth === 'pT1' && (!sampleMaterial || ['P13402', 'P13405', 'P13409'].includes(sampleMaterial)) &&
-                    !['Nivå 1', 'Nivå 2', 'Nivå 3'].includes(haggittLevel) &&
-                    ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 127:
-                // Dybde submukosal
-                return infiltrationDepth === 'pT1' && (!sampleMaterial || ['P13402', 'P13405', 'P13409'].includes(sampleMaterial)) &&
-                    !['Nivå 1', 'Nivå 2', 'Nivå 3'].includes(haggittLevel) &&
-                    ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 116:
-                // Reseksjonsrender 
-                return (!sampleMaterial || ['P13400'].includes(sampleMaterial) && (consideredRemoved !== false)) ||
-                    (!sampleMaterial || ['P13402', 'P13405', 'P13409'].includes(sampleMaterial)) &&
-                    ['M82103', 'M82613', 'M82143', 'M82153', 'M81403', 'M82112', 'M82632', 'M82612', 'M82102', 'M82142', 'M82131', 'M82132', 'M82153'].includes(diagnosis);
-            case 122:
-                // Korteste avstand til reseksjonsrand
-                return (!sampleMaterial || ['P13400'].includes(sampleMaterial) && (consideredRemoved !== false)) ||
-                    (!sampleMaterial || ['P13402', 'P13409'].includes(sampleMaterial)) &&
-                    ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 115:
-                // Korteste avstand til nærmeste sidereseksjonsrand
-                return (!sampleMaterial || ['P13405', 'P13409'].includes(sampleMaterial)) &&
-                    ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 121:
-                // Korteste avstand til dyp reseksjonsrand
-                return (!sampleMaterial || ['P13405', 'P13409'].includes(sampleMaterial)) &&
-                    ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 125:
-                // Antall tumor "buds"
-                return ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
-            case 126:
-                // Graden av tumor "budding"
-                return ['M82103', 'M82613', 'M82143', 'M82153', 'M81403'].includes(diagnosis);
+            case 110: // Differensieringsgrad
+            case 112: // Lymfekarinnvekst
+            case 118: // Venekarinnvekst
+            case 113: // Infiltrasjonsdybde
+            case 125: // Antall tumor "buds"
+            case 126: // Graden av tumor "budding"
+                return isDiagnosisRelevant;
+
+            case 111: // Karsinomets største diameter
+                return (isConditionMet(['P13400'], sampleMaterial) && consideredRemoved !== false) ||
+                    (isConditionMet(['P13402', 'P13405', 'P13409'], sampleMaterial)) && isDiagnosisRelevant;
+
+            case 114: // Haggit-klassifikasjon
+                return (infiltrationDepth === 'pT1' && (isConditionMet(['P13402', 'P13405'], sampleMaterial))) ||
+                    (isConditionMet(['P13409'], sampleMaterial) && (macroscopicLook === undefined || macroscopicLook === 'Is')) && isDiagnosisRelevant;
+
+            case 120: // Sm-klassifikasjon
+            case 127: // Dybde submukosal
+                return infiltrationDepth === 'pT1' &&
+                    (isConditionMet(['P13402', 'P13405', 'P13409'], sampleMaterial)) &&
+                    !isConditionMet(['Nivå 1', 'Nivå 2', 'Nivå 3'], haggittLevel) &&
+                    isDiagnosisRelevant;
+
+            case 116: // Reseksjonsrender
+                return (isConditionMet(['P13400'], sampleMaterial) && consideredRemoved !== false) ||
+                    (isConditionMet(['P13402', 'P13405', 'P13409'], sampleMaterial)) &&
+                    isConditionMet(extendedDiagnoses, diagnosis);
+
+            case 122: // Korteste avstand til reseksjonsrand
+                return (isConditionMet(['P13400'], sampleMaterial) && consideredRemoved !== false) ||
+                    (isConditionMet(['P13402', 'P13409'], sampleMaterial)) && isDiagnosisRelevant;
+
+            case 115: // Korteste avstand til nærmeste sidereseksjonsrand
+            case 121: // Korteste avstand til dyp reseksjonsrand
+                return (isConditionMet(['P13405', 'P13409'], sampleMaterial)) && isDiagnosisRelevant;
+
             default:
-                // Default no rule applies
                 return true;
         }
     };

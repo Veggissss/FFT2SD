@@ -33,9 +33,12 @@ function App() {
     const handleGenerate = async () => {
         try {
             const data = await generateReport(inputText, reportType, totalContainers);
-            setJsonList(data);
-            setCurrentIndex(0);
-            setOutputText(JSON.stringify(data[0], null, 2));
+
+            // Filter out same report type
+            const filteredJsonList = jsonList.filter(item => item.metadata_json[0].value !== reportType);
+            setCurrentIndex(filteredJsonList.length);
+            setJsonList(filteredJsonList.concat(data));
+            setOutputText(JSON.stringify(data[currentIndex], null, 2));
         } catch (error) {
             alert('Error generating report. Please try again.');
         }
@@ -79,9 +82,22 @@ function App() {
             updatedJsonList[currentIndex] = JSON.parse(outputText);
             setJsonList(updatedJsonList);
 
-            const data = await submitCorrection(updatedJsonList, report_id);
-            setJsonList([]);
+            // only send the current report type list
+            const filteredJsonList = updatedJsonList.filter(item => item.metadata_json[0].value === reportType);
+
+            const data = await submitCorrection(filteredJsonList, report_id);
             setOutputText(JSON.stringify(data, null, 2));
+
+            if (reportType === "klinisk") {
+                setReportType("makroskopisk")
+            }
+            else if (reportType === "makroskopisk") {
+                setReportType("mikroskopisk")
+            }
+            else {
+                setReportType("klinisk")
+            }
+            //setJsonList([]);
         } catch (error) {
             if (error instanceof SyntaxError) {
                 alert('Invalid JSON format. Please correct before proceeding.');
@@ -93,6 +109,12 @@ function App() {
 
     const handleGetUnlabeled = async () => {
         const unlabeledJson = await getUnlabeled(reportType);
+
+        // If new case is fetched, then reset json list
+        if (report_id !== unlabeledJson.id) {
+            setJsonList([]);
+        }
+
         setReportId(unlabeledJson.id);
         setInputText(unlabeledJson.text);
         setReportType(unlabeledJson.report_type);

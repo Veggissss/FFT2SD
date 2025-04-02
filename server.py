@@ -30,6 +30,7 @@ def load_model(model_type: ModelType) -> str:
     # Update the global model_loader variable
     global model_loader
     model_loader = ModelLoader(model_type, IS_TRAINED)
+    model_loader.model.eval()
 
     return f"Loaded model: {model_loader.model_name} | {model_type}"
 
@@ -164,17 +165,15 @@ def correct_endpoint(report_id: str):
     labeled_ids_json: dict = load_json(LABELED_IDS_PATH)
 
     # Save every JSON in the list as a separate file
-    count = 1
-    for report in reports:
+    for count, report in enumerate(reports):
         report_type = report["metadata_json"][0]["value"]
 
         # Verify if the report type is valid
         if report_type not in ReportType.get_enum_map():
             return jsonify({"error": "Invalid report type"}), 400
 
-        save_json(report, f"data/corrected/{report_type}_{report_id}_{count}.json")
-        labeled_ids_json[report_id] = {report_type: True}
-        count += 1
+        save_json(report, f"data/corrected/{report_type}_{report_id}_{count+1}.json")
+        labeled_ids_json.setdefault(report_id, {})[report_type] = True
 
     # Update the labeled IDs JSON
     save_json(labeled_ids_json, LABELED_IDS_PATH)
@@ -188,17 +187,43 @@ def unlabeled_endpoint(report_type_str: str):
     unlabeled_batch_json: list[dict] = load_json(UNLABELED_BATCH_PATH)
     labeled_ids_json: dict = load_json(LABELED_IDS_PATH)
 
+    report_type = None
     if report_type_str and report_type_str in ReportType.get_enum_map():
         report_type = ReportType(report_type_str)
-    else:
-        # Get default report type if not provided
-        report_type = ReportType.MIKROSKOPISK
 
     for dataset_case in unlabeled_batch_json:
         if dataset_case["id"] in labeled_ids_json:
-            # Ignore the cases where the report type for the case is labeled
-            if labeled_ids_json[dataset_case["id"]][report_type.value]:
+            is_klinisk_labeled = labeled_ids_json[dataset_case["id"]].get(
+                ReportType.KLINISK.value, False
+            )
+            is_makroskopisk_labeled = labeled_ids_json[dataset_case["id"]].get(
+                ReportType.MAKROSKOPISK.value, False
+            )
+            is_mikroskopisk_labeled = labeled_ids_json[dataset_case["id"]].get(
+                ReportType.MIKROSKOPISK.value, False
+            )
+            if (
+                is_klinisk_labeled
+                and is_makroskopisk_labeled
+                and is_mikroskopisk_labeled
+            ):
+                # Ignore the cases where all report types for the case are labeled
                 continue
+
+            if not report_type:
+                # Get next report type for the case id if is not provided
+                if not is_klinisk_labeled:
+                    report_type = ReportType.KLINISK
+                elif not is_makroskopisk_labeled:
+                    report_type = ReportType.MAKROSKOPISK
+                else:
+                    report_type = ReportType.MIKROSKOPISK
+            elif labeled_ids_json[dataset_case["id"]].get(report_type.value, False):
+                # Ignore the cases where the report type for the case is labeled
+                continue
+
+        if not report_type:
+            report_type = ReportType.KLINISK
 
         # Get the report text based on the report type using match statement
         match report_type:
@@ -226,4 +251,4 @@ def unlabeled_endpoint(report_type_str: str):
 
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

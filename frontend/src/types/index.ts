@@ -16,7 +16,9 @@ export interface LabeledJsonItem {
 }
 
 export interface JsonItem {
+    input_text: string;
     target_json: TargetJsonItem[];
+    metadata_json: TargetJsonItem[];
 }
 
 export interface LoadingState {
