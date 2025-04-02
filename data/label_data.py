@@ -95,6 +95,7 @@ def label_data(
             break
         print("Invalid input. Please enter a positive integer.")
 
+    # Store metadata values
     metadata_json[0]["value"] = report_type_name
     metadata_json[1]["value"] = report_count
 
@@ -133,7 +134,7 @@ def format_enum_options(enum_codes: list[str]) -> str:
         if group:
             formatted_options += f"[{group}] "
         if name:
-            formatted_options += f"{name} "
+            formatted_options += f"[{value}] {name} "
         else:
             formatted_options += f"{value} "
 
@@ -171,8 +172,8 @@ if __name__ == "__main__":
         os.path.join(SCRIPT_PATH, "large_batch/export_2025-03-17.json")
     )
 
-    # Calculate 10% of the dataset ~40 samples
-    sample_size = int(len(dataset_json) * 0.1)
+    # Get some ~40 samples
+    sample_size = 10
     dataset_json = dataset_json[:sample_size]
     print(f"Sampling {sample_size} cases from the dataset.")
 
@@ -180,9 +181,10 @@ if __name__ == "__main__":
     ids_json_path = os.path.join(SCRIPT_PATH, "large_batch/labeled_ids.json")
     labeled_ids_json: dict = load_json(ids_json_path)
 
-    for dataset_case in dataset_json:
+    for i, dataset_case in enumerate(dataset_json):
         if dataset_case["id"] in labeled_ids_json:
             continue
+        print(f"Labeling case {dataset_case['id']} ({i+1}/{sample_size})")
 
         label_data(
             ReportType.KLINISK.value,
@@ -206,7 +208,7 @@ if __name__ == "__main__":
         # Combine mikroskopisk and diagnose text
         micro_text = dataset_case["mikrobeskrivelse"]
         if dataset_case["diagnose"] is not None:
-            micro_text += "\n" + dataset_case["diagnose"]
+            micro_text += "\n\n" + dataset_case["diagnose"]
 
         label_data(
             ReportType.MIKROSKOPISK.value,
@@ -227,3 +229,5 @@ if __name__ == "__main__":
             "mikroskopisk": True,
         }
         save_json(labeled_ids_json, ids_json_path)
+
+    print(f"Finished labeling all {sample_size} cases!!!")
