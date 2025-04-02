@@ -34,28 +34,30 @@ const FormEditor = ({ targetJson, onFieldChange }: FormEditorProps) => {
                 return isDiagnosisRelevant;
 
             case 111: // Karsinomets største diameter
-                return (isConditionMet(['P13400'], sampleMaterial) && consideredRemoved !== false) ||
-                    (isConditionMet(['P13402', 'P13405', 'P13409'], sampleMaterial)) && isDiagnosisRelevant;
+                return ((isConditionMet(['P13400'], sampleMaterial) && consideredRemoved !== false) ||
+                    (isConditionMet(['P13402', 'P13405', 'P13409'], sampleMaterial))) && isDiagnosisRelevant;
 
             case 114: // Haggit-klassifikasjon
-                return (infiltrationDepth === 'pT1' && (isConditionMet(['P13402', 'P13405'], sampleMaterial))) ||
-                    (isConditionMet(['P13409'], sampleMaterial) && (macroscopicLook === undefined || macroscopicLook === 'Is')) && isDiagnosisRelevant;
+                return ((infiltrationDepth === undefined || infiltrationDepth === 'pT1') && 
+                (isConditionMet(['P13402', 'P13405','P13409'], sampleMaterial)) && 
+                (macroscopicLook === undefined || macroscopicLook === 'Is')) && 
+                isDiagnosisRelevant;
 
             case 120: // Sm-klassifikasjon
             case 127: // Dybde submukosal
-                return infiltrationDepth === 'pT1' &&
+                return (infiltrationDepth === undefined || infiltrationDepth === 'pT1') &&
                     (isConditionMet(['P13402', 'P13405', 'P13409'], sampleMaterial)) &&
                     !isConditionMet(['Nivå 1', 'Nivå 2', 'Nivå 3'], haggittLevel) &&
                     isDiagnosisRelevant;
 
             case 116: // Reseksjonsrender
-                return (isConditionMet(['P13400'], sampleMaterial) && consideredRemoved !== false) ||
-                    (isConditionMet(['P13402', 'P13405', 'P13409'], sampleMaterial)) &&
+                return ((isConditionMet(['P13400'], sampleMaterial) && consideredRemoved !== false) ||
+                    (isConditionMet(['P13402', 'P13405', 'P13409'], sampleMaterial))) &&
                     isConditionMet(extendedDiagnoses, diagnosis);
 
             case 122: // Korteste avstand til reseksjonsrand
-                return (isConditionMet(['P13400'], sampleMaterial) && consideredRemoved !== false) ||
-                    (isConditionMet(['P13402', 'P13409'], sampleMaterial)) && isDiagnosisRelevant;
+                return ((isConditionMet(['P13400'], sampleMaterial) && consideredRemoved !== false) ||
+                    (isConditionMet(['P13402', 'P13409'], sampleMaterial))) && isDiagnosisRelevant;
 
             case 115: // Korteste avstand til nærmeste sidereseksjonsrand
             case 121: // Korteste avstand til dyp reseksjonsrand
