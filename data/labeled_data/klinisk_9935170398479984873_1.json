@@ -119,11 +119,11 @@
             "enum": [
                 {
                     "name": "Stilket",
-                    "value": "Is"
+                    "value": "Ip"
                 },
                 {
                     "name": "Høy bredbaset",
-                    "value": "Ip"
+                    "value": "Is"
                 },
                 {
                     "name": "Lav bredbaset",
@@ -190,7 +190,7 @@
             "field": "Antall glass",
             "type": "int",
             "unit": "stk",
-            "value": 2
+            "value": 1
         },
         {
             "id": 128,

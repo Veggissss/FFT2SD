@@ -97,7 +97,7 @@
             "id": 109,
             "field": "Makroskopisk beskrivelse",
             "type": "string",
-            "value": "flat, Måler 4 x 2 x 2 mm."
+            "value": "to flate polypper fra cøkum. Bredbaset. Måler henholdsvis 4 x 2 x 2 og 10 x 3 x 2 mm."
         }
     ],
     "metadata_json": [
@@ -123,7 +123,7 @@
             "field": "Antall glass",
             "type": "int",
             "unit": "stk",
-            "value": 2
+            "value": 1
         },
         {
             "id": 128,

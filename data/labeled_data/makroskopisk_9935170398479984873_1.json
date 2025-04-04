@@ -91,13 +91,13 @@
                     "value": "P2070A"
                 }
             ],
-            "value": "P13409"
+            "value": null
         },
         {
             "id": 109,
             "field": "Makroskopisk beskrivelse",
             "type": "string",
-            "value": "slimhinnebit"
+            "value": "to mulige slimhinnebiter, måler 8+ 11 mm"
         }
     ],
     "metadata_json": [
@@ -123,7 +123,7 @@
             "field": "Antall glass",
             "type": "int",
             "unit": "stk",
-            "value": 2
+            "value": 1
         },
         {
             "id": 128,
