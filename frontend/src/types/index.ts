@@ -28,6 +28,7 @@ export interface LoadingState {
 }
 
 export interface OutputPanelProps {
+    reportId: string | null;
     useFormInput: boolean;
     onToggleChange: (checked: boolean) => void;
     outputText: string;

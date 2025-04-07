@@ -4,6 +4,7 @@ import { OutputPanelProps } from '../types';
 import '../styles/OutputPanel.css';
 
 const OutputPanel = ({
+    reportId,
     useFormInput,
     onToggleChange,
     outputText,
@@ -31,6 +32,7 @@ const OutputPanel = ({
                     />
                     <span className="slider round"></span>
                 </label>
+                <p className="report-id">{reportId ? `ID: ${reportId}` : ""}</p>
             </div>
             <div className="editor-container">
                 {useFormInput ? (

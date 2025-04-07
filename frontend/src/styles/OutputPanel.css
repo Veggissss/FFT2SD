@@ -1,6 +1,8 @@
 .editor-container {
     width: 100%;
+    min-height: 20.5vh;
     height: 50vh;
+    max-height: 60.5vh;
     margin-bottom: 1rem;
     display: flex;
     flex-direction: column;
@@ -10,14 +12,13 @@
 }
 
 .editor-toggle {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
 }
 
-.toggle-label {
-    color: #cccccc;
-    font-size: 0.9rem;
+.report-id {
+    margin-left: auto;
 }
 
 .switch {

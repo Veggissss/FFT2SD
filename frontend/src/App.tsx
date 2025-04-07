@@ -15,7 +15,7 @@ function App() {
     const [jsonList, setJsonList] = useState<JsonItem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [useFormInput, setUseFormInput] = useState(false);
-    const [report_id, setReportId] = useState<string | null>(null)
+    const [reportId, setReportId] = useState<string | null>(null)
 
     // API hooks
     const { isLoading, loadModel, generateReport, submitCorrection, getUnlabeled } = useApi();
@@ -23,8 +23,7 @@ function App() {
     const handleLoadModel = async () => {
         try {
             const data = await loadModel(modelType);
-            setJsonList([]);
-            setOutputText(JSON.stringify(data, null, 2));
+            console.log(data);
         } catch (error) {
             alert('Error loading model. Please try again.');
         }
@@ -33,14 +32,23 @@ function App() {
     const handleGenerate = async () => {
         try {
             const data = await generateReport(inputText, reportType, totalContainers);
+            if (reportType === 'auto') {
+                setJsonList([]);
+            }
 
             // Filter out same report type
-            const filteredJsonList = jsonList.filter(item => item.metadata_json[0].value !== reportType);
-            setCurrentIndex(filteredJsonList.length);
-            setJsonList(filteredJsonList.concat(data));
-            setOutputText(JSON.stringify(data[currentIndex], null, 2));
+            const filteredJsonList = jsonList.filter(item => item.metadata_json && item.metadata_json[0].value !== reportType);
+
+            // Add new data to list, and update index to be end of old list and start of new.
+            const combined = filteredJsonList.concat(data);
+            const index = Math.min(filteredJsonList.length, combined.length);
+
+            setJsonList(combined);
+            setCurrentIndex(index);
+            setOutputText(JSON.stringify(combined[index], null, 2));
         } catch (error) {
             alert('Error generating report. Please try again.');
+            console.log(error);
         }
     };
 
@@ -56,6 +64,7 @@ function App() {
                 setOutputText(JSON.stringify(updatedJsonList[newIndex], null, 2));
             } catch (error) {
                 alert('Invalid JSON format. Please correct before proceeding.');
+                console.error(error);
             }
         }
     };
@@ -72,6 +81,7 @@ function App() {
                 setOutputText(JSON.stringify(updatedJsonList[newIndex], null, 2));
             } catch (error) {
                 alert('Invalid JSON format. Please correct before proceeding.');
+                console.error(error);
             }
         }
     };
@@ -83,11 +93,12 @@ function App() {
             setJsonList(updatedJsonList);
 
             // only send the current report type list
-            const filteredJsonList = updatedJsonList.filter(item => item.metadata_json[0].value === reportType);
+            const filteredJsonList = updatedJsonList.filter(item => item.metadata_json && item.metadata_json[0].value === reportType);
 
-            const data = await submitCorrection(filteredJsonList, report_id);
+            const data = await submitCorrection(filteredJsonList, reportId);
             setOutputText(JSON.stringify(data, null, 2));
 
+            // Automatically set next report type
             if (reportType === "klinisk") {
                 setReportType("makroskopisk")
             }
@@ -97,7 +108,6 @@ function App() {
             else {
                 setReportType("klinisk")
             }
-            //setJsonList([]);
         } catch (error) {
             if (error instanceof SyntaxError) {
                 alert('Invalid JSON format. Please correct before proceeding.');
@@ -110,8 +120,8 @@ function App() {
     const handleGetUnlabeled = async () => {
         const unlabeledJson = await getUnlabeled(reportType);
 
-        // If new case is fetched, then reset json list
-        if (report_id !== unlabeledJson.id) {
+        // If new case/reportId is fetched, then reset json list
+        if (reportId !== unlabeledJson.id) {
             setJsonList([]);
         }
 
@@ -177,6 +187,7 @@ function App() {
                 />
 
                 <OutputPanel
+                    reportId={reportId}
                     useFormInput={useFormInput}
                     onToggleChange={handleToggleChange}
                     outputText={outputText}
