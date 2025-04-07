@@ -205,14 +205,9 @@ if __name__ == "__main__":
             output_dir,
         )
 
-        # Combine mikroskopisk and diagnose text
-        micro_text = dataset_case["mikrobeskrivelse"]
-        if dataset_case["diagnose"] is not None:
-            micro_text += "\n\n" + dataset_case["diagnose"]
-
         label_data(
             ReportType.MIKROSKOPISK.value,
-            micro_text,
+            dataset_case["mikrobeskrivelse"],
             dataset_case["id"],
             os.path.join(
                 input_json_dir, f"generated-{ReportType.MIKROSKOPISK.value}.json"
@@ -221,12 +216,26 @@ if __name__ == "__main__":
             output_dir,
         )
 
+        if dataset_case["diagnose"] is not None:
+            label_data(
+                ReportType.MIKROSKOPISK.value,
+                dataset_case["diagnose"],
+                dataset_case["id"],
+                os.path.join(
+                    input_json_dir,
+                    f"generated-{ReportType.MIKROSKOPISK.value}-diagn.json",
+                ),
+                os.path.join(input_json_dir, "generated-metadata.json"),
+                output_dir,
+            )
+
         # Finished labeling case
         print(f"Finished labeling case {dataset_case['id']}")
         labeled_ids_json[dataset_case["id"]] = {
-            "klinisk": True,
-            "makroskopisk": True,
-            "mikroskopisk": True,
+            "kliniske_opplysninger": True,
+            "makrobeskrivelse": True,
+            "mikrobeskrivelse": True,
+            "diagnose": True,
         }
         save_json(labeled_ids_json, ids_json_path)
 

@@ -1,4 +1,5 @@
 import uuid
+import os
 import copy
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -62,11 +63,14 @@ def generate(
     # Determine report type if not provided
     if not report_type:
         filled_report = fill_json(input_text, CONTAINER_NUMBER_MASK, report_json)
-        report_type_str = filled_report.get("value", "").strip()
-        if not report_type_str or report_type_str not in ReportType.get_enum_map():
+        report_type_str = filled_report.get("value", "")
+        if (
+            not report_type_str
+            or report_type_str.strip() not in ReportType.get_enum_map()
+        ):
             print("ERROR: Invalid report type!")
             return None
-        report_type = ReportType(report_type_str)
+        report_type = ReportType(report_type_str.strip())
 
     # Determine total containers if not provided
     if not total_containers:
@@ -139,8 +143,11 @@ def generate_endpoint():
     # Get optional parameters
     report_type_str: str | None = request.json.get("report_type")
     report_type = None
-    if report_type_str and report_type_str in ReportType.get_enum_map():
-        report_type = ReportType(report_type_str)
+    if report_type_str:
+        if report_type_str in ReportType.get_enum_map():
+            report_type = ReportType(report_type_str)
+        elif report_type_str == "diagnose":
+            report_type = ReportType.MIKROSKOPISK
     total_containers: int | None = request.json.get("total_containers")
 
     reports = generate(input_text, report_type, total_containers)
@@ -166,14 +173,29 @@ def correct_endpoint(report_id: str):
 
     # Save every JSON in the list as a separate file
     for count, report in enumerate(reports):
-        report_type = report["metadata_json"][0]["value"]
+        report_type: str = report["metadata_json"][0]["value"]
 
         # Verify if the report type is valid
         if report_type not in ReportType.get_enum_map():
             return jsonify({"error": "Invalid report type"}), 400
+        path = f"data/corrected/{report_type}_{report_id}_{count+1}.json"
 
-        save_json(report, f"data/corrected/{report_type}_{report_id}_{count+1}.json")
-        labeled_ids_json.setdefault(report_id, {})[report_type] = True
+        labeled_type: str = ""
+        match report_type:
+            case ReportType.KLINISK.value:
+                labeled_type = "kliniske_opplysninger"
+            case ReportType.MAKROSKOPISK.value:
+                labeled_type = "makrobeskrivelse"
+            case ReportType.MIKROSKOPISK.value:
+                labeled_type = "mikrobeskrivelse"
+
+        # Since 'diagnose' and 'mikrobeskrivelse' are the same, we need to check if the file already exists
+        if os.path.exists(path) and report_type is ReportType.MIKROSKOPISK.value:
+            path = f"data/corrected/{report_type}_diagn_{report_id}_{count+1}.json"
+            labeled_type = "diagnose"
+
+        save_json(report, path)
+        labeled_ids_json.setdefault(report_id, {})[labeled_type] = True
 
     # Update the labeled IDs JSON
     save_json(labeled_ids_json, LABELED_IDS_PATH)
@@ -181,67 +203,79 @@ def correct_endpoint(report_id: str):
     return jsonify({"message": "Correctly labeled JSON saved!"})
 
 
-@app.route("/unlabeled/<string:report_type_str>", methods=["GET"])
-def unlabeled_endpoint(report_type_str: str):
+@app.route("/unlabeled/<string:text_type_str>", methods=["GET"])
+def unlabeled_endpoint(text_type_str: str):
     """Endpoint to get the unlabeled JSON files."""
-    unlabeled_batch_json: list[dict] = load_json(UNLABELED_BATCH_PATH)
-    labeled_ids_json: dict = load_json(LABELED_IDS_PATH)
+    unlabeled_data: list[dict] = load_json(UNLABELED_BATCH_PATH)
+    labeled_ids: dict = load_json(LABELED_IDS_PATH)
 
-    report_type = None
-    if report_type_str and report_type_str in ReportType.get_enum_map():
-        report_type = ReportType(report_type_str)
+    # Determine report type from input
+    if text_type_str in ReportType.get_enum_map():
+        report_type = ReportType(text_type_str)
+    elif text_type_str == "diagnose":
+        report_type = ReportType.MIKROSKOPISK
+    else:
+        report_type = None
 
-    for dataset_case in unlabeled_batch_json:
-        if dataset_case["id"] in labeled_ids_json:
-            is_klinisk_labeled = labeled_ids_json[dataset_case["id"]].get(
-                ReportType.KLINISK.value, False
-            )
-            is_makroskopisk_labeled = labeled_ids_json[dataset_case["id"]].get(
-                ReportType.MAKROSKOPISK.value, False
-            )
-            is_mikroskopisk_labeled = labeled_ids_json[dataset_case["id"]].get(
-                ReportType.MIKROSKOPISK.value, False
-            )
-            if (
-                is_klinisk_labeled
-                and is_makroskopisk_labeled
-                and is_mikroskopisk_labeled
-            ):
-                # Ignore the cases where all report types for the case are labeled
-                continue
+    for dataset_entry in unlabeled_data:
+        entry_id = dataset_entry["id"]
+        labeled_info = labeled_ids.get(entry_id)
 
+        # If already labeled, check if this report type is labeled
+        if labeled_info:
+            is_klinisk = labeled_info.get("kliniske_opplysninger", False)
+            is_makro = labeled_info.get("makrobeskrivelse", False)
+            is_mikro = labeled_info.get("mikrobeskrivelse", False)
+            is_diagnose = labeled_info.get("diagnose", False)
+
+            if is_klinisk and is_makro and is_mikro and is_diagnose:
+                continue  # Skip fully labeled entries
+
+            # Determine next unlabeled report type if not provided
             if not report_type:
-                # Get next report type for the case id if is not provided
-                if not is_klinisk_labeled:
+                if not is_klinisk and dataset_entry.get("kliniske_opplysninger"):
                     report_type = ReportType.KLINISK
-                elif not is_makroskopisk_labeled:
+                elif not is_makro and dataset_entry.get("makrobeskrivelse"):
                     report_type = ReportType.MAKROSKOPISK
-                else:
+                elif not is_mikro and dataset_entry.get("mikrobeskrivelse"):
                     report_type = ReportType.MIKROSKOPISK
-            elif labeled_ids_json[dataset_case["id"]].get(report_type.value, False):
-                # Ignore the cases where the report type for the case is labeled
-                continue
+                elif not is_diagnose and dataset_entry.get("diagnose"):
+                    report_type = ReportType.MIKROSKOPISK
+            else:
+                # If report type is specified, check if it's already labeled
+                if report_type == ReportType.KLINISK and is_klinisk:
+                    continue
+                if report_type == ReportType.MAKROSKOPISK and is_makro:
+                    continue
+                if report_type == ReportType.MIKROSKOPISK and (is_mikro or is_diagnose):
+                    continue
 
-        if not report_type:
+        # Entry is completely new (not in labeled list)
+        elif not report_type:
             report_type = ReportType.KLINISK
 
-        # Get the report text based on the report type using match statement
+        # Select the appropriate report text
         match report_type:
             case ReportType.KLINISK:
-                report_text = dataset_case["kliniske_opplysninger"]
+                report_text = dataset_entry.get("kliniske_opplysninger", None)
             case ReportType.MAKROSKOPISK:
-                report_text = dataset_case["makrobeskrivelse"]
+                report_text = dataset_entry.get("makrobeskrivelse", None)
             case ReportType.MIKROSKOPISK:
-                report_text = dataset_case["mikrobeskrivelse"]
-                if dataset_case["diagnose"] is not None:
-                    report_text += "\n\n" + dataset_case["diagnose"]
+                if text_type_str == "diagnose" or is_diagnose:
+                    report_text = dataset_entry.get("diagnose", None)
+                else:
+                    report_text = dataset_entry.get("mikrobeskrivelse", None)
 
-        # Format the report text
+        # Skip if no text is available
+        if not report_text:
+            continue
+
+        # Sanitize the report text
         report_text = report_text.strip().replace("\r", "\n")
 
         return jsonify(
             {
-                "id": dataset_case["id"],
+                "id": entry_id,
                 "report_type": report_type.value,
                 "text": report_text,
             }

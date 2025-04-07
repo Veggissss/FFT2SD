@@ -23,6 +23,7 @@ const InputPanel = ({
                 <option value="klinisk">Klinisk</option>
                 <option value="makroskopisk">Makroskopisk</option>
                 <option value="mikroskopisk">Mikroskopisk</option>
+                <option value="diagnose">Diagnose</option>
             </select>
             <button
                 onClick={onGetUnlabeled}

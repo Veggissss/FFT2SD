@@ -31,7 +31,8 @@ function App() {
 
     const handleGenerate = async () => {
         try {
-            const data = await generateReport(inputText, reportType, totalContainers);
+            const reportTypeToUse = reportType === "diagnose" ? "mikroskopisk" : reportType;
+            const data = await generateReport(inputText, reportTypeToUse, totalContainers);
             if (reportType === 'auto') {
                 setJsonList([]);
             }
@@ -93,20 +94,24 @@ function App() {
             setJsonList(updatedJsonList);
 
             // only send the current report type list
-            const filteredJsonList = updatedJsonList.filter(item => item.metadata_json && item.metadata_json[0].value === reportType);
+            const reportTypeToUse = reportType === "diagnose" ? "mikroskopisk" : reportType;
+            const filteredJsonList = updatedJsonList.filter(item => item.metadata_json && item.metadata_json[0].value === reportTypeToUse);
 
             const data = await submitCorrection(filteredJsonList, reportId);
             setOutputText(JSON.stringify(data, null, 2));
 
             // Automatically set next report type
             if (reportType === "klinisk") {
-                setReportType("makroskopisk")
+                setReportType("makroskopisk");
             }
             else if (reportType === "makroskopisk") {
-                setReportType("mikroskopisk")
+                setReportType("mikroskopisk");
+            }
+            else if (reportType === "mikroskopisk") {
+                setReportType("diagnose");
             }
             else {
-                setReportType("klinisk")
+                setReportType("klinisk");
             }
         } catch (error) {
             if (error instanceof SyntaxError) {
@@ -127,7 +132,9 @@ function App() {
 
         setReportId(unlabeledJson.id);
         setInputText(unlabeledJson.text);
-        setReportType(unlabeledJson.report_type);
+        if (reportType === "auto") {
+            setReportType(unlabeledJson.report_type);
+        }
     }
 
     const handleToggleChange = (checked: boolean) => {
