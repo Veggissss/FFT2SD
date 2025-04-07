@@ -16,6 +16,7 @@ const OutputPanel = ({
     onPrevious,
     onNext,
     onCorrect,
+    onClearReportId,
     isLoading,
     isDisabled
 }: OutputPanelProps) => {
@@ -32,7 +33,18 @@ const OutputPanel = ({
                     />
                     <span className="slider round"></span>
                 </label>
-                <p className="report-id">{reportId ? `ID: ${reportId}` : ""}</p>
+                <div
+                    className="report-id"
+                    onClick={onClearReportId}
+                    style={{ cursor: reportId ? 'pointer' : 'default' }}
+                    title={reportId ? "Click to clear report ID" : ""}
+                >
+                    {reportId ? (
+                        <div>
+                            ID: {reportId} ❌
+                        </div>
+                    ) : ""}
+                </div>
             </div>
             <div className="editor-container">
                 {useFormInput ? (

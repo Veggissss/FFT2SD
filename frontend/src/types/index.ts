@@ -40,6 +40,7 @@ export interface OutputPanelProps {
     onPrevious: () => void;
     onNext: () => void;
     onCorrect: () => void;
+    onClearReportId: () => void;
     isLoading: LoadingState;
     isDisabled: boolean;
 }
@@ -50,6 +51,7 @@ export interface FormEditorProps {
 }
 
 export interface InputPanelProps {
+    reportId: string | null;
     reportType: string;
     totalContainers: number | null;
     inputText: string;

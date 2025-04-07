@@ -37,8 +37,8 @@ function App() {
                 setJsonList([]);
             }
 
-            // Filter out same report type
-            const filteredJsonList = jsonList.filter(item => item.metadata_json && item.metadata_json[0].value !== reportType);
+            // Filter out duplicate reports
+            const filteredJsonList = jsonList.filter(item => item.input_text && item.input_text !== inputText);
 
             // Add new data to list, and update index to be end of old list and start of new.
             const combined = filteredJsonList.concat(data);
@@ -93,11 +93,7 @@ function App() {
             updatedJsonList[currentIndex] = JSON.parse(outputText);
             setJsonList(updatedJsonList);
 
-            // only send the current report type list
-            const reportTypeToUse = reportType === "diagnose" ? "mikroskopisk" : reportType;
-            const filteredJsonList = updatedJsonList.filter(item => item.metadata_json && item.metadata_json[0].value === reportTypeToUse);
-
-            const data = await submitCorrection(filteredJsonList, reportId);
+            const data = await submitCorrection(updatedJsonList, reportId);
             setOutputText(JSON.stringify(data, null, 2));
 
             // Automatically set next report type
@@ -132,9 +128,6 @@ function App() {
 
         setReportId(unlabeledJson.id);
         setInputText(unlabeledJson.text);
-        if (reportType === "auto") {
-            setReportType(unlabeledJson.report_type);
-        }
     }
 
     const handleToggleChange = (checked: boolean) => {
@@ -169,6 +162,10 @@ function App() {
         setOutputText(value || '');
     };
 
+    const handleClearReportId = () => {
+        setReportId(null);
+    };
+
     return (
         <>
             <h1 className="app-title">Pathology Report Labeler</h1>
@@ -191,6 +188,7 @@ function App() {
                     onGenerate={handleGenerate}
                     onGetUnlabeled={handleGetUnlabeled}
                     isLoading={isLoading.generate}
+                    reportId={reportId}
                 />
 
                 <OutputPanel
@@ -206,6 +204,7 @@ function App() {
                     onPrevious={handlePrevious}
                     onNext={handleNext}
                     onCorrect={handleCorrect}
+                    onClearReportId={handleClearReportId}
                     isLoading={isLoading}
                     isDisabled={jsonList.length === 0}
                 />

@@ -2,6 +2,7 @@ import { InputPanelProps } from '../types';
 import '../styles/InputPanel.css';
 
 const InputPanel = ({
+    reportId,
     reportType,
     totalContainers,
     inputText,
@@ -10,7 +11,7 @@ const InputPanel = ({
     onInputTextChange,
     onGenerate,
     onGetUnlabeled,
-    isLoading
+    isLoading,
 }: InputPanelProps) => {
     return (
         <div className="left-panel">
@@ -47,7 +48,7 @@ const InputPanel = ({
                 onChange={(e) => onInputTextChange(e.target.value)}
                 placeholder="Report text..."
                 className="input-textarea"
-                disabled={isLoading}
+                disabled={isLoading || reportId !== null}
             />
 
             <button
