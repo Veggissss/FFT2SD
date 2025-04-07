@@ -1,0 +1,135 @@
+{
+    "input_text": "Stilket polypp fra cøkum, ingen stilk. Måler 10 x 7 x 7 mm. Seriesnittes i # 1.",
+    "metadata_json": [
+        {
+            "enum": [
+                {
+                    "value": "klinisk"
+                },
+                {
+                    "value": "makroskopisk"
+                },
+                {
+                    "value": "mikroskopisk"
+                }
+            ],
+            "field": "Rapport type",
+            "id": 0,
+            "type": "enum",
+            "value": "makroskopisk"
+        },
+        {
+            "field": "Antall glass",
+            "id": 1,
+            "type": "int",
+            "unit": "stk",
+            "value": 1
+        },
+        {
+            "field": "Beholder-ID",
+            "id": 128,
+            "type": "int",
+            "value": 1
+        }
+    ],
+    "target_json": [
+        {
+            "enum": [
+                {
+                    "name": "terminale ileum",
+                    "value": "T65520"
+                },
+                {
+                    "name": "coecum",
+                    "value": "T67100"
+                },
+                {
+                    "name": "colon ascendens",
+                    "value": "T67200"
+                },
+                {
+                    "name": "høyre colonfleksur",
+                    "value": "T67300"
+                },
+                {
+                    "name": "colon transversum",
+                    "value": "T67400"
+                },
+                {
+                    "name": "venstre colonfleksur",
+                    "value": "T67500"
+                },
+                {
+                    "name": "colon descendens",
+                    "value": "T67600"
+                },
+                {
+                    "name": "colon sigmoideum",
+                    "value": "T67700"
+                },
+                {
+                    "name": "rectosigmoid",
+                    "value": "T68200"
+                },
+                {
+                    "name": "rectum",
+                    "value": "T68000"
+                },
+                {
+                    "name": "anus",
+                    "value": "T69000"
+                },
+                {
+                    "name": "colon",
+                    "value": "T67000"
+                },
+                {
+                    "name": "colon og rectum",
+                    "value": "T67920"
+                }
+            ],
+            "field": "Lokasjon patologi",
+            "id": 107,
+            "type": "enum",
+            "value": "T67100"
+        },
+        {
+            "enum": [
+                {
+                    "name": "endoskopisk biopsi",
+                    "value": "P13400"
+                },
+                {
+                    "name": "endoskopisk slyngereseksjon",
+                    "value": "P13402"
+                },
+                {
+                    "name": "endoskopisk slyngereseksjon piecemeal",
+                    "value": "P13403"
+                },
+                {
+                    "name": "endoskopisk submucosal disseksjon",
+                    "value": "P13405"
+                },
+                {
+                    "name": "endoskopisk materiale, prosedyre ukjent",
+                    "value": "P13409"
+                },
+                {
+                    "name": "konsultasjonspreparat",
+                    "value": "P2070A"
+                }
+            ],
+            "field": "Prøvemateriale",
+            "id": 108,
+            "type": "enum",
+            "value": "P13409"
+        },
+        {
+            "field": "Makroskopisk beskrivelse",
+            "id": 109,
+            "type": "string",
+            "value": "Stilket polypp fra cøkum, ingen stilk. Måler 10 x 7 x 7 mm."
+        }
+    ]
+}
