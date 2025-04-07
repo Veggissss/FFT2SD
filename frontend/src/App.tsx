@@ -128,6 +128,11 @@ function App() {
 
         setReportId(unlabeledJson.id);
         setInputText(unlabeledJson.text);
+
+        setReportType(unlabeledJson.report_type);
+        if (unlabeledJson.is_diagnose) {
+            setReportType("diagnose");
+        }
     }
 
     const handleToggleChange = (checked: boolean) => {

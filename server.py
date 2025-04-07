@@ -261,13 +261,10 @@ def unlabeled_endpoint(text_type_str: str):
                         break
 
                 # Check for unlabeled diagnose as special case
-                if (
-                    not report_type
-                    and not labeled_info.get(DatasetField.DIAGNOSE.value, False)
-                    and entry.get(DatasetField.DIAGNOSE.value)
-                ):
+                if not labeled_info.get(DatasetField.DIAGNOSE.value, False):
                     report_type = ReportType.MIKROSKOPISK
                     field_map[report_type] = DatasetField.DIAGNOSE.value
+                    is_diagnose = True
 
         # Process the selected report type
         if report_type:
@@ -283,6 +280,7 @@ def unlabeled_endpoint(text_type_str: str):
                 return jsonify(
                     {
                         "id": entry_id,
+                        "is_diagnose": is_diagnose,  # Value needed for the frontend auto setting of report type
                         "report_type": report_type.value,
                         "text": report_text.strip().replace("\r", "\n"),
                     }

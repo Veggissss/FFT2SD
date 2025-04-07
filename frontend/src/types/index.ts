@@ -11,6 +11,7 @@ export interface TargetJsonItem {
 
 export interface LabeledJsonItem {
     id: string,
+    is_diagnose: boolean,
     report_type: string,
     text: string
 }
