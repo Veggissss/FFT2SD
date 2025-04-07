@@ -35,6 +35,18 @@ class ReportType(BaseEnum):
     MIKROSKOPISK = "mikroskopisk"
 
 
+class DatasetField(BaseEnum):
+    """
+    Enum class to represent the field names for the text types in the dataset.
+    
+    """
+
+    KLINISK = "kliniske_opplysninger"
+    MAKROSKOPISK = "makrobeskrivelse"
+    MIKROSKOPISK = "mikrobeskrivelse"
+    DIAGNOSE = "diagnose"
+
+
 class GenerationState(Enum):
     """
     Enum class to represent the states of the restricted token generation.

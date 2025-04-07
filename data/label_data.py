@@ -6,7 +6,7 @@ SCRIPT_PATH = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(SCRIPT_PATH, "..")))
 
 from utils.file_loader import load_json, save_json, json_to_str
-from utils.enums import ReportType
+from utils.enums import ReportType, DatasetField
 
 
 def get_valid_input(input_prompt, item: dict) -> str | int | bool | None:
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
         label_data(
             ReportType.KLINISK.value,
-            dataset_case["kliniske_opplysninger"],
+            dataset_case[DatasetField.KLINISK.value],
             dataset_case["id"],
             os.path.join(input_json_dir, f"generated-{ReportType.KLINISK.value}.json"),
             os.path.join(input_json_dir, "generated-metadata.json"),
@@ -196,7 +196,7 @@ if __name__ == "__main__":
         )
         label_data(
             ReportType.MAKROSKOPISK.value,
-            dataset_case["makrobeskrivelse"],
+            dataset_case[DatasetField.MAKROSKOPISK.value],
             dataset_case["id"],
             os.path.join(
                 input_json_dir, f"generated-{ReportType.MAKROSKOPISK.value}.json"
@@ -205,9 +205,14 @@ if __name__ == "__main__":
             output_dir,
         )
 
+        # Combine mikroskopisk and diagnose text
+        micro_text = dataset_case[DatasetField.MIKROSKOPISK.value]
+        if dataset_case[DatasetField.DIAGNOSE.value] is not None:
+            micro_text += "\n\n" + dataset_case[DatasetField.DIAGNOSE.value]
+
         label_data(
             ReportType.MIKROSKOPISK.value,
-            dataset_case["mikrobeskrivelse"],
+            micro_text,
             dataset_case["id"],
             os.path.join(
                 input_json_dir, f"generated-{ReportType.MIKROSKOPISK.value}.json"
@@ -216,26 +221,13 @@ if __name__ == "__main__":
             output_dir,
         )
 
-        if dataset_case["diagnose"] is not None:
-            label_data(
-                ReportType.MIKROSKOPISK.value,
-                dataset_case["diagnose"],
-                dataset_case["id"],
-                os.path.join(
-                    input_json_dir,
-                    f"generated-{ReportType.MIKROSKOPISK.value}-diagn.json",
-                ),
-                os.path.join(input_json_dir, "generated-metadata.json"),
-                output_dir,
-            )
-
         # Finished labeling case
         print(f"Finished labeling case {dataset_case['id']}")
         labeled_ids_json[dataset_case["id"]] = {
-            "kliniske_opplysninger": True,
-            "makrobeskrivelse": True,
-            "mikrobeskrivelse": True,
-            "diagnose": True,
+            DatasetField.KLINISK.value: True,
+            DatasetField.MAKROSKOPISK.value: True,
+            DatasetField.MIKROSKOPISK.value: True,
+            DatasetField.DIAGNOSE.value: True,
         }
         save_json(labeled_ids_json, ids_json_path)
 

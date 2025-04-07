@@ -6,7 +6,7 @@ from flask_cors import CORS
 
 from model_loader import ModelLoader
 from utils.config import CONTAINER_NUMBER_MASK
-from utils.enums import ModelType, ReportType
+from utils.enums import ModelType, ReportType, DatasetField
 from utils.file_loader import load_json, save_json
 from dataset_loader import reset_value_fields
 
@@ -172,29 +172,39 @@ def correct_endpoint(report_id: str):
     labeled_ids_json: dict = load_json(LABELED_IDS_PATH)
 
     # Save every JSON in the list as a separate file
-    for count, report in enumerate(reports):
-        report_type: str = report["metadata_json"][0]["value"]
+    last_type = None
+    count = 1
+    for report in reports:
+        report_type_str: str = report["metadata_json"][0]["value"]
+        total_glass_amount: int = report["metadata_json"][1]["value"]
+        if last_type == report_type_str:
+            count += 1
+        else:
+            count = 1
+        last_type = report_type_str
 
         # Verify if the report type is valid
-        if report_type not in ReportType.get_enum_map():
+        if report_type_str not in ReportType.get_enum_map():
             return jsonify({"error": "Invalid report type"}), 400
-        path = f"data/corrected/{report_type}_{report_id}_{count+1}.json"
 
-        labeled_type: str = ""
-        match report_type:
-            case ReportType.KLINISK.value:
-                labeled_type = "kliniske_opplysninger"
-            case ReportType.MAKROSKOPISK.value:
-                labeled_type = "makrobeskrivelse"
-            case ReportType.MIKROSKOPISK.value:
-                labeled_type = "mikrobeskrivelse"
+        save_json(
+            report, f"data/corrected/{report_type_str}_{report_id}_{count+1}.json"
+        )
+        # Check if its a diagnose report
+        if count > total_glass_amount:
+            labeled_type = DatasetField.DIAGNOSE.value
+        else:
+            matching_field = next(
+                (
+                    member
+                    for member in DatasetField
+                    if report_type_str in member.name.lower()
+                ),
+                None,
+            )
+            labeled_type = matching_field.value
 
-        # Since 'diagnose' and 'mikrobeskrivelse' are the same, we need to check if the file already exists
-        if os.path.exists(path) and report_type is ReportType.MIKROSKOPISK.value:
-            path = f"data/corrected/{report_type}_diagn_{report_id}_{count+1}.json"
-            labeled_type = "diagnose"
-
-        save_json(report, path)
+        # Save which report type was labeled
         labeled_ids_json.setdefault(report_id, {})[labeled_type] = True
 
     # Update the labeled IDs JSON
@@ -205,82 +215,80 @@ def correct_endpoint(report_id: str):
 
 @app.route("/unlabeled/<string:text_type_str>", methods=["GET"])
 def unlabeled_endpoint(text_type_str: str):
-    """Endpoint to get the unlabeled JSON files."""
-    unlabeled_data: list[dict] = load_json(UNLABELED_BATCH_PATH)
-    labeled_ids: dict = load_json(LABELED_IDS_PATH)
+    """Endpoint to get an unlabeled case of specified type."""
+    unlabeled_data = load_json(UNLABELED_BATCH_PATH)
+    labeled_ids = load_json(LABELED_IDS_PATH)
 
-    # Determine report type from input
-    if text_type_str in ReportType.get_enum_map():
-        report_type = ReportType(text_type_str)
-    elif text_type_str == "diagnose":
+    # Determine report type - handle "diagnose" as special case of MIKROSKOPISK
+    is_diagnose = text_type_str == "diagnose"
+    report_type = None
+    if is_diagnose:
         report_type = ReportType.MIKROSKOPISK
-    else:
-        report_type = None
+    elif text_type_str in ReportType.get_enum_map():
+        report_type = ReportType(text_type_str)
 
-    for dataset_entry in unlabeled_data:
-        entry_id = dataset_entry["id"]
-        labeled_info = labeled_ids.get(entry_id)
+    # Define field mappings between report types and dataset fields
+    field_map = {
+        ReportType.KLINISK: DatasetField.KLINISK.value,
+        ReportType.MAKROSKOPISK: DatasetField.MAKROSKOPISK.value,
+        ReportType.MIKROSKOPISK: (
+            DatasetField.MIKROSKOPISK.value
+            if not is_diagnose
+            else DatasetField.DIAGNOSE.value
+        ),
+    }
 
-        # If already labeled, check if this report type is labeled
-        if labeled_info:
-            is_klinisk = labeled_info.get("kliniske_opplysninger", False)
-            is_makro = labeled_info.get("makrobeskrivelse", False)
-            is_mikro = labeled_info.get("mikrobeskrivelse", False)
-            is_diagnose = labeled_info.get("diagnose", False)
+    # Find suitable unlabeled entry
+    for entry in unlabeled_data:
+        entry_id = entry["id"]
+        labeled_info = labeled_ids.get(entry_id, {})
 
-            if is_klinisk and is_makro and is_mikro and is_diagnose:
-                continue  # Skip fully labeled entries
-
-            # Determine next unlabeled report type if not provided
-            if not report_type:
-                if not is_klinisk and dataset_entry.get("kliniske_opplysninger"):
-                    report_type = ReportType.KLINISK
-                elif not is_makro and dataset_entry.get("makrobeskrivelse"):
-                    report_type = ReportType.MAKROSKOPISK
-                elif not is_mikro and dataset_entry.get("mikrobeskrivelse"):
-                    report_type = ReportType.MIKROSKOPISK
-                elif not is_diagnose and dataset_entry.get("diagnose"):
-                    report_type = ReportType.MIKROSKOPISK
-            else:
-                # If report type is specified, check if it's already labeled
-                if report_type == ReportType.KLINISK and is_klinisk:
-                    continue
-                if report_type == ReportType.MAKROSKOPISK and is_makro:
-                    continue
-                if report_type == ReportType.MIKROSKOPISK and (is_mikro or is_diagnose):
-                    continue
-
-        # Entry is completely new (not in labeled list)
-        elif not report_type:
-            report_type = ReportType.KLINISK
-
-        # Select the appropriate report text
-        match report_type:
-            case ReportType.KLINISK:
-                report_text = dataset_entry.get("kliniske_opplysninger", None)
-            case ReportType.MAKROSKOPISK:
-                report_text = dataset_entry.get("makrobeskrivelse", None)
-            case ReportType.MIKROSKOPISK:
-                if text_type_str == "diagnose" or is_diagnose:
-                    report_text = dataset_entry.get("diagnose", None)
-                else:
-                    report_text = dataset_entry.get("mikrobeskrivelse", None)
-
-        # Skip if no text is available
-        if not report_text:
+        # Skip fully labeled entries
+        if all(labeled_info.get(field, False) for field in DatasetField.get_enum_map()):
             continue
 
-        # Sanitize the report text
-        report_text = report_text.strip().replace("\r", "\n")
+        # For entries without a report type specified
+        if not report_type:
+            # Default to KLINISK for new entries
+            if not labeled_info:
+                report_type = ReportType.KLINISK
+            else:
+                # Find first unlabeled report type
+                for rt in ReportType:
+                    field = field_map.get(rt)
+                    if not labeled_info.get(field, False) and entry.get(field):
+                        report_type = rt
+                        break
 
-        return jsonify(
-            {
-                "id": entry_id,
-                "report_type": report_type.value,
-                "text": report_text,
-            }
-        )
+                # Check for unlabeled diagnose as special case
+                if (
+                    not report_type
+                    and not labeled_info.get(DatasetField.DIAGNOSE.value, False)
+                    and entry.get(DatasetField.DIAGNOSE.value)
+                ):
+                    report_type = ReportType.MIKROSKOPISK
+                    field_map[report_type] = DatasetField.DIAGNOSE.value
 
+        # Process the selected report type
+        if report_type:
+            field = field_map.get(report_type)
+
+            # Skip if already labeled
+            if labeled_info.get(field, False):
+                continue
+
+            # Get and return the report text if available
+            report_text = entry.get(field)
+            if report_text:
+                return jsonify(
+                    {
+                        "id": entry_id,
+                        "report_type": report_type.value,
+                        "text": report_text.strip().replace("\r", "\n"),
+                    }
+                )
+
+    # No suitable unlabeled cases found
     return jsonify({"error": "No unlabeled cases found!"}), 404
 
 
