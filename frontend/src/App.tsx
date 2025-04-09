@@ -146,8 +146,8 @@ function App() {
                 setJsonList(updatedJsonList);
                 setUseFormInput(true);
             } catch (error) {
-                alert('Invalid JSON format. Please correct before switching to form mode.');
-                return;
+                console.error('Invalid JSON format.');
+                setUseFormInput(true);
             }
         }
     };

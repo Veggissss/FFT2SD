@@ -24,6 +24,11 @@ const FormEditor = ({ targetJson, onFieldChange }: FormEditorProps) => {
         const extendedDiagnoses = [...relevantDiagnoses, 'M82112', 'M82632', 'M82612', 'M82102', 'M82142', 'M82131', 'M82132'];
         const isDiagnosisRelevant = isConditionMet(relevantDiagnoses, diagnosis);
 
+        // If llm has given the field a value then show it no matter.
+        if (item.value !== null) {
+            return true;
+        }
+
         switch (id) {
             case 110: // Differensieringsgrad
             case 112: // Lymfekarinnvekst
@@ -38,10 +43,10 @@ const FormEditor = ({ targetJson, onFieldChange }: FormEditorProps) => {
                     (isConditionMet(['P13402', 'P13405', 'P13409'], sampleMaterial))) && isDiagnosisRelevant;
 
             case 114: // Haggit-klassifikasjon
-                return ((infiltrationDepth === undefined || infiltrationDepth === 'pT1') && 
-                (isConditionMet(['P13402', 'P13405','P13409'], sampleMaterial)) && 
-                (macroscopicLook === undefined || macroscopicLook === 'Is')) && 
-                isDiagnosisRelevant;
+                return ((infiltrationDepth === undefined || infiltrationDepth === 'pT1') &&
+                    (isConditionMet(['P13402', 'P13405', 'P13409'], sampleMaterial)) &&
+                    (macroscopicLook === undefined || macroscopicLook === 'Is')) &&
+                    isDiagnosisRelevant;
 
             case 120: // Sm-klassifikasjon
             case 127: // Dybde submukosal
