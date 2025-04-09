@@ -13,7 +13,7 @@ from dataset_loader import reset_value_fields
 app = Flask(__name__)
 
 # Enable CORS for all endpoints
-CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*"])
+CORS(app, origins="*")
 
 # Global variable to store the loaded model
 model_loader = None
@@ -177,34 +177,44 @@ def correct_endpoint(report_id: str):
     for report in reports:
         report_type_str: str = report["metadata_json"][0]["value"]
         total_glass_amount: int = report["metadata_json"][1]["value"]
-        if last_type == report_type_str:
-            count += 1
-        else:
-            count = 1
+
+        count = count + 1 if last_type == report_type_str else 1
         last_type = report_type_str
 
         # Verify if the report type is valid
         if report_type_str not in ReportType.get_enum_map():
             return jsonify({"error": "Invalid report type"}), 400
+        path = f"data/corrected/{report_type_str}_{report_id}_{count}.json"
 
-        save_json(
-            report, f"data/corrected/{report_type_str}_{report_id}_{count+1}.json"
-        )
-        # Check if its a diagnose report
-        if count > total_glass_amount:
+        if os.path.exists(path):
+            # See if file contains the same data
+            duplicate_json = load_json(path)
+            if duplicate_json.get("input_text") == report.get("input_text"):
+                continue
+
+            # Save the new 'diagnose' JSON with a different name
+            path = f"data/corrected/{report_type_str}_{report_id}_diag_{count}.json"
             labeled_type = DatasetField.DIAGNOSE.value
         else:
-            matching_field = next(
+            # Find the matching report type in the DatasetField enum
+            labeled_type = next(
                 (
-                    member
+                    member.value
                     for member in DatasetField
                     if report_type_str in member.name.lower()
                 ),
                 None,
             )
-            labeled_type = matching_field.value
+            # Hacky way to detect if the report is a diagnose since its the same report_type/data model
+            # Manually labeling diagnose for a case and then a microscopisk would result in a mislabeling of filenames
+            # Correcting this would mean changing the json itself and updating it before storing which is not ideal either
+            if count > total_glass_amount:
+                labeled_type = DatasetField.DIAGNOSE.value
 
-        # Save which report type was labeled
+        # Save the report JSON
+        save_json(report, path)
+
+        # Update which report type was labeled
         labeled_ids_json.setdefault(report_id, {})[labeled_type] = True
 
     # Update the labeled IDs JSON
