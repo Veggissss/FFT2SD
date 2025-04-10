@@ -109,6 +109,32 @@
     },
     "5615815285114329460": {
         "kliniske_opplysninger": true,
-        "makrobeskrivelse": true
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "3893576453893321733": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "2735735602435987607": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "9129452169871655673": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "1975981812823283305": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
     }
 }

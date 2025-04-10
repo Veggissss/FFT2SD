@@ -1,5 +1,5 @@
 {
-    "input_text": "1. Ileumslimhinne uten påvist patologiske forandringer. \n2-4: Colonslimhinne uten påvist patologiske forandringer. \n5: Rektumslimhinne med moderat kronisk aktiv betennelse. \n\n \n\n#1: Tynntarmslimhinne med lange slanke totter og bevart kryptarkitektur. Upåfallende sylinderepitel. Vanlig mengde og fordeling av betennelsesceller i lamina propria. Ikke sett inflammasjon eller dysplasi.\n\n#2-4: En vevsbit med colonslimhinne med bevart kryptarkitektur. En lymfoid aggregat, ellers vanlig mengde betennelsesceller i lamina propria. Dysplasi ikke påvist. \n\n#5: Noe opprevet bit med rektumslimhinne. Det er kryptarkitekturforstyrrelse med tap av krypter, og økt antall betennelsesceller i lamina propria, med lymfocytter, plasmaceller og spredte eosinofile og nøytrofile granulocytter. Nøytrofile trekker over på kryptepitelet, forenlig med kryptitt, og enkelte krypter er i ferd med å gå til grunnet. Epitelet er lett reaktivt med lett forstørrede kjerner, entydig atypi sees ikke. Det er ikke funnet holdepunkter for dysplasi eller malignitet.",
+    "input_text": "Prøve 1, snitt 1- 2: Multiple, små biter colonslimhinne. Normal slimhinne er ikke sett. De fleste bitene har utseende som passer best med deler av tubulært adenom med lavgradig dysplasi. I enkelte biter ses hypereosinofilt cytoplasma, slike det ofte kan ses i sagtakkede lesjoner. Imidlertid ser man ikke tydelig arkitektonisk funn som passer med sagtakket lesjon, og funnene vurderes derfor best forenlig med deler av tubulært adenom, også dette. Det er ikke sett høygradig dysplasi eller tegn til infiltrerende vekst.",
     "metadata_json": [
         {
             "enum": [
@@ -23,7 +23,7 @@
             "id": 1,
             "type": "int",
             "unit": "stk",
-            "value": 5
+            "value": 1
         },
         {
             "field": "Beholder-ID",
@@ -269,13 +269,13 @@
             "field": "Patologidiagnose",
             "id": 109,
             "type": "enum",
-            "value": "M00100"
+            "value": "M82111"
         },
         {
             "field": "Kommentar",
             "id": 117,
             "type": "string",
-            "value": "Tynntarmslimhinne med lange slanke totter og bevart kryptarkitektur. Upåfallende sylinderepitel. Vanlig mengde og fordeling av betennelsesceller i lamina propria. Ikke sett inflammasjon eller dysplasi."
+            "value": "Multiple, små biter colonslimhinne. Normal slimhinne er ikke sett. I enkelte biter ses hypereosinofilt cytoplasma, slike det ofte kan ses i sagtakkede lesjoner. Imidlertid ser man ikke tydelig arkitektonisk funn som passer med sagtakket lesjon, og funnene vurderes derfor best forenlig med deler av tubulært adenom, også dette. Det er ikke sett høygradig dysplasi eller tegn til infiltrerende vekst."
         },
         {
             "enum": [

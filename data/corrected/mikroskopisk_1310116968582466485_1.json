@@ -365,7 +365,7 @@
             "field": "Infiltrasjonsdybde",
             "id": 113,
             "type": "enum",
-            "value": "pT3"
+            "value": null
         },
         {
             "enum": [
@@ -397,7 +397,7 @@
             "field": "Haggitt-klassifikasjon",
             "id": 114,
             "type": "enum",
-            "value": "Nivå 4"
+            "value": null
         },
         {
             "enum": [

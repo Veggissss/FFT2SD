@@ -1,5 +1,5 @@
 {
-    "input_text": "1. Ileumslimhinne uten påvist patologiske forandringer. \n2-4: Colonslimhinne uten påvist patologiske forandringer. \n5: Rektumslimhinne med moderat kronisk aktiv betennelse. \n\n \n\n#1: Tynntarmslimhinne med lange slanke totter og bevart kryptarkitektur. Upåfallende sylinderepitel. Vanlig mengde og fordeling av betennelsesceller i lamina propria. Ikke sett inflammasjon eller dysplasi.\n\n#2-4: En vevsbit med colonslimhinne med bevart kryptarkitektur. En lymfoid aggregat, ellers vanlig mengde betennelsesceller i lamina propria. Dysplasi ikke påvist. \n\n#5: Noe opprevet bit med rektumslimhinne. Det er kryptarkitekturforstyrrelse med tap av krypter, og økt antall betennelsesceller i lamina propria, med lymfocytter, plasmaceller og spredte eosinofile og nøytrofile granulocytter. Nøytrofile trekker over på kryptepitelet, forenlig med kryptitt, og enkelte krypter er i ferd med å gå til grunnet. Epitelet er lett reaktivt med lett forstørrede kjerner, entydig atypi sees ikke. Det er ikke funnet holdepunkter for dysplasi eller malignitet.",
+    "input_text": "1: Lett polypøs colonslimhinne (cøkum).\n\n2: Bredbaset sagtakket lesjon uten dysplasi, colon slyngereseksjon.\n\n3: Tubulært adenom med lavgradig dysplasi, colon slyngereseksjon.\n\n4: Tubulovilløst adenom med lavgradig dysplasi, colon slyngereseksjon.",
     "metadata_json": [
         {
             "enum": [
@@ -23,13 +23,13 @@
             "id": 1,
             "type": "int",
             "unit": "stk",
-            "value": 5
+            "value": 4
         },
         {
             "field": "Beholder-ID",
             "id": 128,
             "type": "int",
-            "value": 1
+            "value": 4
         }
     ],
     "target_json": [
@@ -269,13 +269,13 @@
             "field": "Patologidiagnose",
             "id": 109,
             "type": "enum",
-            "value": "M00100"
+            "value": "M82631"
         },
         {
             "field": "Kommentar",
             "id": 117,
             "type": "string",
-            "value": "Tynntarmslimhinne med lange slanke totter og bevart kryptarkitektur. Upåfallende sylinderepitel. Vanlig mengde og fordeling av betennelsesceller i lamina propria. Ikke sett inflammasjon eller dysplasi."
+            "value": "colon slyngereseksjon."
         },
         {
             "enum": [

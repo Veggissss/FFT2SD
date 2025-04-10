@@ -480,7 +480,7 @@
             "id": 125,
             "type": "int",
             "unit": "stk",
-            "value": 5
+            "value": null
         },
         {
             "enum": [
