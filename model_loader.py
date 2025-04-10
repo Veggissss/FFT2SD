@@ -1,12 +1,10 @@
 import copy
 import json
 import torch
-from transformers import StoppingCriteriaList
 
 from utils.file_loader import json_to_str
-from token_constraints import StopOnToken
+from utils.enums import ModelType, ReportType
 from utils.config import SYSTEM_PROMPT, MODELS_DICT
-from utils.enums import ModelType
 from model_strategy import (
     BaseModelStrategy,
     EncoderDecoderStrategy,
@@ -54,15 +52,15 @@ class ModelLoader:
         # Load model with corresponding tokenizer
         self.model, self.tokenizer = self.strategy.load(self)
 
-        # Set stopping criteria to json end (Not used for encoder model)
-        self.stopping_criteria = StoppingCriteriaList(
-            [StopOnToken(self.tokenizer, "}")]
-        )
-
         print(f"Model loaded: {self.model_name}")
         print(f"Device: {self.device}")
 
-    def __generate(self, prompts: list[str], full_template_json: list[dict]) -> str:
+    def __generate(
+        self,
+        prompts: list[str],
+        full_template_json: list[dict],
+        report_type: ReportType,
+    ) -> str:
         """Generate model output based on the input prompt.
         :param prompt: Text input prompt for the model.
         :return: Generated output text.
@@ -78,7 +76,9 @@ class ModelLoader:
         # print(f"Prompt tokens/Max new tokens: {amount_prompt_tokens}")
 
         # Generate output based on the strategy
-        return self.strategy.generate(self, inputs, 100, full_template_json)
+        return self.strategy.generate(
+            self, inputs, 100, full_template_json, report_type
+        )
 
     def __output_to_json(self, output_text: str, template_entry: dict) -> dict:
         """
@@ -95,7 +95,11 @@ class ModelLoader:
         return filled_json
 
     def generate_filled_json(
-        self, input_text: str, container_number: str, template_json: list[dict]
+        self,
+        input_text: str,
+        container_number: str,
+        template_json: list[dict],
+        report_type: ReportType,
     ) -> list[dict]:
         """
         Fill out the JSON values based on the input text.
@@ -131,7 +135,7 @@ class ModelLoader:
             prompts.append(prompt)
 
         # Generate the filled JSON based on the prompt
-        outputs = self.__generate(prompts, full_template_json)
+        outputs = self.__generate(prompts, full_template_json, report_type)
 
         # Format every model output text in the batch to JSON
         filled_json_list = []

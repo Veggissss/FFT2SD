@@ -38,7 +38,7 @@ class ReportType(BaseEnum):
 class DatasetField(BaseEnum):
     """
     Enum class to represent the field names for the text types in the dataset.
-    
+
     """
 
     KLINISK = "kliniske_opplysninger"
@@ -56,3 +56,4 @@ class GenerationState(Enum):
     AWAIT_VALUE = 1
     AWAITING_QUOTE = 2
     AWAITING_END_BRACKET = 3
+    AWAITING_EOS = 4

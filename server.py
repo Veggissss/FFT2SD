@@ -38,7 +38,10 @@ def load_model(model_type: ModelType) -> str:
 
 
 def fill_json(
-    input_text: str, container_str: str, template_json: list[dict]
+    input_text: str,
+    container_str: str,
+    template_json: list[dict],
+    report_type: ReportType = None,
 ) -> list[dict]:
     """Function to fill a single JSON template using the loaded model."""
     mask_token = "null"
@@ -48,7 +51,7 @@ def fill_json(
 
     # Generate filled JSON using the model
     return model_loader.generate_filled_json(
-        input_text, container_str, copy.deepcopy(template_json)
+        input_text, container_str, copy.deepcopy(template_json), report_type
     )
 
 
@@ -109,10 +112,11 @@ def generate(
         # Generate filled JSON using the model
         # Process the template in batches to handle large templates
         batch_size = 16
-        print(len(template_json))
         for i in range(0, len(template_json), batch_size):
             batch = template_json[i : i + batch_size]
-            batch_filled = fill_json(input_text, str(container_number), batch)
+            batch_filled = fill_json(
+                input_text, str(container_number), batch, report_type
+            )
             generated_report["target_json"].extend(batch_filled)
 
         reports.append(generated_report)
