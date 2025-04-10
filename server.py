@@ -23,6 +23,7 @@ IS_TRAINED = True
 # Unlabeled dataset path
 UNLABELED_BATCH_PATH = "data/large_batch/export_2025-03-17.json"
 LABELED_IDS_PATH = "data/large_batch/labeled_ids.json"
+CORRECTED_OUT_DIR = "data/corrected/"
 
 
 def load_model(model_type: ModelType) -> str:
@@ -164,9 +165,11 @@ def correct_endpoint(report_id: str):
     if not reports:
         return jsonify({"error": "No reports provided"}), 400
 
+    # Generate a new report ID if not provided
+    random_id = None
     if not report_id or report_id == "null":
-        # Generate a new report ID if not provided
-        report_id = str(uuid.uuid4())
+        random_id = str(uuid.uuid4())
+        report_id = random_id
 
     # Check if the report is already labeled
     labeled_ids_json: dict = load_json(LABELED_IDS_PATH)
@@ -184,7 +187,7 @@ def correct_endpoint(report_id: str):
         # Verify if the report type is valid
         if report_type_str not in ReportType.get_enum_map():
             return jsonify({"error": "Invalid report type"}), 400
-        path = f"data/corrected/{report_type_str}_{report_id}_{count}.json"
+        path = f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_{count}.json"
 
         if os.path.exists(path):
             # See if file contains the same data
@@ -193,7 +196,7 @@ def correct_endpoint(report_id: str):
                 continue
 
             # Save the new 'diagnose' JSON with a different name
-            path = f"data/corrected/{report_type_str}_{report_id}_diag_{count}.json"
+            path = f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_diag_{count}.json"
             labeled_type = DatasetField.DIAGNOSE.value
         else:
             # Find the matching report type in the DatasetField enum
@@ -215,7 +218,8 @@ def correct_endpoint(report_id: str):
         save_json(report, path)
 
         # Update which report type was labeled
-        labeled_ids_json.setdefault(report_id, {})[labeled_type] = True
+        if not random_id:
+            labeled_ids_json.setdefault(report_id, {})[labeled_type] = True
 
     # Update the labeled IDs JSON
     save_json(labeled_ids_json, LABELED_IDS_PATH)
