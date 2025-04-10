@@ -136,5 +136,15 @@
         "makrobeskrivelse": true,
         "mikrobeskrivelse": true,
         "diagnose": true
+    },
+    "5309886184308093371": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true
+    },
+    "1553686882037744557": {
+        "mikrobeskrivelse": true,
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true
     }
 }
