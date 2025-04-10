@@ -48,7 +48,7 @@ class BaseModelStrategy:
         model_loader: "ModelLoader",
         inputs: dict[str, torch.Tensor],
         amount_new_tokens: int,
-        template_str: str = None,
+        full_template_json: list[dict] = None,
     ) -> str:
         """
         Generate model output text based on the input prompt.
@@ -79,40 +79,46 @@ class BaseModelStrategy:
             cleaned_data[key] = value
         return cleaned_data
 
-    def output_to_json(self, output_text: str, template_str: str) -> dict:
+    def output_to_json(self, output_text: str, template_entry: dict) -> dict:
         """
         Convert generated output text back into just a JSON.
         """
-        output_json = str_to_json(output_text.split(JSON_START_MARKER)[-1])
+        output_json: list[dict] = str_to_json(output_text.split(JSON_START_MARKER)[-1])
 
         # Clean and convert string values to appropriate types
         cleaned_data = self.clean_json(output_json)
 
         # Add possible enum values back to the output JSON
         if cleaned_data.get("type") == "enum":
-            cleaned_data["enum"] = str_to_json(template_str)["enum"]
+            cleaned_data["enum"] = template_entry["enum"]
 
         return cleaned_data
 
-    def get_type_allowed_tokens(self, template_str: str) -> list[int]:
+    def get_type_allowed_tokens(
+        self, full_template_json: list[dict]
+    ) -> list[list[int]]:
         """
         Get the allowed tokens based on the template type.
-        :param template_str: The untokenized template as a JSON string.
+        :param full_template_json: The untokenized full template as a JSON.
         :return: List of token IDs that are allowed for the given template type.
         """
-        template_json = str_to_json(template_str)
-        template_type = template_json["type"]
+        allowed_token_ids_list = []
+        for template_json_entry in full_template_json:
+            template_type = template_json_entry["type"]
 
-        # If the template is an enum, get the allowed tokens
-        template_enums = None
-        if "enum" in template_json:
-            template_enums = [enum["value"] for enum in template_json["enum"]]
-        # Get allowed tokens
-        return get_allowed_tokens(
-            self.tokenizer,
-            template_type,
-            template_enums,
-        )
+            # If the template is an enum, get the allowed tokens
+            template_enums = None
+            if "enum" in template_json_entry:
+                template_enums = [enum["value"] for enum in template_json_entry["enum"]]
+            # Get allowed tokens
+            allowed_token_ids_list.append(
+                get_allowed_tokens(
+                    self.tokenizer,
+                    template_type,
+                    template_enums,
+                )
+            )
+        return allowed_token_ids_list
 
 
 class EncoderDecoderStrategy(BaseModelStrategy):
@@ -137,12 +143,12 @@ class EncoderDecoderStrategy(BaseModelStrategy):
         model_loader,
         inputs,
         amount_new_tokens,
-        template_str=None,
+        full_template_json=None,
     ) -> str:
         logits_processor = LogitsProcessorList(
             [
                 TokenTypeConstraintProcessor(
-                    self.tokenizer, self.get_type_allowed_tokens(template_str)
+                    self.tokenizer, self.get_type_allowed_tokens(full_template_json)
                 )
             ]
         )
@@ -155,14 +161,13 @@ class EncoderDecoderStrategy(BaseModelStrategy):
         )
         return model_loader.tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
-    def output_to_json(self, output_text: str, template_str: str) -> dict:
+    def output_to_json(self, output_text: str, template_entry: dict) -> dict:
         # Parse output text to JSON and clean string values
         cleaned_data = self.clean_json(str_to_json(output_text))
 
         # Add the output value to the template JSON
-        template_json = str_to_json(template_str)
-        template_json["value"] = cleaned_data["value"]
-        return template_json
+        template_entry["value"] = cleaned_data["value"]
+        return template_entry
 
 
 class DecoderStrategy(BaseModelStrategy):
@@ -177,6 +182,7 @@ class DecoderStrategy(BaseModelStrategy):
 
         q_config = BitsAndBytesConfig(
             load_in_4bit=True,  # Use 4-bit quantization
+            bnb_4bit_compute_dtype=torch.float16,
         )
 
         # Load the untrained base model.
@@ -194,6 +200,8 @@ class DecoderStrategy(BaseModelStrategy):
             model = PeftModel.from_pretrained(
                 model,
                 model_loader.model_name,
+                low_cpu_mem_usage=True,
+                ephemeral_gpu_offloading=True,
             )
 
         return model, self.tokenizer
@@ -203,14 +211,14 @@ class DecoderStrategy(BaseModelStrategy):
         model_loader,
         inputs,
         amount_new_tokens,
-        template_str=None,
+        full_template_json=None,
     ) -> str:
         # Generate decoder output
         inputs.pop("token_type_ids", None)
         logits_processor = LogitsProcessorList(
             [
                 TokenTypeConstraintProcessor(
-                    self.tokenizer, self.get_type_allowed_tokens(template_str)
+                    self.tokenizer, self.get_type_allowed_tokens(full_template_json)
                 )
             ]
         )
@@ -249,42 +257,56 @@ class EncoderStrategy(BaseModelStrategy):
         model_loader,
         inputs,
         amount_new_tokens,
-        template_str=None,
-    ) -> str:
+        full_template_json=None,
+    ) -> list[str]:
         # Forward pass to get logits
         with torch.no_grad():
             outputs = model_loader.model(**inputs)
             # [batch_size, seq_length, vocab_size]
             logits = outputs.logits
 
-        # Find the masked token position
-        masked_index = torch.where(
-            inputs.input_ids == model_loader.tokenizer.mask_token_id
-        )[1].item()
+        batch_size = logits.shape[0]
+        assert len(full_template_json) == batch_size
 
-        # Get logits for the masked token [batch_size, vocab_size]
-        masked_scores = logits[:, masked_index]
+        decoded_output = []
+        for i, _ in enumerate(full_template_json):
+            masked = torch.where(
+                inputs.input_ids[i] == model_loader.tokenizer.mask_token_id
+            )
 
-        # Decrease preference for null token
-        null_token_id = self.tokenizer.convert_tokens_to_ids("null")
-        masked_scores[:, null_token_id] -= REDUCE_NULL_BIAS
+            # Get the column indices where the mask token is located
+            masked_index = masked[0].item()
 
-        # Get allowed tokens based on the template
-        allowed_token_ids = self.get_type_allowed_tokens(template_str)
+            # Get logits for the masked token [batch_size, vocab_size]
+            masked_scores = logits[i, masked_index].unsqueeze(0)
 
-        # Log allowed token probabilities
-        log_token_probabilities(
-            model_loader.tokenizer, masked_scores, allowed_token_ids
-        )
+            # Decrease preference for null token
+            null_token_id = self.tokenizer.convert_tokens_to_ids("null")
+            masked_scores[:, null_token_id] -= REDUCE_NULL_BIAS
 
-        # Add a mask to the scores based on the allowed token IDs
-        masked_scores = add_score_mask(masked_scores, allowed_token_ids)
+            # Get allowed tokens based on the template
+            allowed_token_ids = self.get_type_allowed_tokens(full_template_json)[i]
 
-        # Inject the predicted token back into the input
-        # inputs.input_ids: [batch_size, seq_length]
-        input_ids = inputs.input_ids[0]
-        input_ids[masked_index] = torch.argmax(masked_scores).item()
+            # Log allowed token probabilities
+            log_token_probabilities(
+                model_loader.tokenizer, masked_scores, allowed_token_ids
+            )
 
-        return model_loader.tokenizer.decode(
-            input_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
-        )
+            # Add a mask to the scores based on the allowed token IDs
+            masked_scores = add_score_mask(masked_scores, allowed_token_ids)
+
+            # Inject the predicted token back into the input
+            # inputs.input_ids: [batch_size, seq_length]
+            input_ids = inputs.input_ids[i]
+            input_ids[masked_index] = torch.argmax(masked_scores).item()
+
+            # Decode batch item to string
+
+            decoded_text = model_loader.tokenizer.decode(
+                input_ids,
+                skip_special_tokens=True,
+                clean_up_tokenization_spaces=True,
+            )
+            decoded_output.append(decoded_text)
+
+        return decoded_output

@@ -10,17 +10,19 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
     Controls the sequence: ": "TOKEN"}" where "TOKEN" must be of a specific type.
     """
 
-    def __init__(self, tokenizer: AutoTokenizer, allowed_token_ids: list[int]):
+    def __init__(
+        self, tokenizer: AutoTokenizer, allowed_token_ids_list: list[list[int]]
+    ):
         """
         Initialize the processor with allowed token IDs for a specific type.
 
         Args:
             tokenizer: Hugging Face tokenizer
-            allowed_token_ids: List of token IDs that are allowed for the value
+            allowed_token_ids_list: List of json entries (the batch) that contains a list of token IDs that are allowed for the value
         """
         super().__init__()
         self.tokenizer = tokenizer
-        self.allowed_token_ids = allowed_token_ids
+        self.allowed_token_ids_list = allowed_token_ids_list
 
         # Identifying sequence of tokens that indicate the value field
         self.value_token_id = tokenizer.convert_tokens_to_ids("value")
@@ -33,43 +35,49 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         self.state = GenerationState.WAITING
 
     def __call__(self, input_ids, scores):
-        # Originally for string, only the null token is in allowed_token_ids, so give no constraints
-        if len(self.allowed_token_ids) <= 1 or input_ids.shape[1] < 5:
-            return scores
+        """
+        Args:
+        input_ids (batch_size, sequence_length)
+        scores shape (batch_size, config.vocab_size)
+        """
+        for i, allowed_token_ids in enumerate(self.allowed_token_ids_list):
+            # Originally for string, only the null token is in allowed_token_ids, so give no constraints
+            if len(allowed_token_ids) <= 1 or input_ids.shape[1] < 5:
+                continue
 
-        # Decrease preference for null token
-        scores[:, self.null_token_id] -= REDUCE_NULL_BIAS
+            # Decrease preference for null token
+            scores[i, self.null_token_id] -= REDUCE_NULL_BIAS
 
-        last_token_id = input_ids[0, -1].item()
-        match self.state:
-            case GenerationState.WAITING:
-                # See if "value": is generated (There might be separators before value)
-                recent_tokens = input_ids[0, -5:].tolist()
-                if (
-                    last_token_id == self.colon_token_id
-                    and self.value_token_id in recent_tokens
-                ):
-                    self.state = GenerationState.AWAIT_VALUE
+            last_token_id = input_ids[i, -1].item()
+            match self.state:
+                case GenerationState.WAITING:
+                    # See if "value": is generated (There might be separators before value)
+                    recent_tokens = input_ids[i, -5:].tolist()
+                    if (
+                        last_token_id == self.colon_token_id
+                        and self.value_token_id in recent_tokens
+                    ):
+                        self.state = GenerationState.AWAIT_VALUE
+                        return add_score_mask(
+                            scores, [self.quote_token_id, self.quote2_token_id]
+                        )
+
+                case GenerationState.AWAIT_VALUE:
+                    # If the last token is a quote, allow only the restricted value token
+                    self.state = GenerationState.AWAITING_QUOTE
+                    scores = add_score_mask(scores, allowed_token_ids)
+                    log_token_probabilities(self.tokenizer, scores, allowed_token_ids)
+                    return scores
+
+                case GenerationState.AWAITING_QUOTE:
+                    self.state = GenerationState.AWAITING_END_BRACKET
                     return add_score_mask(
                         scores, [self.quote_token_id, self.quote2_token_id]
                     )
 
-            case GenerationState.AWAIT_VALUE:
-                # If the last token is a quote, allow only the restricted value token
-                self.state = GenerationState.AWAITING_QUOTE
-                scores = add_score_mask(scores, self.allowed_token_ids)
-                log_token_probabilities(self.tokenizer, scores, self.allowed_token_ids)
-                return scores
-
-            case GenerationState.AWAITING_QUOTE:
-                self.state = GenerationState.AWAITING_END_BRACKET
-                return add_score_mask(
-                    scores, [self.quote_token_id, self.quote2_token_id]
-                )
-
-            case GenerationState.AWAITING_END_BRACKET:
-                self.state = None
-                return add_score_mask(scores, self.bracket_end_token_id)
+                case GenerationState.AWAITING_END_BRACKET:
+                    self.state = None
+                    return add_score_mask(scores, self.bracket_end_token_id)
 
         return scores
 
@@ -84,7 +92,13 @@ class StopOnToken(StoppingCriteria):
         self.stop_token_id = tokenizer.convert_tokens_to_ids(stop_token)
 
     def __call__(self, input_ids, scores, **kwargs):
-        return input_ids[0, -1].item() == self.stop_token_id
+        """
+        Args:
+        input_ids (batch_size, sequence_length)
+        scores (batch_size, config.vocab_size)
+        """
+        # Stop each generation in the batch individually
+        return (input_ids[:, -1] == self.stop_token_id).tolist()
 
 
 def add_score_mask(

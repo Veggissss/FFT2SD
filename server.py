@@ -37,16 +37,18 @@ def load_model(model_type: ModelType) -> str:
     return f"Loaded model: {model_loader.model_name} | {model_type}"
 
 
-def fill_json(input_text: str, container_str: str, template_entry: dict) -> dict:
+def fill_json(
+    input_text: str, container_str: str, template_json: list[dict]
+) -> list[dict]:
     """Function to fill a single JSON template using the loaded model."""
     mask_token = "null"
     if model_loader.model_type == ModelType.ENCODER:
         mask_token = model_loader.tokenizer.mask_token
-    template_entry = reset_value_fields([template_entry], value=mask_token)[0]
+    template_json = reset_value_fields(template_json, value=mask_token)
 
     # Generate filled JSON using the model
     return model_loader.generate_filled_json(
-        input_text, container_str, copy.deepcopy(template_entry)
+        input_text, container_str, copy.deepcopy(template_json)
     )
 
 
@@ -63,7 +65,7 @@ def generate(
 
     # Determine report type if not provided
     if not report_type:
-        filled_report = fill_json(input_text, CONTAINER_NUMBER_MASK, report_json)
+        filled_report = fill_json(input_text, CONTAINER_NUMBER_MASK, report_json)[0]
         report_type_str = filled_report.get("value", "")
         if (
             not report_type_str
@@ -77,7 +79,7 @@ def generate(
     if not total_containers:
         filled_container = fill_json(
             input_text, CONTAINER_NUMBER_MASK, glass_amount_json
-        )
+        )[0]
         total_containers = filled_container.get("value")
         if not total_containers or not str(total_containers).isdigit():
             print("ERROR: Could not parse the container count!")
@@ -88,7 +90,9 @@ def generate(
             return None
 
     # Load the generated JSON template based on the report type
-    template_json = load_json(f"data_model/out/generated-{report_type.value}.json")
+    template_json: list[dict] = load_json(
+        f"data_model/out/generated-{report_type.value}.json"
+    )
 
     # Get the filled JSON for each container, 1 indexed
     reports = []
@@ -103,9 +107,13 @@ def generate(
         }
 
         # Generate filled JSON using the model
-        for template_entry in template_json:
-            filled_json = fill_json(input_text, container_number, template_entry)
-            generated_report["target_json"].append(filled_json)
+        # Process the template in batches to handle large templates
+        batch_size = 16
+        print(len(template_json))
+        for i in range(0, len(template_json), batch_size):
+            batch = template_json[i : i + batch_size]
+            batch_filled = fill_json(input_text, str(container_number), batch)
+            generated_report["target_json"].extend(batch_filled)
 
         reports.append(generated_report)
 
