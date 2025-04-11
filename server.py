@@ -68,7 +68,7 @@ def generate(
 
     # Determine report type if not provided
     if not report_type:
-        filled_report = fill_json(input_text, CONTAINER_NUMBER_MASK, report_json)[0]
+        filled_report = fill_json(input_text, CONTAINER_NUMBER_MASK, [report_json])[0]
         report_type_str = filled_report.get("value", "")
         if (
             not report_type_str
@@ -81,7 +81,7 @@ def generate(
     # Determine total containers if not provided
     if not total_containers:
         filled_container = fill_json(
-            input_text, CONTAINER_NUMBER_MASK, glass_amount_json
+            input_text, CONTAINER_NUMBER_MASK, [glass_amount_json]
         )[0]
         total_containers = filled_container.get("value")
         if not total_containers or not str(total_containers).isdigit():
@@ -113,7 +113,7 @@ def generate(
         # Process the template in batches to handle large templates
         batch_size = 16
         for i in range(0, len(template_json), batch_size):
-            batch = template_json[i : i + batch_size]
+            batch = copy.deepcopy(template_json[i : i + batch_size])
             batch_filled = fill_json(
                 input_text, str(container_number), batch, report_type
             )

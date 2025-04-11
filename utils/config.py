@@ -6,8 +6,11 @@ MODELS_DICT: dict[str, str] = {
 }
 DATA_MODEL_OUTPUT_FOLDER = "data_model/out"
 
+# Print out contstrained token probabilities
 DEBUG_MODE_ENABLED = True
-REDUCE_NULL_BIAS = 2.0
+
+# Reduce the change of null values in the output
+REDUCE_NULL_BIAS = 0.2
 
 """
 Mark the end of the model prompt and before the template JSON in the prompt.
@@ -24,7 +27,7 @@ Parameters:
 - template_json: The JSON template to fill in.
 """
 SYSTEM_PROMPT = (
-    "Gitt teksten: '{input_text}'."
+    "Gitt teksten: {input_text}."
     + "\nGlass nummer {container_number}."
     + '\nFyll ut den manglede verdien for JSON feltet "value": '
     + JSON_START_MARKER

@@ -222,8 +222,8 @@ class DecoderStrategy(BaseModelStrategy):
             model = PeftModel.from_pretrained(
                 model,
                 model_loader.model_name,
-                low_cpu_mem_usage=True,
-                ephemeral_gpu_offloading=True,
+                # low_cpu_mem_usage=True,
+                # ephemeral_gpu_offloading=True,
                 is_trainable=True,
             )
 

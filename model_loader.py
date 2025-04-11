@@ -38,7 +38,7 @@ class ModelLoader:
 
         # Use either a trained local model or a Hugging Face model
         if is_trained:
-            self.model_name = f"trained/{model_type.value}"
+            self.model_name = f"trained-corrected/{model_type.value}"
         else:
             self.model_name = MODELS_DICT[model_type.value]
 
@@ -126,7 +126,7 @@ class ModelLoader:
                 container_number=container_number,
                 # Strip the value field if the model is a decoder speed up generation
                 template_json=(
-                    template_entry_str.rsplit('"value"', 1)[0] + '"value"'
+                    template_entry_str.rsplit('"value":', 1)[0] + '"value":'
                     if self.model_type == ModelType.DECODER
                     else template_entry_str
                 ),

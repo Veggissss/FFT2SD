@@ -12,9 +12,29 @@ from model_loader import ModelLoader
 from utils.config import JSON_START_MARKER
 from utils.enums import ModelType
 import dataset_loader
+import torch
 
 
-def tokenize_dataset(tokenizer: AutoTokenizer, text_data: Dataset) -> Dataset:
+class CustomLossTrainer(Trainer):
+    def __init__(self, weights, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.weights = weights.to(self.args.device)
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        labels = inputs.get("labels")
+        outputs = model(**inputs)
+        logits = outputs.logits
+
+        # Calculate loss, but reduce the null token impact on the loss
+        loss_fct = torch.nn.CrossEntropyLoss(weight=self.weights)
+        loss = loss_fct(logits.view(-1, self.weights.size(0)), labels.view(-1))
+
+        return (loss, outputs) if return_outputs else loss
+
+
+def tokenize_dataset(
+    tokenizer: AutoTokenizer, text_data: Dataset, max_length: int
+) -> Dataset:
     """
     Tokenize the dataset using the provided model tokenizer.
     :param tokenizer: Model tokenizer.
@@ -26,6 +46,8 @@ def tokenize_dataset(tokenizer: AutoTokenizer, text_data: Dataset) -> Dataset:
             data["input"],
             text_target=data["output"],
             padding=True,
+            max_length=max_length,
+            truncation=True,
             return_special_tokens_mask=True,
             return_tensors="np",  # NumPy is faster here: https://huggingface.co/docs/datasets/nlp_process#map
         ),
@@ -33,7 +55,12 @@ def tokenize_dataset(tokenizer: AutoTokenizer, text_data: Dataset) -> Dataset:
     )
 
 
-def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) -> None:
+def train_model(
+    loader: ModelLoader,
+    training_data: Dataset,
+    output_dir: str,
+    training_args: TrainingArguments,
+) -> None:
     """
     Train the model using the provided dataset.
     :param loader: ModelLoader object with the loaded model and tokenizer.
@@ -43,21 +70,6 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
     # Remove untokenized input and output columns.
     training_data = training_data.remove_columns(["input", "output"])
     training_data = training_data.train_test_split(test_size=0.01)
-
-    # Define training arguments.
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        num_train_epochs=200,  # TODO: Make selectable along with other training params
-        learning_rate=3e-5,
-        weight_decay=0.01,
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=1,
-        eval_strategy="steps",
-        eval_steps=100,
-        logging_dir="./logs",
-        logging_steps=10,
-        fp16=True,  # Mixed precision
-    )
 
     match loader.model_type:
         case ModelType.ENCODER_DECODER:
@@ -81,7 +93,12 @@ def train_model(loader: ModelLoader, training_data: Dataset, output_dir: str) ->
                 return_tensors="pt",
             )
 
+    # null_token_id = loader.tokenizer.convert_tokens_to_ids("null")
+    # weights = torch.ones(len(loader.tokenizer), dtype=torch.float32)
+    # weights[null_token_id] = 0.2
+
     trainer = Trainer(
+        # weights=weights,
         model=loader.model,
         args=training_args,
         train_dataset=training_data["train"],
@@ -148,7 +165,7 @@ def add_tokens_to_tokenizer(model_loader: ModelLoader, enums: list[str]) -> None
 
 
 def reinitialize_weights(module):
-    """Reinitialize the weights of the model's layers."""
+    """Simulate untrained model by reinitializing the weights of the model layers."""
     if hasattr(module, "reset_parameters"):
         module.reset_parameters()
         print(f"Reinitialized weights for {module.__class__.__name__}")
@@ -159,41 +176,57 @@ def train(model_type: ModelType) -> None:
     Train the model using the provided dataset.
     :param model_type: Model type to train.
     """
-    # Load the untrained model and tokenizer.
     model_loader = ModelLoader(model_type, is_trained=False)
+    output_dir = f"trained-corrected/{model_loader.model_type.value}"
+    batch_size = 3
+
+    # Define training args
+    training_args = TrainingArguments(
+        output_dir=output_dir,
+        num_train_epochs=10,
+        learning_rate=4e-4,
+        weight_decay=0.01,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=1,
+        eval_strategy="epoch",
+        logging_dir="./logs",
+        logging_steps=10,
+        fp16=True,  # Mixed precision
+        warmup_ratio=0.1,  # 10% warmup
+        lr_scheduler_type="cosine",
+    )
+
+    # Load the dataset.
+    dataset, enums = dataset_loader.create_dataset(
+        "data/corrected/", model_loader.model_type
+    )
+    print(dataset["input"][:2])
+    dataset.batch(batch_size=batch_size)
 
     # Quantized models can't be trained directly.
     if model_loader.model_type == ModelType.DECODER:
         model_loader.model = apply_peft(model_loader)
 
-    # Load the test dataset.
-    dataset, enums = dataset_loader.create_dataset(
-        "data/labeled_data/", model_loader.model_type
-    )
-
-    add_tokens_to_tokenizer(model_loader, enums)
-    print(f"Number of tokens in the tokenizer: {len(model_loader.tokenizer)}")
+    # Add new tokens if the model is not trained.
+    if not model_loader.is_trained:
+        add_tokens_to_tokenizer(model_loader, enums)
+        print(f"Number of tokens in the tokenizer: {len(model_loader.tokenizer)}")
 
     # Tokenize the dataset.
-    tokenized_dataset = tokenize_dataset(model_loader.tokenizer, dataset)
+    max_length = model_loader.model.config.max_position_embeddings
+    tokenized_dataset = tokenize_dataset(model_loader.tokenizer, dataset, max_length)
 
     # Find the longest tensor in the tokenized_dataset["inputs"] column
-    max_length = max(len(tensor) for tensor in tokenized_dataset["input_ids"])
-    print(f"Longest tensor length in 'input_ids' column: {max_length}")
-
-    # TODO: compare with removing learned weights
-    # model_loader.model.apply(reinitialize_weights)
+    tensor_length = len(tokenized_dataset["input_ids"][0])
+    print(f"Longest tensor length in 'input_ids' column: {tensor_length}")
+    if tensor_length == max_length:
+        print("Truncated the input tensors to the maximum length.")
 
     # Train/Fine-tune and save the model.
-    train_model(
-        model_loader, tokenized_dataset, f"trained/{model_loader.model_type.value}"
-    )
+    train_model(model_loader, tokenized_dataset, output_dir, training_args)
 
 
 if __name__ == "__main__":
-    TRAIN_ALL_TYPES = True
-    if not TRAIN_ALL_TYPES:
-        train(ModelType.ENCODER)
-    else:
-        for model_type in ModelType:
-            train(model_type)
+    # train(ModelType.DECODER)
+    train(ModelType.ENCODER_DECODER)
+    train(ModelType.ENCODER)
