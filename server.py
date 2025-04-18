@@ -109,10 +109,11 @@ def generate(
             "metadata_json": copy.deepcopy(metadata_json),
         }
 
-        # Generate filled JSON using the model
         # Process the template in batches to handle large templates
-        batch_size = 16
+        batch_size = len(template_json)
         for i in range(0, len(template_json), batch_size):
+            # Determine if caching should be used, only if the full template is used
+            report_type = report_type if batch_size == len(template_json) else None
             batch = copy.deepcopy(template_json[i : i + batch_size])
             batch_filled = fill_json(
                 input_text, str(container_number), batch, report_type

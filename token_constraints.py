@@ -66,7 +66,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         quote_token_id = tokenizer.convert_tokens_to_ids('"')
         quote2_token_id = tokenizer.convert_tokens_to_ids(' "')
         self.quote_tokens = [quote_token_id]
-        # If the quote2 token is unk
+        # If the quote2 token is <unk> or not
         if quote2_token_id != 0:
             self.quote_tokens.append(quote2_token_id)
 
@@ -85,40 +85,34 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
 
         for i in range(batch_size):
             if not i in self.state:
-                # print("Initializing state for sequence", i)
                 self.state[i] = GenerationState.WAITING
 
-            # Originally for string, only the null token is in allowed_token_ids, so give no constraints
-            if len(self.allowed_token_ids_list[i]) <= 1 or input_ids.shape[1] < 5:
-                continue
+            # Early exit when not enough tokens are generated for constraints
+            if input_ids.shape[1] < 5:
+                break
 
-            # print(f"{i}: {self.state[i]}")
             match self.state[i]:
                 case GenerationState.WAITING:
                     # See if "value": is generated (There might be separators before value)
                     recent_tokens_ids = input_ids[:, -5:].tolist()
                     last_items = [sublist[-1] for sublist in recent_tokens_ids]
 
-                    if (
-                        self.colon_token_id in last_items
-                        and any(
-                            self.value_token_id in batch_list
-                            for batch_list in recent_tokens_ids
-                        )
-                        # and self.value_token_id in recent_tokens_ids
+                    if self.colon_token_id in last_items and any(
+                        self.value_token_id in batch_list
+                        for batch_list in recent_tokens_ids
                     ):
-                        # self.has_waited = True
                         self.state[i] = GenerationState.AWAIT_VALUE
                         scores[i] = add_score_mask(scores[i], self.quote_tokens)
 
                 case GenerationState.AWAIT_VALUE:
+                    # If the type is string, allow all tokens
+                    if len(self.allowed_token_ids_list[i]) <= 1:
+                        continue
+
                     # If the last token is a quote, allow only the restricted value token
                     self.state[i] = GenerationState.AWAITING_QUOTE
                     scores[i] = add_score_mask(
-                        scores[i],
-                        self.allowed_token_ids_list[
-                            i
-                        ],  # TODO: when the batch_size is smaller than the len(allowed_token_ids_list) then the next iteration will get wrong index
+                        scores[i], self.allowed_token_ids_list[i]
                     )
                     log_token_probabilities(
                         self.tokenizer, scores[i], self.allowed_token_ids_list[i]

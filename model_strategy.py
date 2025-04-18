@@ -101,11 +101,12 @@ class BaseModelStrategy:
         return cleaned_data
 
     def get_type_allowed_tokens(
-        self, full_template_json: list[dict], report_type: ReportType
+        self, full_template_json: list[dict], report_type: ReportType | None
     ) -> list[list[int]]:
         """
         Get the allowed tokens based on the template type.
         :param full_template_json: The untokenized full template as a JSON.
+        :param report_type: The report type (KLINISK, MAKROSKOPISK, MIKROSKOPISK) enum or None for caching diabled.
         :return: List of token IDs that are allowed for the given template type.
         """
         # Check for cached allowed tokens
