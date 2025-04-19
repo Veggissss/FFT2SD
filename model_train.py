@@ -12,24 +12,6 @@ from model_loader import ModelLoader
 from utils.config import JSON_START_MARKER
 from utils.enums import ModelType
 import dataset_loader
-import torch
-
-
-class CustomLossTrainer(Trainer):
-    def __init__(self, weights, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.weights = weights.to(self.args.device)
-
-    def compute_loss(self, model, inputs, return_outputs=False):
-        labels = inputs.get("labels")
-        outputs = model(**inputs)
-        logits = outputs.logits
-
-        # Calculate loss, but reduce the null token impact on the loss
-        loss_fct = torch.nn.CrossEntropyLoss(weight=self.weights)
-        loss = loss_fct(logits.view(-1, self.weights.size(0)), labels.view(-1))
-
-        return (loss, outputs) if return_outputs else loss
 
 
 def tokenize_dataset(

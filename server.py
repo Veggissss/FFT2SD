@@ -57,7 +57,7 @@ def fill_json(
 
 def generate(
     input_text: str, report_type: ReportType = None, total_containers: int = None
-) -> list[dict] | None:
+) -> dict | None:
     """Function to generate text using the loaded model."""
 
     # Load metadata template to determine the report type and container count
