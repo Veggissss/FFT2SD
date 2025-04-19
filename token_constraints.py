@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoTokenizer, StoppingCriteria, LogitsProcessor
 from utils.enums import GenerationState
-from utils.config import DEBUG_MODE_ENABLED, REDUCE_NULL_BIAS
+from utils.config import DEBUG_MODE_ENABLED, REDUCE_NULL_BIAS, STRING_GENERATION_ENABLED
 
 
 class StopOnToken(StoppingCriteria):
@@ -105,9 +105,11 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                         scores[i] = add_score_mask(scores[i], self.quote_tokens)
 
                 case GenerationState.AWAIT_VALUE:
-                    # If the type is string, allow all tokens
+                    # If the type is string, allow all tokens if enabled, else just the null token
                     if len(self.allowed_token_ids_list[i]) <= 1:
-                        continue
+                        if STRING_GENERATION_ENABLED:
+                            continue
+                        print("String generation disabled.")
 
                     # If the last token is a quote, allow only the restricted value token
                     self.state[i] = GenerationState.AWAITING_QUOTE

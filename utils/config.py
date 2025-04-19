@@ -7,10 +7,17 @@ MODELS_DICT: dict[str, str] = {
 DATA_MODEL_OUTPUT_FOLDER = "data_model/out"
 
 # Print out contstrained token probabilities
-DEBUG_MODE_ENABLED = True
+DEBUG_MODE_ENABLED = False
 
 # Reduce the change of null values in the output
-REDUCE_NULL_BIAS = 0.2
+REDUCE_NULL_BIAS = 0
+
+"""
+Whether or not to generate unrestricted string output then the "type" is set to "string".
+This speeds up the generation process, but all the "value" for the strings will be set to null.
+Used for fast eval metrics generation.
+"""
+STRING_GENERATION_ENABLED = False
 
 """
 Mark the end of the model prompt and before the template JSON in the prompt.
