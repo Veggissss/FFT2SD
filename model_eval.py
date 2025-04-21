@@ -119,8 +119,8 @@ def visualize(
     plt.xticks(rotation=0)
     plt.legend(title="Model Type")
     plt.tight_layout()
-    plt.savefig(output_dir.joinpath("accuracy_by_report_type.svg"))
-    print("Saved: accuracy_by_report_type.svg")
+    plt.savefig(output_dir.joinpath(f"accuracy_by_report_type_{model_size.value}.svg"))
+    print(f"Saved: accuracy_by_report_type_{model_size.value}.svg")
 
     # Accuracy by Value Type
     type_summary = df.groupby(["type", "model_name"])["accuracy"].mean().unstack()
@@ -133,8 +133,8 @@ def visualize(
     plt.xticks(rotation=0)
     plt.legend(title="Model Name")
     plt.tight_layout()
-    plt.savefig(output_dir.joinpath("accuracy_by_value_type.svg"))
-    print("Saved: accuracy_by_value_type.svg")
+    plt.savefig(output_dir.joinpath(f"accuracy_by_value_type_{model_size.value}.svg"))
+    print(f"Saved: accuracy_by_value_type_{model_size.value}.svg")
 
     # Precision / Recall / F1 per Model Type
     metrics = []
@@ -164,8 +164,8 @@ def visualize(
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
     plt.tight_layout()
-    plt.savefig(output_dir.joinpath("precision_recall_f1.svg"))
-    print("Saved: precision_recall_f1.svg")
+    plt.savefig(output_dir.joinpath(f"precision_recall_f1_{model_size.value}.svg"))
+    print(f"Saved: precision_recall_f1_{model_size.value}.svg")
 
 
 if __name__ == "__main__":
