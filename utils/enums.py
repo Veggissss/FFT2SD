@@ -21,7 +21,7 @@ class ModelSize(BaseEnum):
     """
 
     SMALL = "small"
-    MEDIUM = "medium"
+    BASE = "base"
     LARGE = "large"
 
 

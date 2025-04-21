@@ -45,6 +45,7 @@ def evaluate(
                     "file": file_path.name,
                     "report_type": report_type.name,
                     "model_name": server.model_loader.model_name,
+                    "model_size": model_size.value,
                     "type": value_type,
                     "y_true": y_true,
                     "y_pred": y_pred,
@@ -84,6 +85,7 @@ def add_bar_labels(ax):
 
 
 def visualize(
+    model_size: ModelSize,
     output_dir: Path = Path("./figures/"),
     results_path: Path = Path("./eval_results.json"),
     ignore_strings: bool = True,
@@ -98,6 +100,10 @@ def visualize(
     if ignore_strings:
         results = [entry for entry in results if entry.get("type") != "string"]
 
+    # Filter out other model sizes
+    results = [
+        entry for entry in results if entry.get("model_size") == model_size.value
+    ]
     df = pd.DataFrame(results)
 
     # Accuracy by Report Type
@@ -106,7 +112,7 @@ def visualize(
     )
     ax = report_summary.plot(kind="bar", figsize=(12, 6))
     add_bar_labels(ax)
-    plt.title("Accuracy by Report Type and Model Type")
+    plt.title("Accuracy by Report Type")
     plt.xlabel("Report Type")
     plt.ylabel("Average Accuracy")
     plt.ylim(0, 1)
@@ -120,12 +126,12 @@ def visualize(
     type_summary = df.groupby(["type", "model_name"])["accuracy"].mean().unstack()
     ax = type_summary.plot(kind="bar", figsize=(12, 6))
     add_bar_labels(ax)
-    plt.title("Accuracy by Value Type and Model Type")
+    plt.title("Accuracy by Value Type")
     plt.xlabel("Value Type")
     plt.ylabel("Average Accuracy")
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
-    plt.legend(title="Model Type")
+    plt.legend(title="Model Name")
     plt.tight_layout()
     plt.savefig(output_dir.joinpath("accuracy_by_value_type.svg"))
     print("Saved: accuracy_by_value_type.svg")
@@ -153,7 +159,7 @@ def visualize(
     metrics_df = pd.DataFrame(metrics).set_index("model_name")
     ax = metrics_df.plot(kind="bar", figsize=(12, 6))
     add_bar_labels(ax)
-    plt.title("Precision, Recall, and F1 Score per Model Type")
+    plt.title(f"Precision, Recall, and F1 Score per Model Type ({model_size.value})")
     plt.ylabel("Score")
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
@@ -164,7 +170,8 @@ def visualize(
 
 if __name__ == "__main__":
     for m_type in ModelType:
-        evaluate(model_type=m_type, model_size=ModelSize.SMALL)
-        # evaluate(model_type=m_type, model_size=ModelSize.MEDIUM)
+        # evaluate(model_type=m_type, model_size=ModelSize.SMALL)
+        # evaluate(model_type=m_type, model_size=ModelSize.BASE)
         # evaluate(model_type=m_type, model_size=ModelSize.LARGE)
-    visualize()
+        continue
+    visualize(ModelSize.SMALL)

@@ -213,5 +213,5 @@ if __name__ == "__main__":
     # Train all model types and sizes
     for m_type in ModelType:
         # train(model_type, ModelSize.SMALL)
-        train(m_type, ModelSize.MEDIUM)
+        train(m_type, ModelSize.BASE)
         # train(model_type, ModelSize.LARGE)

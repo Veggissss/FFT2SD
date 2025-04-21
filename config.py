@@ -24,17 +24,17 @@ class ModelSettings:
 MODELS_DICT: dict[ModelType, dict[ModelSize, ModelSettings]] = {
     ModelType.ENCODER_DECODER: {
         ModelSize.LARGE: ModelSettings("ltg/nort5-large"),
-        ModelSize.MEDIUM: ModelSettings("ltg/nort5-base"),
+        ModelSize.BASE: ModelSettings("ltg/nort5-base"),
         ModelSize.SMALL: ModelSettings("ltg/nort5-small"),
     },
     ModelType.ENCODER: {
         ModelSize.LARGE: ModelSettings("ltg/norbert3-large"),
-        ModelSize.MEDIUM: ModelSettings("ltg/norbert3-base"),
+        ModelSize.BASE: ModelSettings("ltg/norbert3-base"),
         ModelSize.SMALL: ModelSettings("ltg/norbert3-small"),
     },
     ModelType.DECODER: {
         ModelSize.LARGE: ModelSettings("norallm/normistral-11b-warm"),
-        ModelSize.MEDIUM: ModelSettings("norallm/normistral-7b-warm"),
+        ModelSize.BASE: ModelSettings("norallm/normistral-7b-warm"),
         ModelSize.SMALL: ModelSettings("norallm/normistral-7b-warm", use_peft=True),
     },
 }

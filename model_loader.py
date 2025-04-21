@@ -16,15 +16,19 @@ from model_strategy import (
 class ModelLoader:
     """
     Class to load and generate from a transformer model and its tokenizer with the specified architecture type.
+    Params:
+        model_type (ModelType): The type of model architecture (encoder, decoder, encoder-decoder).
+        model_size (ModelSize): The size of the model (small, base, large).
+        is_trained (bool): Flag indicating if the model is fine-tuned and is saved locally.
+
     Attributes:
-        model_type (ModelType): The type of model architecture.
-        is_trained (bool): Flag indicating if the model is pre-trained.
-        model_name (str): The name of the model.
+        model_name (str): The name of the model/path to local if is_trained.
         device (torch.device): The device to run the model on (CPU or GPU).
         strategy (BaseModelStrategy): The strategy for handling the model based on its type.
         model: The loaded transformer model.
         tokenizer: The tokenizer associated with the model.
-        stopping_criteria (StoppingCriteriaList): Criteria to stop the generation process.
+        model_settings: The settings for the model, including its name and other specific configs.
+        strategy: The strategy for handling the model based on its type.
     """
 
     def __init__(
