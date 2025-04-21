@@ -20,7 +20,7 @@ from token_constraints import (
     TokenTypeConstraintProcessor,
     StopOnToken,
 )
-from utils.config import JSON_START_MARKER, MODELS_DICT, REDUCE_NULL_BIAS
+from config import JSON_START_MARKER, MODELS_DICT, REDUCE_NULL_BIAS
 from utils.file_loader import str_to_json
 from utils.enums import ReportType
 
@@ -201,31 +201,40 @@ class DecoderStrategy(BaseModelStrategy):
         # Load tokenizer
         super().load(model_loader)
 
-        q_config = BitsAndBytesConfig(
-            load_in_4bit=True,  # Use 4-bit quantization
-            bnb_4bit_compute_dtype=torch.float16,
-        )
+        if model_loader.model_settings.use_peft:
+            q_config = BitsAndBytesConfig(
+                load_in_4bit=True,  # Use 4-bit quantization
+                bnb_4bit_compute_dtype=torch.float16,
+            )
 
-        # Load the untrained base model.
-        model = AutoModelForCausalLM.from_pretrained(
-            MODELS_DICT[model_loader.model_type.value],
-            quantization_config=q_config,
-            device_map="auto",
-            # Don’t use low_cpu_mem_usage=True when creating a new PEFT adapter for training.
-            # # https://huggingface.co/docs/peft/v0.15.0/en/package_reference/peft_model#peft.PeftModel.low_cpu_mem_usage
-        )
+            # Load the untrained base model.
+            model = AutoModelForCausalLM.from_pretrained(
+                MODELS_DICT[model_loader.model_type][
+                    model_loader.model_size
+                ].model_name,
+                quantization_config=q_config,
+                device_map="auto",
+                # Don’t use low_cpu_mem_usage=True when creating a new PEFT adapter for training.
+                # # https://huggingface.co/docs/peft/v0.15.0/en/package_reference/peft_model#peft.PeftModel.low_cpu_mem_usage
+            )
 
-        if model_loader.is_trained:
-            # Resize to fit the trained model's token embeddings
-            model.resize_token_embeddings(len(self.tokenizer))
+            if model_loader.is_trained:
+                # Resize to fit the trained model's token embeddings
+                model.resize_token_embeddings(len(self.tokenizer))
 
-            # Load the PEFT model
-            model = PeftModel.from_pretrained(
-                model,
-                model_loader.model_name,
-                # low_cpu_mem_usage=True,
-                # ephemeral_gpu_offloading=True,
-                is_trainable=True,
+                # Load the PEFT model
+                model = PeftModel.from_pretrained(
+                    model,
+                    model_loader.model_name,
+                    # ephemeral_gpu_offloading=True,
+                    # is_trainable=True,
+                )
+        else:
+            # Load non-quant non-PEFT model
+            model = AutoModelForCausalLM.from_pretrained(
+                MODELS_DICT[model_loader.model_type],
+                device_map="auto",
+                low_cpu_mem_usage=True,
             )
 
         return model, self.tokenizer

@@ -5,8 +5,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from model_loader import ModelLoader
-from utils.config import CONTAINER_NUMBER_MASK
-from utils.enums import ModelType, ReportType, DatasetField
+from config import CONTAINER_NUMBER_MASK
+from utils.enums import ModelType, ReportType, DatasetField, ModelSize
 from utils.file_loader import load_json, save_json
 from dataset_loader import reset_value_fields
 
@@ -19,6 +19,7 @@ CORS(app, origins="*")
 model_loader = None
 # If to use the trained model or directly from huggingface specified in utils/config.py
 IS_TRAINED = True
+MODEL_SIZE = ModelSize.SMALL
 
 # Unlabeled dataset path
 UNLABELED_BATCH_PATH = "data/large_batch/export_2025-03-17.json"
@@ -31,7 +32,7 @@ def load_model(model_type: ModelType) -> str:
 
     # Update the global model_loader variable
     global model_loader
-    model_loader = ModelLoader(model_type, IS_TRAINED)
+    model_loader = ModelLoader(model_type, MODEL_SIZE, IS_TRAINED)
     model_loader.model.eval()
 
     return f"Loaded model: {model_loader.model_name} | {model_type}"

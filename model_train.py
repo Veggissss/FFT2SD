@@ -9,8 +9,8 @@ from transformers import (
 )
 from datasets import Dataset
 from model_loader import ModelLoader
-from utils.config import JSON_START_MARKER
-from utils.enums import ModelType
+from config import JSON_START_MARKER
+from utils.enums import ModelType, ModelSize
 import dataset_loader
 
 
@@ -147,20 +147,23 @@ def add_tokens_to_tokenizer(model_loader: ModelLoader, enums: list[str]) -> None
 
 
 def reinitialize_weights(module):
-    """Simulate untrained model by reinitializing the weights of the model layers."""
+    """TODO: Simulate untrained model by reinitializing the weights of the model layers."""
     if hasattr(module, "reset_parameters"):
         module.reset_parameters()
         print(f"Reinitialized weights for {module.__class__.__name__}")
 
 
-def train(model_type: ModelType) -> None:
+def train(model_type: ModelType, model_size: ModelSize) -> None:
     """
     Train the model using the provided dataset.
     :param model_type: Model type to train.
     """
-    model_loader = ModelLoader(model_type, is_trained=False)
-    output_dir = f"trained-corrected/{model_loader.model_type.value}"
+    model_loader = ModelLoader(model_type, model_size, is_trained=False)
+    dataset_dir = "data/corrected/"
+    output_dir = f"trained/{model_loader.model_settings.get_saved_name()}"
     batch_size = 3
+
+    print(f"Saving trained model to: {output_dir}")
 
     # Define training args
     training_args = TrainingArguments(
@@ -169,7 +172,7 @@ def train(model_type: ModelType) -> None:
         learning_rate=4e-4,
         weight_decay=0.01,
         per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=1,
+        per_device_eval_batch_size=batch_size,
         eval_strategy="epoch",
         logging_dir="./logs",
         logging_steps=10,
@@ -179,9 +182,7 @@ def train(model_type: ModelType) -> None:
     )
 
     # Load the dataset.
-    dataset, enums = dataset_loader.create_dataset(
-        "data/corrected/", model_loader.model_type
-    )
+    dataset, enums = dataset_loader.create_dataset(dataset_dir, model_loader.model_type)
     print(dataset["input"][:2])
     dataset.batch(batch_size=batch_size)
 
@@ -209,6 +210,8 @@ def train(model_type: ModelType) -> None:
 
 
 if __name__ == "__main__":
-    # train(ModelType.DECODER)
-    train(ModelType.ENCODER_DECODER)
-    train(ModelType.ENCODER)
+    # Train all model types and sizes
+    for m_type in ModelType:
+        # train(model_type, ModelSize.SMALL)
+        train(m_type, ModelSize.MEDIUM)
+        # train(model_type, ModelSize.LARGE)

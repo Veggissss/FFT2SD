@@ -3,7 +3,7 @@ import copy
 from datasets import Dataset
 from utils.file_loader import load_json, json_to_str
 from utils.enums import ModelType
-from utils.config import SYSTEM_PROMPT, CONTAINER_NUMBER_MASK, DATA_MODEL_OUTPUT_FOLDER
+from config import SYSTEM_PROMPT, CONTAINER_NUMBER_MASK, DATA_MODEL_OUTPUT_FOLDER
 
 
 def create_dataset(dataset_path: str, model_type: ModelType) -> tuple[Dataset, list]:

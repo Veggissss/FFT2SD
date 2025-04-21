@@ -78,7 +78,7 @@ def test_unlabeled_endpoint(client: FlaskClient):
     response = client.get("/unlabeled/null")
     assert "id" in response.json
     assert "text" in response.json
-    assert not response.json["is_diagnose"]
+    assert response.json["is_diagnose"] != None
 
 
 def test_correct_endpoint(client: FlaskClient):

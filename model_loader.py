@@ -3,8 +3,8 @@ import json
 import torch
 
 from utils.file_loader import json_to_str
-from utils.enums import ModelType, ReportType
-from utils.config import SYSTEM_PROMPT, MODELS_DICT
+from utils.enums import ModelType, ReportType, ModelSize
+from config import SYSTEM_PROMPT, MODELS_DICT
 from model_strategy import (
     BaseModelStrategy,
     EncoderDecoderStrategy,
@@ -30,17 +30,20 @@ class ModelLoader:
     def __init__(
         self,
         model_type: ModelType,
-        is_trained: bool,
+        model_size: ModelSize = ModelSize.SMALL,
+        is_trained: bool = True,
     ):
         self.model_type = model_type
+        self.model_size = model_size
         self.is_trained = is_trained
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model_settings = MODELS_DICT[model_type][model_size]
 
         # Use either a trained local model or a Hugging Face model
         if is_trained:
-            self.model_name = f"trained-corrected/{model_type.value}"
+            self.model_name = f"trained/{self.model_settings.get_saved_name()}"
         else:
-            self.model_name = MODELS_DICT[model_type.value]
+            self.model_name = self.model_settings.model_name
 
         # Load the model architecture specific handler
         self.strategy: BaseModelStrategy = {

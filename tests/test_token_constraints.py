@@ -1,13 +1,14 @@
 import pytest
 from transformers import AutoTokenizer, AddedToken
 from token_constraints import get_allowed_tokens
-from utils.config import MODELS_DICT
+from config import MODELS_DICT
+from utils.enums import ModelType
 
 
 def test_allowed_tokens_enum():
     test_enums = ["Hello", "World", "Test", "59jfa9fjFJFj29", "null"]
     test_tokens = [AddedToken(enum, single_word=True) for enum in test_enums]
-    tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT["encoder"])
+    tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT[ModelType.ENCODER])
     tokenizer.add_tokens(test_tokens)
     allowed_token_ids = get_allowed_tokens(tokenizer, "enum", test_enums)
 
@@ -20,7 +21,7 @@ def test_allowed_tokens_enum():
 
 def test_allowed_tokens_boolean():
     test_booleans = ["true", "false", "null"]
-    tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT["encoder"])
+    tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT[ModelType.ENCODER])
     tokenizer.add_tokens(test_booleans)
     allowed_token_ids = get_allowed_tokens(tokenizer, "boolean")
 
@@ -33,7 +34,7 @@ def test_allowed_tokens_boolean():
 
 def test_allowed_tokens_int():
     test_ints = ["1", "2", "3", "100", "1000", "null"]
-    tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT["encoder"])
+    tokenizer = AutoTokenizer.from_pretrained(MODELS_DICT[ModelType.ENCODER])
     tokenizer.add_tokens(test_ints)
     allowed_token_ids = get_allowed_tokens(tokenizer, "int")
 
