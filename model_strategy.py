@@ -211,7 +211,7 @@ class DecoderStrategy(BaseModelStrategy):
             model = AutoModelForCausalLM.from_pretrained(
                 MODELS_DICT[model_loader.model_type][
                     model_loader.model_size
-                ].model_name,
+                ].model_name,  # Will not include the '_peft'
                 quantization_config=q_config,
                 device_map="auto",
                 # Don’t use low_cpu_mem_usage=True when creating a new PEFT adapter for training.
@@ -232,7 +232,7 @@ class DecoderStrategy(BaseModelStrategy):
         else:
             # Load non-quant non-PEFT model
             model = AutoModelForCausalLM.from_pretrained(
-                MODELS_DICT[model_loader.model_type],
+                model_loader.model_name,
                 device_map="auto",
                 low_cpu_mem_usage=True,
             )
