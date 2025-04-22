@@ -6,7 +6,7 @@ from config import DEBUG_MODE_ENABLED, REDUCE_NULL_BIAS, STRING_GENERATION_ENABL
 
 class StopOnToken(StoppingCriteria):
     """
-    Stopping criteria to stop generation when a specific token is generated for all sequences in a batch.
+    Stopping criteria to stop generation when a specific token is generated.
     """
 
     def __init__(self, tokenizer, stop_token):
@@ -14,27 +14,30 @@ class StopOnToken(StoppingCriteria):
         self.stop_token_id = tokenizer.convert_tokens_to_ids(stop_token)
         self.stopped = None
 
-    def __call__(self, input_ids, scores, **kwargs):
+    def __call__(self, input_ids, scores, **kwargs) -> torch.BoolTensor:
         """
         Args:
-        input_ids [batch_size, sequence_length]
-        scores [batch_size, vocab_size]
+            input_ids: Tensor of shape [batch_size, sequence_length]
+            scores: Tensor of shape [batch_size, vocab_size]
+
+        Returns:
+            torch.BoolTensor: Tensor of shape [batch_size] where True indicates
+            stopping generation for that sequence
         """
+        # Init tensor
         if self.stopped is None:
             self.stopped = torch.zeros(input_ids.shape[0], dtype=torch.bool).to(
                 input_ids.device
             )
 
+        # Check if the last token is the stop token
         is_last_token = input_ids[:, -1] == self.stop_token_id
         self.stopped = self.stopped | is_last_token
-        is_finished = self.stopped.all()
 
-        # Stop generation and reset state
-        if is_finished and DEBUG_MODE_ENABLED:
+        if self.stopped.all() and DEBUG_MODE_ENABLED:
             print("Stopping generation for all sequences in the batch.")
 
-        # Stop generation if the stop token is generated for all sequences in the batch
-        return is_finished
+        return self.stopped
 
 
 class TokenTypeConstraintProcessor(LogitsProcessor):
