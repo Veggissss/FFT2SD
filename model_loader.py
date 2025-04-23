@@ -4,7 +4,7 @@ import torch
 
 from utils.file_loader import json_to_str
 from utils.enums import ModelType, ReportType, ModelSize
-from config import SYSTEM_PROMPT, MODELS_DICT
+from config import SYSTEM_PROMPT, MODELS_DICT, INCLUDE_ENUMS
 from model_strategy import (
     BaseModelStrategy,
     EncoderDecoderStrategy,
@@ -97,7 +97,9 @@ class ModelLoader:
         try:
             filled_json = self.strategy.output_to_json(output_text, template_entry)
         except json.JSONDecodeError:
-            print("Failed to parse model output into JSON. Raw output:", output_text)
+            print("Failed to parse model output into JSON! Raw output:", output_text)
+            filled_json = template_entry
+            filled_json["value"] = None
 
         return filled_json
 
@@ -118,10 +120,11 @@ class ModelLoader:
         # Convert JSON template to string to be used in generation with enum field
         full_template_json = copy.deepcopy(template_json)
 
-        # Remove enum field from prompt to save tokens
-        for template_entry in template_json:
-            if "enum" in template_entry:
-                template_entry.pop("enum")
+        if not INCLUDE_ENUMS:
+            # Remove enum field from prompt to save tokens
+            for template_entry in template_json:
+                if "enum" in template_entry:
+                    template_entry.pop("enum")
 
         # Convert JSON template to a string to include in the prompt.
         prompts = []

@@ -3,7 +3,12 @@ import copy
 from datasets import Dataset
 from utils.file_loader import load_json, json_to_str
 from utils.enums import ModelType
-from config import SYSTEM_PROMPT, CONTAINER_NUMBER_MASK, DATA_MODEL_OUTPUT_FOLDER
+from config import (
+    SYSTEM_PROMPT,
+    CONTAINER_NUMBER_MASK,
+    DATA_MODEL_OUTPUT_FOLDER,
+    INCLUDE_ENUMS,
+)
 
 
 def create_dataset(dataset_path: str, model_type: ModelType) -> tuple[Dataset, list]:
@@ -60,9 +65,11 @@ def process_json_file(file_path: str, model_type: ModelType, enums: list) -> dic
                 if enum_value not in enums:
                     enums.append(enum_value)
             # Remove the enum form input and output to save a lot of tokens/max_length
-            del target_entry["enum"]
-            del template_entry["enum"]
+            if not INCLUDE_ENUMS:
+                del target_entry["enum"]
+                del template_entry["enum"]
 
+        # Remove the value field from antall glass as it should be not given in the input
         if template_entry.get("field") == "Antall glass":
             container_number = CONTAINER_NUMBER_MASK
         else:
