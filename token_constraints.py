@@ -129,12 +129,13 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                     scores[i] = add_score_mask(scores[i], self.quote_tokens)
 
                 case GenerationState.AWAITING_END_BRACKET:
-                    self.state[i] = GenerationState.AWAITING_EOS
+                    self.state[i] = None
                     scores[i] = add_score_mask(scores[i], [self.bracket_end_token_id])
+                    # Stopping criteria should stop the next token generation
 
-                case GenerationState.AWAITING_EOS:
+                case None:
+                    print("Stopping criteria was not set.")
                     scores[i] = add_score_mask(scores[i], [self.tokenizer.eos_token_id])
-
         return scores
 
 
@@ -184,7 +185,7 @@ def get_allowed_tokens(
 ) -> list[int]:
     """
     Get the token ids corresponding to the allowed token types.
-    null is always allowed and added to list.
+    null is always allowed and is always added to the allowed tokens list.
     """
     allowed_token_ids = []
 
@@ -194,11 +195,12 @@ def get_allowed_tokens(
 
     match token_type:
         case "int":
-            # Identify token IDs corresponding to numeric tokens
-            for token_id in range(tokenizer.vocab_size):
-                token_str = tokenizer.decode([token_id]).strip()
-                if token_str.isdigit():
-                    allowed_token_ids.append(token_id)
+            for num in range(100):
+                # Convert the number to a string and then to token IDs
+                token_ids = tokenizer.encode(str(num), add_special_tokens=False)
+                # Only add if number maps to a single token to avoid multi-tokens
+                if len(token_ids) == 1:
+                    allowed_token_ids.append(token_ids[0])
         case "enum":
             if enums is None:
                 raise ValueError("Enums must be provided for enum token type.")
@@ -206,11 +208,17 @@ def get_allowed_tokens(
                 enum_str = str(enum)
                 if enum_str == "None":
                     continue
-                token_id = tokenizer.convert_tokens_to_ids(enum_str)
-                allowed_token_ids.append(token_id)
+                token_ids = tokenizer.encode(enum_str, add_special_tokens=False)
+                # Should be a single token as its added as a seperate token before training
+                if len(token_ids) == 1:
+                    allowed_token_ids.append(token_ids[0])
+                else:
+                    print(f"Enum token '{enum_str}' is not a single token!")
         case "boolean":
-            for token_id in range(tokenizer.vocab_size):
-                token_str = tokenizer.decode([token_id]).strip()
-                if token_str.lower() in ["true", "false"]:
-                    allowed_token_ids.append(token_id)
+            for bool_val in ["true", "false"]:
+                token_ids = tokenizer.encode(bool_val, add_special_tokens=False)
+                if len(token_ids) == 1:
+                    allowed_token_ids.append(token_ids[0])
+                else:
+                    print(f"Boolean token '{bool_val}' is not a single token!")
     return allowed_token_ids

@@ -66,4 +66,3 @@ class GenerationState(Enum):
     AWAIT_VALUE = 1
     AWAITING_QUOTE = 2
     AWAITING_END_BRACKET = 3
-    AWAITING_EOS = 4

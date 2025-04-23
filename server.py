@@ -243,7 +243,15 @@ def correct_endpoint(report_id: str):
 
 @app.route("/unlabeled/<string:text_type_str>", methods=["GET"])
 def unlabeled_endpoint(text_type_str: str):
-    """Endpoint to get an unlabeled case of specified type."""
+    """
+    Endpoint to get an unlabeled case of specified type.
+
+    TODO:
+        Keep in mind that multiple people could get the same case at the same time!
+        For a distributed system, each user should get a seperate case that is not finished labeled.
+        For a single user scenario like this PoC, this is not a problem.
+        As its important to be able to continue where you left off on session refresh.
+    """
     unlabeled_data = load_json(UNLABELED_BATCH_PATH)
     labeled_ids = load_json(LABELED_IDS_PATH)
 

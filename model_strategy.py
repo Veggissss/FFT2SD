@@ -177,7 +177,6 @@ class EncoderDecoderStrategy(BaseModelStrategy):
             attention_mask=inputs["attention_mask"],
             max_new_tokens=amount_new_tokens,
             logits_processor=logits_processor,
-            eos_token_id=self.tokenizer.eos_token_id,
             stopping_criteria=stopping_criteria,
         )
         return model_loader.tokenizer.batch_decode(output_ids, skip_special_tokens=True)
@@ -252,14 +251,13 @@ class DecoderStrategy(BaseModelStrategy):
                 )
             ]
         )
-        # Set stopping criteria to json end (Not used for encoder model)
+        # Stopping criteria to stop generation when json is done generating
         stopping_criteria = StoppingCriteriaList([StopOnToken(self.tokenizer, "}")])
 
         output_ids = model_loader.model.generate(
             **inputs,
             max_new_tokens=amount_new_tokens,
             logits_processor=logits_processor,
-            eos_token_id=self.tokenizer.eos_token_id,
             stopping_criteria=stopping_criteria,
         )
         return model_loader.tokenizer.batch_decode(output_ids, skip_special_tokens=True)

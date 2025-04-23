@@ -43,11 +43,13 @@ def test_allowed_tokens_boolean():
 
 
 def test_allowed_tokens_int():
-    test_ints = ["1", "2", "3", "100", "1000", "null"]
+    test_ints = ["1", "2", "3", "99", "null"]
+    test_invalid_ints = ["100", "1000", "994"]
     tokenizer = AutoTokenizer.from_pretrained(
         MODELS_DICT[ModelType.ENCODER][ModelSize.SMALL].get_saved_name()
     )
     tokenizer.add_tokens(test_ints)
+    tokenizer.add_tokens(test_invalid_ints)
     allowed_token_ids = get_allowed_tokens(tokenizer, "int")
 
     assert len(allowed_token_ids) > 0, "No allowed token IDs found"
@@ -56,6 +58,8 @@ def test_allowed_tokens_int():
         tokenizer.decode([token_id]).strip() for token_id in allowed_token_ids
     ]
     for test_int in test_ints:
+        # Test out of range integers
+        assert test_invalid_ints not in allowed_ints
         assert test_int in allowed_ints, f"Unexpected token: '{test_int}'"
 
 
@@ -148,7 +152,6 @@ def test_token_constraint_full_flow():
     value_token_id = processor.value_token_id
     colon_token_id = processor.colon_token_id
     quote_token_id = processor.quote_tokens[0]
-    bracket_end_token_id = processor.bracket_end_token_id
     vocab_size = tokenizer.vocab_size
     scores = torch.randn(1, vocab_size)
 
@@ -181,31 +184,6 @@ def test_token_constraint_full_flow():
     # Check that only quote tokens have valid scores
     for token_id in range(vocab_size):
         if token_id in processor.quote_tokens:
-            assert new_scores[0][token_id] > float("-inf")
-        else:
-            assert new_scores[0][token_id] == float("-inf") + scores[0][token_id]
-
-    # After closing quote (AWAITING_EOS)
-    input_ids = torch.tensor(
-        [
-            [
-                1,
-                2,
-                value_token_id,
-                4,
-                colon_token_id,
-                quote_token_id,
-                true_token_id,
-                quote_token_id,
-            ]
-        ]
-    )
-    new_scores = processor(input_ids, scores.clone())
-    assert processor.state[0] == GenerationState.AWAITING_EOS
-
-    # Check that only closing bracket has valid score
-    for token_id in range(vocab_size):
-        if token_id == bracket_end_token_id:
             assert new_scores[0][token_id] > float("-inf")
         else:
             assert new_scores[0][token_id] == float("-inf") + scores[0][token_id]

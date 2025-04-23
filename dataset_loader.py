@@ -92,6 +92,8 @@ def add_prompt_entry(
 ) -> None:
     """
     Format and add the input-output pair to the dataset based on the model type.
+    Encoder-Decoder: input has the prompt + json with null value and the output target text is { "value": "correct_value" }.
+    Decoder and Encoder: input has the prompt + json with correct value, output target text is not used.
     """
     input_prompt = SYSTEM_PROMPT.format(
         input_text=input_text,
