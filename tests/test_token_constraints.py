@@ -55,7 +55,7 @@ def test_allowed_tokens_int():
     assert len(allowed_token_ids) > 0, "No allowed token IDs found"
 
     allowed_ints = [
-        tokenizer.decode([token_id]).strip() for token_id in allowed_token_ids
+        tokenizer.decode(token_id).strip() for token_id in allowed_token_ids
     ]
     for test_int in test_ints:
         # Test out of range integers
@@ -165,7 +165,7 @@ def test_token_constraint_full_flow():
         [[1, 2, value_token_id, 4, colon_token_id, quote_token_id]]
     )
     new_scores = processor(input_ids, scores.clone())
-    assert processor.state[0] == GenerationState.AWAITING_QUOTE
+    assert processor.state[0] == GenerationState.AWAIT_VALUE
 
     # Check that only allowed tokens have valid scores
     for token_id in range(vocab_size):
@@ -179,7 +179,7 @@ def test_token_constraint_full_flow():
         [[1, 2, value_token_id, 4, colon_token_id, quote_token_id, true_token_id]]
     )
     new_scores = processor(input_ids, scores.clone())
-    assert processor.state[0] == GenerationState.AWAITING_END_BRACKET
+    assert processor.state[0] == GenerationState.ALLOW_QUOTE
 
     # Check that only quote tokens have valid scores
     for token_id in range(vocab_size):

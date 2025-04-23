@@ -43,37 +43,40 @@ class StopOnToken(StoppingCriteria):
 class TokenTypeConstraintProcessor(LogitsProcessor):
     """
     Logits processor that constrains token generation based on expected value types.
-    Controls the sequence: ": "TOKEN"}" where "TOKEN" must be of a specific type.
+    Controls the sequence: ": "TOKEN"}" where "TOKEN" must be of a specific type. "TOKEN" might be a series of sub-tokens.
     """
 
     def __init__(
-        self, tokenizer: AutoTokenizer, allowed_token_ids_list: list[list[int]]
+        self,
+        tokenizer: AutoTokenizer,
+        allowed_token_ids_list: list[list[int]] | list[list[list[int]]],
     ):
         """
         Initialize the processor with allowed token IDs for a specific type.
 
         Args:
             tokenizer: Hugging Face tokenizer
-            allowed_token_ids_list: List of json entries (the batch) that contains a list of token IDs that are allowed for the value
+            allowed_token_ids_list: List of json entries (the batch) that contains a list of token IDs that are allowed for the value.
+            Each token ID might be a list of sub-tokens.
         """
         super().__init__()
         self.tokenizer = tokenizer
         self.allowed_token_ids_list = allowed_token_ids_list
         self.state = {}
 
-        # Identifying sequence of tokens that indicate the value field
+        # Define the token IDs for the expected pattern and json
         self.value_token_id = tokenizer.convert_tokens_to_ids("value")
-        self.null_token_id = tokenizer.convert_tokens_to_ids("null")
         self.colon_token_id = tokenizer.convert_tokens_to_ids(":")
+        self.null_token_id = tokenizer.convert_tokens_to_ids("null")
+        self.bracket_end_token_id = tokenizer.convert_tokens_to_ids("}")
 
+        # Define quotes that are used in the json string
+        # (All values will be forced as strings and converted to the correct type later)
         quote_token_id = tokenizer.convert_tokens_to_ids('"')
         quote2_token_id = tokenizer.convert_tokens_to_ids(' "')
         self.quote_tokens = [quote_token_id]
-        # If the quote2 token is <unk> or not
-        if quote2_token_id != 0:
+        if quote2_token_id != tokenizer.unk_token_id:
             self.quote_tokens.append(quote2_token_id)
-
-        self.bracket_end_token_id = tokenizer.convert_tokens_to_ids("}")
 
     def __call__(self, input_ids, scores):
         """
@@ -94,48 +97,72 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
             if input_ids.shape[1] < 5:
                 break
 
-            match self.state[i]:
-                case GenerationState.WAITING:
-                    # See if "value": is generated (There might be separators before value)
-                    recent_tokens_ids = input_ids[:, -5:].tolist()
-                    last_items = [sublist[-1] for sublist in recent_tokens_ids]
+            if self.state[i] == GenerationState.WAITING:
+                # See if "value": is generated (There might be separators before value)
+                recent_tokens_ids = input_ids[:, -5:].tolist()
+                last_items = [sublist[-1] for sublist in recent_tokens_ids]
 
-                    if self.colon_token_id in last_items and any(
-                        self.value_token_id in batch_list
-                        for batch_list in recent_tokens_ids
-                    ):
-                        self.state[i] = GenerationState.AWAIT_VALUE
-                        scores[i] = add_score_mask(scores[i], self.quote_tokens)
-
-                case GenerationState.AWAIT_VALUE:
-                    # If the type is string, allow all tokens if enabled, else just the null token
-                    if len(self.allowed_token_ids_list[i]) <= 1:
-                        if STRING_GENERATION_ENABLED:
-                            continue
-                        if DEBUG_MODE_ENABLED:
-                            print("String generation disabled.")
-
-                    # If the last token is a quote, allow only the restricted value token
-                    self.state[i] = GenerationState.AWAITING_QUOTE
-                    scores[i] = add_score_mask(
-                        scores[i], self.allowed_token_ids_list[i]
-                    )
-                    log_token_probabilities(
-                        self.tokenizer, scores[i], self.allowed_token_ids_list[i]
-                    )
-
-                case GenerationState.AWAITING_QUOTE:
-                    self.state[i] = GenerationState.AWAITING_END_BRACKET
+                if self.colon_token_id in last_items and any(
+                    self.value_token_id in batch_list
+                    for batch_list in recent_tokens_ids
+                ):
+                    self.state[i] = GenerationState.AWAIT_VALUE
                     scores[i] = add_score_mask(scores[i], self.quote_tokens)
+                    
+            elif self.state[i] == GenerationState.AWAIT_VALUE:
+                # If the type is string, allow all tokens if enabled, else just the null token
+                if len(self.allowed_token_ids_list[i]) <= 1:
+                    if STRING_GENERATION_ENABLED:
+                        # dont change scores if string generation is enabled
+                        continue
+                    if DEBUG_MODE_ENABLED:
+                        print("String generation disabled.")
 
-                case GenerationState.AWAITING_END_BRACKET:
-                    self.state[i] = None
-                    scores[i] = add_score_mask(scores[i], [self.bracket_end_token_id])
-                    # Stopping criteria should stop the next token generation
+                # Check if the last value is a sub token of the allowed token list
+                # So that "42" may be generated as "4" and "2" and is given as ["4","2"] and whilst also be able to end with quote
+                allowed_token_ids = []
+                for item in self.allowed_token_ids_list[i]:
+                    if isinstance(item, list):
+                        # Add first token of sub-token sequence
+                        if item[0] not in allowed_token_ids:
+                            allowed_token_ids.append(item[0])
+                    elif item not in allowed_token_ids:
+                        allowed_token_ids.append(item)
 
-                case None:
-                    print("Stopping criteria was not set.")
-                    scores[i] = add_score_mask(scores[i], [self.tokenizer.eos_token_id])
+                last_token_id = input_ids[i, -1].item()
+                sub_token_ids = []
+                if last_token_id not in self.quote_tokens:
+                    for allowed_token_id in self.allowed_token_ids_list[i]:
+                        if not isinstance(allowed_token_id, list):
+                            continue
+                        if last_token_id in allowed_token_id:
+                            # Get the index of the token in the sequence
+                            sub_token_index = allowed_token_id.index(last_token_id)
+                            if sub_token_index < len(allowed_token_id) - 1:
+                                # If the last token is a sub token of the allowed token list, allow it
+                                sub_token_ids.append(
+                                    allowed_token_id[sub_token_index + 1]
+                                )
+                    # Allow quote to be generated next time since some value will be generated
+                    self.state[i] = GenerationState.ALLOW_QUOTE
+                    if len(sub_token_ids) > 0:
+                        # If the last token is a sub token of the allowed token list, allow it
+                        allowed_token_ids.extend(self.quote_tokens)
+                        allowed_token_ids.extend(sub_token_ids)
+                    else:
+                        # If a value has been generated and no sub token is found, allow only the end bracket token
+                        allowed_token_ids = self.quote_tokens
+
+                else:
+                    # If the last token is a quote and a value has been generated, allow the end bracket token
+                    if self.state[i] == GenerationState.ALLOW_QUOTE:
+                        print("Value generated, allowing end bracket token.")
+                        allowed_token_ids = [self.bracket_end_token_id]
+                        self.state[i] = None
+
+                scores[i] = add_score_mask(scores[i], allowed_token_ids)
+                log_token_probabilities(self.tokenizer, scores[i], allowed_token_ids)
+
         return scores
 
 
@@ -182,7 +209,7 @@ def log_token_probabilities(
 
 def get_allowed_tokens(
     tokenizer: AutoTokenizer, token_type: str, enums: list = None
-) -> list[int]:
+) -> list[int] | list[list[int]]:
     """
     Get the token ids corresponding to the allowed token types.
     null is always allowed and is always added to the allowed tokens list.
@@ -201,6 +228,9 @@ def get_allowed_tokens(
                 # Only add if number maps to a single token to avoid multi-tokens
                 if len(token_ids) == 1:
                     allowed_token_ids.append(token_ids[0])
+                else:
+                    allowed_token_ids.append(token_ids)
+                    print(f"Integer token '{num}' is not a single token!")
         case "enum":
             if enums is None:
                 raise ValueError("Enums must be provided for enum token type.")
@@ -213,6 +243,7 @@ def get_allowed_tokens(
                 if len(token_ids) == 1:
                     allowed_token_ids.append(token_ids[0])
                 else:
+                    allowed_token_ids.append(token_ids)
                     print(f"Enum token '{enum_str}' is not a single token!")
         case "boolean":
             for bool_val in ["true", "false"]:
@@ -220,5 +251,6 @@ def get_allowed_tokens(
                 if len(token_ids) == 1:
                     allowed_token_ids.append(token_ids[0])
                 else:
+                    allowed_token_ids.append(token_ids)
                     print(f"Boolean token '{bool_val}' is not a single token!")
     return allowed_token_ids
