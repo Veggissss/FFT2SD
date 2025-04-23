@@ -217,10 +217,15 @@ class DecoderStrategy(BaseModelStrategy):
                 # # https://huggingface.co/docs/peft/v0.15.0/en/package_reference/peft_model#peft.PeftModel.low_cpu_mem_usage
             )
 
+            # For using untrained decoder
+            self.tokenizer.add_special_tokens(
+                {
+                    "pad_token": "<PAD>",
+                }
+            )
+            # Resize to fit the pad. If trained also fit newly added token embeddings
+            model.resize_token_embeddings(len(self.tokenizer))
             if model_loader.is_trained:
-                # Resize to fit the trained model's token embeddings
-                model.resize_token_embeddings(len(self.tokenizer))
-
                 # Load the PEFT model
                 model = PeftModel.from_pretrained(
                     model,
