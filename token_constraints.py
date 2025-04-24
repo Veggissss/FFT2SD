@@ -50,7 +50,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         self,
         tokenizer: AutoTokenizer,
         allowed_token_ids_list: list[list[int]] | list[list[list[int]]],
-    ):
+    ) -> None:
         """
         Initialize the processor with allowed token IDs for a specific type.
 
@@ -78,7 +78,79 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         if quote2_token_id != tokenizer.unk_token_id:
             self.quote_tokens.append(quote2_token_id)
 
-    def __call__(self, input_ids, scores):
+    def _is_value_pattern_found(self, input_ids: torch.LongTensor) -> bool:
+        """Check if the "value": pattern is detected in recent tokens"""
+        recent_tokens_ids = input_ids[:, -5:].tolist()
+        last_items = [sublist[-1] for sublist in recent_tokens_ids]
+
+        return self.colon_token_id in last_items and any(
+            self.value_token_id in batch_list for batch_list in recent_tokens_ids
+        )
+
+    def _is_string_type_enabled(self, batch_index: int) -> bool:
+        """
+        Handle when token type is a string, giving it unrestricted tokens.
+        Will just produce a 'null' value if STRING_GENERATION_ENABLED is false.
+        """
+        if len(self.allowed_token_ids_list[batch_index]) <= 1:
+            if STRING_GENERATION_ENABLED:
+                return True
+            if DEBUG_MODE_ENABLED:
+                print("String generation disabled.")
+        return False
+
+    def _get_allowed_tokens_for_value(
+        self, batch_index: int, last_token_id: int
+    ) -> list[int]:
+        """Get the allowed tokens for value generation based on the last_token_id"""
+        allowed_token_ids = []
+
+        # If the last token is not a quote, check for sub-tokens
+        if last_token_id not in self.quote_tokens:
+            # Update state to allow quote in next iteration
+            self.state[batch_index] = GenerationState.ALLOW_QUOTE
+
+            sub_token_ids = self._get_next_subtokens(batch_index, last_token_id)
+            if len(sub_token_ids) > 0:
+                allowed_token_ids.extend(self.quote_tokens)
+                allowed_token_ids.extend(sub_token_ids)
+            else:
+                # If a value has been generated and no sub token is found, allow only quotes
+                allowed_token_ids = self.quote_tokens
+        else:
+            # If the last token is a quote and a value has been generated, allow the end bracket token
+            if self.state[batch_index] == GenerationState.ALLOW_QUOTE:
+                if DEBUG_MODE_ENABLED:
+                    print("Value generated, allowing end bracket token.")
+                allowed_token_ids = [self.bracket_end_token_id]
+                self.state[batch_index] = None
+            else:
+                # Allow first tokens in sub-token sequences and all other "full" tokens
+                for item in self.allowed_token_ids_list[batch_index]:
+                    if isinstance(item, list):
+                        if item[0] not in allowed_token_ids:
+                            allowed_token_ids.append(item[0])
+                    elif item not in allowed_token_ids:
+                        allowed_token_ids.append(item)
+        return allowed_token_ids
+
+    def _get_next_subtokens(self, batch_index: int, last_token_id: int) -> list[int]:
+        """Get the next tokens in multi-token sequences where the last_token_id appears"""
+        sub_token_ids = []
+        for allowed_token_id in self.allowed_token_ids_list[batch_index]:
+            if not isinstance(allowed_token_id, list):
+                continue
+            if last_token_id in allowed_token_id:
+                # Get the index of the token in the sequence
+                sub_token_index = allowed_token_id.index(last_token_id)
+                if sub_token_index < len(allowed_token_id) - 1:
+                    # Add the next token in the sequence
+                    sub_token_ids.append(allowed_token_id[sub_token_index + 1])
+        return sub_token_ids
+
+    def __call__(
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor
+    ) -> torch.FloatTensor:
         """
         Args:
         input_ids [batch_size, sequence_length]
@@ -90,7 +162,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         scores[:, self.null_token_id] -= REDUCE_NULL_BIAS
 
         for i in range(batch_size):
-            if not i in self.state:
+            if i not in self.state:
                 self.state[i] = GenerationState.WAITING
 
             # Early exit when not enough tokens are generated for constraints
@@ -98,67 +170,17 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                 break
 
             if self.state[i] == GenerationState.WAITING:
-                # See if "value": is generated (There might be separators before value)
-                recent_tokens_ids = input_ids[:, -5:].tolist()
-                last_items = [sublist[-1] for sublist in recent_tokens_ids]
-
-                if self.colon_token_id in last_items and any(
-                    self.value_token_id in batch_list
-                    for batch_list in recent_tokens_ids
-                ):
+                if self._is_value_pattern_found(input_ids):
                     self.state[i] = GenerationState.AWAIT_VALUE
                     scores[i] = add_score_mask(scores[i], self.quote_tokens)
-                    
-            elif self.state[i] == GenerationState.AWAIT_VALUE:
-                # If the type is string, allow all tokens if enabled, else just the null token
-                if len(self.allowed_token_ids_list[i]) <= 1:
-                    if STRING_GENERATION_ENABLED:
-                        # dont change scores if string generation is enabled
-                        continue
-                    if DEBUG_MODE_ENABLED:
-                        print("String generation disabled.")
 
-                # Check if the last value is a sub token of the allowed token list
-                # So that "42" may be generated as "4" and "2" and is given as ["4","2"] and whilst also be able to end with quote
-                allowed_token_ids = []
-                for item in self.allowed_token_ids_list[i]:
-                    if isinstance(item, list):
-                        # Add first token of sub-token sequence
-                        if item[0] not in allowed_token_ids:
-                            allowed_token_ids.append(item[0])
-                    elif item not in allowed_token_ids:
-                        allowed_token_ids.append(item)
+            elif self.state[i] == GenerationState.AWAIT_VALUE:
+                # Handle the case for string generation
+                if self._is_string_type_enabled(i):
+                    continue
 
                 last_token_id = input_ids[i, -1].item()
-                sub_token_ids = []
-                if last_token_id not in self.quote_tokens:
-                    for allowed_token_id in self.allowed_token_ids_list[i]:
-                        if not isinstance(allowed_token_id, list):
-                            continue
-                        if last_token_id in allowed_token_id:
-                            # Get the index of the token in the sequence
-                            sub_token_index = allowed_token_id.index(last_token_id)
-                            if sub_token_index < len(allowed_token_id) - 1:
-                                # If the last token is a sub token of the allowed token list, allow it
-                                sub_token_ids.append(
-                                    allowed_token_id[sub_token_index + 1]
-                                )
-                    # Allow quote to be generated next time since some value will be generated
-                    self.state[i] = GenerationState.ALLOW_QUOTE
-                    if len(sub_token_ids) > 0:
-                        # If the last token is a sub token of the allowed token list, allow it
-                        allowed_token_ids.extend(self.quote_tokens)
-                        allowed_token_ids.extend(sub_token_ids)
-                    else:
-                        # If a value has been generated and no sub token is found, allow only the end bracket token
-                        allowed_token_ids = self.quote_tokens
-
-                else:
-                    # If the last token is a quote and a value has been generated, allow the end bracket token
-                    if self.state[i] == GenerationState.ALLOW_QUOTE:
-                        print("Value generated, allowing end bracket token.")
-                        allowed_token_ids = [self.bracket_end_token_id]
-                        self.state[i] = None
+                allowed_token_ids = self._get_allowed_tokens_for_value(i, last_token_id)
 
                 scores[i] = add_score_mask(scores[i], allowed_token_ids)
                 log_token_probabilities(self.tokenizer, scores[i], allowed_token_ids)
