@@ -4,14 +4,16 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score, recall_score, f1_score
 
 from utils.file_loader import load_json, save_json
-from utils.enums import ModelType, ModelSize, ReportType
+from utils.enums import ModelType, ReportType
 from model_loader import ModelLoader
+from config import MODELS_DICT
 import server
 
 
 def evaluate(
     model_type: ModelType,
-    model_size: ModelSize = ModelSize.SMALL,
+    model_index: int = 0,
+    is_trained: bool = True,
     data_dir: Path = Path("data/corrected"),
     output_path: Path = Path("./eval_results.json"),
 ):
@@ -19,7 +21,7 @@ def evaluate(
     Runs evaluation on all labeled JSON files
     Saves per-file metrics to a JSON file for each model_type.
     """
-    server.model_loader = ModelLoader(model_type, model_size, is_trained=True)
+    server.model_loader = ModelLoader(model_type, model_index, is_trained)
 
     files = list(data_dir.glob("*.json"))
     per_file_stats = []
@@ -45,7 +47,7 @@ def evaluate(
                     "file": file_path.name,
                     "report_type": report_type.name,
                     "model_name": server.model_loader.model_name,
-                    "model_size": model_size.value,
+                    "model_type": model_type.name,
                     "type": value_type,
                     "y_true": y_true,
                     "y_pred": y_pred,
@@ -85,7 +87,7 @@ def add_bar_labels(ax):
 
 
 def visualize(
-    model_size: ModelSize,
+    model_type: ModelType,
     output_dir: Path = Path("./figures/"),
     results_path: Path = Path("./eval_results.json"),
     ignore_strings: bool = True,
@@ -102,7 +104,7 @@ def visualize(
 
     # Filter out other model sizes
     results = [
-        entry for entry in results if entry.get("model_size") == model_size.value
+        entry for entry in results if entry.get("model_type") == model_type.value
     ]
     df = pd.DataFrame(results)
 
@@ -119,8 +121,8 @@ def visualize(
     plt.xticks(rotation=0)
     plt.legend(title="Model Type")
     plt.tight_layout()
-    plt.savefig(output_dir.joinpath(f"accuracy_by_report_type_{model_size.value}.svg"))
-    print(f"Saved: accuracy_by_report_type_{model_size.value}.svg")
+    plt.savefig(output_dir.joinpath(f"accuracy_by_report_type_{model_type.value}.svg"))
+    print(f"Saved: accuracy_by_report_type_{model_type.value}.svg")
 
     # Accuracy by Value Type
     type_summary = df.groupby(["type", "model_name"])["accuracy"].mean().unstack()
@@ -133,8 +135,8 @@ def visualize(
     plt.xticks(rotation=0)
     plt.legend(title="Model Name")
     plt.tight_layout()
-    plt.savefig(output_dir.joinpath(f"accuracy_by_value_type_{model_size.value}.svg"))
-    print(f"Saved: accuracy_by_value_type_{model_size.value}.svg")
+    plt.savefig(output_dir.joinpath(f"accuracy_by_value_type_{model_type.value}.svg"))
+    print(f"Saved: accuracy_by_value_type_{model_type.value}.svg")
 
     # Precision / Recall / F1 per Model Type
     metrics = []
@@ -159,19 +161,28 @@ def visualize(
     metrics_df = pd.DataFrame(metrics).set_index("model_name")
     ax = metrics_df.plot(kind="bar", figsize=(12, 6))
     add_bar_labels(ax)
-    plt.title(f"Precision, Recall, and F1 Score per Model Type ({model_size.value})")
+    plt.title(f"Precision, Recall, and F1 Score per Model Type ({model_type.value})")
     plt.ylabel("Score")
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
     plt.tight_layout()
-    plt.savefig(output_dir.joinpath(f"precision_recall_f1_{model_size.value}.svg"))
-    print(f"Saved: precision_recall_f1_{model_size.value}.svg")
+    plt.savefig(output_dir.joinpath(f"precision_recall_f1_{model_type.value}.svg"))
+    print(f"Saved: precision_recall_f1_{model_type.value}.svg")
 
 
 if __name__ == "__main__":
     for m_type in ModelType:
-        # evaluate(model_type=m_type, model_size=ModelSize.SMALL)
-        # evaluate(model_type=m_type, model_size=ModelSize.BASE)
-        # evaluate(model_type=m_type, model_size=ModelSize.LARGE)
-        continue
-    visualize(ModelSize.SMALL)
+        i = 0
+        evaluate(
+            model_type=m_type,
+            model_index=i,
+            is_trained=m_type != ModelType.DECODER
+            and i < 3,  # Gemma and DeepSeek should just be evaluated
+        )
+
+    for m_type in ModelType:
+        break  # Skip eval generation
+        for i in range(len(MODELS_DICT[m_type])):
+            evaluate(model_type=m_type, model_index=i, is_trained=False)
+
+    visualize(ModelType.DECODER)

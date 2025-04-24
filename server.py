@@ -5,8 +5,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from model_loader import ModelLoader
-from config import CONTAINER_NUMBER_MASK
-from utils.enums import ModelType, ReportType, DatasetField, ModelSize
+from config import CONTAINER_NUMBER_MASK, MODELS_DICT
+from utils.enums import ModelType, ReportType, DatasetField
 from utils.file_loader import load_json, save_json
 from dataset_loader import reset_value_fields
 
@@ -17,9 +17,6 @@ CORS(app, origins="*")
 
 # Global variable to store the loaded model
 model_loader = None
-# If to use the trained model or directly from huggingface specified in utils/config.py
-IS_TRAINED = True
-MODEL_SIZE = ModelSize.SMALL
 
 # Unlabeled dataset path
 UNLABELED_BATCH_PATH = "data/large_batch/export_2025-03-17.json"
@@ -27,12 +24,17 @@ LABELED_IDS_PATH = "data/large_batch/labeled_ids.json"
 CORRECTED_OUT_DIR = "data/corrected/"
 
 
-def load_model(model_type: ModelType) -> str:
+def load_model(model_type: ModelType, model_index: int) -> str:
     """Function to load the specified LLM model based on type."""
 
     # Update the global model_loader variable
     global model_loader
-    model_loader = ModelLoader(model_type, MODEL_SIZE, IS_TRAINED)
+    model_loader = ModelLoader(
+        model_type,
+        model_index,
+        is_trained=model_type != ModelType.DECODER
+        and model_index < 3,  # Only gemma and deepseek are untrained
+    )
     model_loader.model.eval()
 
     return f"Loaded model: {model_loader.model_name} | {model_type}"
@@ -126,14 +128,27 @@ def generate(
     return reports
 
 
+@app.route("/models", methods=["GET"])
+def get_models():
+    """Endpoint to get all available models from the configuration."""
+    # Convert ModelSettings objects to string lists for JSON serialization
+    serialized_models = {}
+    for model_type, models in MODELS_DICT.items():
+        serialized_models[model_type.value] = [str(model) for model in models]
+    return jsonify(serialized_models)
+
+
 @app.route("/load_model", methods=["POST"])
 def load_model_endpoint():
     """Endpoint to load the specified model based on type."""
     model_type_str: str | None = request.json.get("model_type")
+    model_index: int | None = request.json.get("model_index")
+    if model_index is None:
+        return (jsonify({"error": "Model index is required"}), 400)
     if not model_type_str:
         return (
             jsonify(
-                {"error": "Model type is required (decoder, encoder, encoder-decoder)"}
+                {"error": "Model type is required (decoder, encoder, encoder_decoder)"}
             ),
             400,
         )
@@ -141,7 +156,13 @@ def load_model_endpoint():
         print("Invalid model type")
         return jsonify({"error": "Invalid model type"}), 400
 
-    return jsonify({"message": load_model(ModelType(model_type_str))})
+    model_type = ModelType(model_type_str)
+    if model_index < 0 or model_index >= len(MODELS_DICT[model_type]):
+        return (
+            jsonify({"error": "Model index out of range"}),
+            404,
+        )
+    return jsonify({"message": load_model(model_type, model_index)})
 
 
 @app.route("/generate", methods=["POST"])

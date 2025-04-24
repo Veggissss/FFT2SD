@@ -14,17 +14,6 @@ class BaseEnum(Enum):
         return cls._value2member_map_
 
 
-class ModelSize(BaseEnum):
-    """
-    Enum class to represent the size of the model.
-    Used for looking up the model name in the model dict.
-    """
-
-    SMALL = "small"
-    BASE = "base"
-    LARGE = "large"
-
-
 class ModelType(BaseEnum):
     """
     Enum class to represent the type of model architecture.
@@ -32,7 +21,7 @@ class ModelType(BaseEnum):
     """
 
     ENCODER = "encoder"
-    ENCODER_DECODER = "encoder-decoder"
+    ENCODER_DECODER = "encoder_decoder"
     DECODER = "decoder"
 
 

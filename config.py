@@ -1,17 +1,17 @@
 from dataclasses import dataclass
-from utils.enums import ModelType, ModelSize
+from utils.enums import ModelType
 
 
 @dataclass
 class ModelSettings:
     """
-    Model settings for the Hugging Face models. (This is not an enum I know...)
+    Model settings for the Hugging Face models.
     """
 
     model_name: str
     use_peft: bool = False
 
-    def get_saved_name(self) -> str:
+    def __str__(self) -> str:
         """
         Get the saved model name.
         """
@@ -21,22 +21,24 @@ class ModelSettings:
 
 
 # Definitions of Hugging Face models
-MODELS_DICT: dict[ModelType, dict[ModelSize, ModelSettings]] = {
-    ModelType.ENCODER_DECODER: {
-        ModelSize.LARGE: ModelSettings("ltg/nort5-large"),
-        ModelSize.BASE: ModelSettings("ltg/nort5-base"),
-        ModelSize.SMALL: ModelSettings("ltg/nort5-small"),
-    },
-    ModelType.ENCODER: {
-        ModelSize.LARGE: ModelSettings("ltg/norbert3-large"),
-        ModelSize.BASE: ModelSettings("ltg/norbert3-base"),
-        ModelSize.SMALL: ModelSettings("ltg/norbert3-small"),
-    },
-    ModelType.DECODER: {
-        ModelSize.LARGE: ModelSettings("norallm/normistral-11b-warm"),
-        ModelSize.BASE: ModelSettings("norallm/normistral-7b-warm"),
-        ModelSize.SMALL: ModelSettings("norallm/normistral-7b-warm", use_peft=True),
-    },
+MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
+    ModelType.ENCODER_DECODER: [
+        ModelSettings("ltg/nort5-small"),
+        ModelSettings("ltg/nort5-base"),
+        ModelSettings("ltg/nort5-large"),
+    ],
+    ModelType.ENCODER: [
+        ModelSettings("ltg/norbert3-small"),
+        ModelSettings("ltg/norbert3-base"),
+        ModelSettings("ltg/norbert3-large"),
+    ],
+    ModelType.DECODER: [
+        ModelSettings("norallm/normistral-7b-warm", use_peft=True),
+        ModelSettings("norallm/normistral-7b-warm"),
+        ModelSettings("norallm/normistral-11b-warm"),
+        ModelSettings("google/gemma-3-27b-it"),
+        ModelSettings("deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"),
+    ],
 }
 
 # Output path for the data models combined struct/template
@@ -57,7 +59,7 @@ Whether or not to generate unrestricted string output then the "type" is set to 
 This speeds up the generation process, but all the "value" for the strings will be set to null.
 Used for fast eval metrics generation.
 """
-STRING_GENERATION_ENABLED = True
+STRING_GENERATION_ENABLED = False
 
 """
 Mark the end of the model prompt and before the template JSON in the prompt.

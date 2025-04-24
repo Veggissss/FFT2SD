@@ -9,8 +9,8 @@ from transformers import (
 )
 from datasets import Dataset
 from model_loader import ModelLoader
-from config import JSON_START_MARKER
-from utils.enums import ModelType, ModelSize
+from config import JSON_START_MARKER, MODELS_DICT
+from utils.enums import ModelType
 import dataset_loader
 
 
@@ -153,14 +153,14 @@ def reinitialize_weights(module):
         print(f"Reinitialized weights for {module.__class__.__name__}")
 
 
-def train(model_type: ModelType, model_size: ModelSize) -> None:
+def train(model_type: ModelType, model_index: int) -> None:
     """
     Train the model using the provided dataset.
     :param model_type: Model type to train.
     """
-    model_loader = ModelLoader(model_type, model_size, is_trained=False)
+    model_loader = ModelLoader(model_type, model_index, is_trained=False)
     dataset_dir = "data/corrected/"
-    output_dir = f"trained/{model_loader.model_settings.get_saved_name()}"
+    output_dir = f"trained/{model_loader.model_settings.__str__()}"
     batch_size = 3
 
     print(f"Saving trained model to: {output_dir}")
@@ -212,6 +212,7 @@ def train(model_type: ModelType, model_size: ModelSize) -> None:
 if __name__ == "__main__":
     # Train all model types and sizes
     for m_type in ModelType:
-        # train(model_type, ModelSize.SMALL)
-        train(m_type, ModelSize.BASE)
-        # train(model_type, ModelSize.LARGE)
+        for i in range(len(MODELS_DICT[m_type])):
+            train(m_type, i)
+            # train(m_type, 1)
+            # train(m_type, 2)

@@ -209,7 +209,7 @@ class DecoderStrategy(BaseModelStrategy):
             # Load the untrained base model.
             model = AutoModelForCausalLM.from_pretrained(
                 MODELS_DICT[model_loader.model_type][
-                    model_loader.model_size
+                    model_loader.model_index
                 ].model_name,  # Will not include the '_peft'
                 quantization_config=q_config,
                 device_map="auto",

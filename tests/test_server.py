@@ -14,17 +14,30 @@ def client() -> Generator[FlaskClient, None, None]:
 
 
 def test_load_model_endpoint(client: FlaskClient):
+    """Test the basic /load_model endpoint functionality."""
+    # Test with missing model_index parameter
     response = client.post("/load_model", json={"model_type": "encoder"})
+    assert response.status_code == 400
+    assert "Model index is required" in response.json["error"]
+
+    # Test with valid parameters
+    response = client.post(
+        "/load_model", json={"model_type": "encoder", "model_index": 0}
+    )
     assert response.status_code == 200
     assert "Loaded model:" in response.json["message"]
 
-    response = client.post("/load_model", json={"model_type": "invalid"})
+    # Test with invalid model type
+    response = client.post(
+        "/load_model", json={"model_type": "invalid", "model_index": 0}
+    )
     assert response.status_code == 400
     assert "Invalid model type" in response.json["error"]
 
-    response = client.post("/load_model", json={})
+    # Test with missing model type
+    response = client.post("/load_model", json={"model_index": 0})
     assert response.status_code == 400
-    assert "Model type is required " in response.json["error"]
+    assert "Model type is required" in response.json["error"]
 
 
 def test_generate_endpoint(client: FlaskClient):
@@ -35,7 +48,7 @@ def test_generate_endpoint(client: FlaskClient):
     assert "Model is not loaded!" in response.json["error"]
 
     # Load the model for testing
-    client.post("/load_model", json={"model_type": "encoder"})
+    client.post("/load_model", json={"model_type": "encoder", "model_index": 0})
 
     response = client.post(
         "/generate",
@@ -139,3 +152,23 @@ def test_correct_endpoint(client: FlaskClient):
     assert report_id in labeled_ids
     assert "kliniske_opplysninger" in labeled_ids[report_id]
     assert labeled_ids[report_id]["kliniske_opplysninger"]
+
+
+def test_models_endpoint(client: FlaskClient):
+    """Test the /models endpoint which returns available models."""
+    response = client.get("/models")
+    assert response.status_code == 200
+
+    # Check that the response is a dictionary
+    assert isinstance(response.json, dict)
+    assert len(response.json) > 0
+
+    # Check that each model type has a list of model settings
+    for model_type, models in response.json.items():
+        assert isinstance(model_type, str)
+        assert isinstance(models, list)
+        assert len(models) > 0
+
+        # Check that each model is a string and not ModelSettings object
+        for model in models:
+            assert isinstance(model, str)

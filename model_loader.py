@@ -3,7 +3,7 @@ import json
 import torch
 
 from utils.file_loader import json_to_str
-from utils.enums import ModelType, ReportType, ModelSize
+from utils.enums import ModelType, ReportType
 from config import SYSTEM_PROMPT, MODELS_DICT, INCLUDE_ENUMS
 from model_strategy import (
     BaseModelStrategy,
@@ -18,7 +18,7 @@ class ModelLoader:
     Class to load and generate from a transformer model and its tokenizer with the specified architecture type.
     Params:
         model_type (ModelType): The type of model architecture (encoder, decoder, encoder-decoder).
-        model_size (ModelSize): The size of the model (small, base, large).
+        model_index (int): The index of the model settings to use from the `config.py` model dictionary. (Generaly increasing model size with index)
         is_trained (bool): Flag indicating if the model is fine-tuned and is saved locally.
 
     Attributes:
@@ -34,18 +34,18 @@ class ModelLoader:
     def __init__(
         self,
         model_type: ModelType,
-        model_size: ModelSize = ModelSize.SMALL,
+        model_index: int = 0,
         is_trained: bool = True,
     ):
         self.model_type = model_type
-        self.model_size = model_size
         self.is_trained = is_trained
+        self.model_index = model_index
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model_settings = MODELS_DICT[model_type][model_size]
+        self.model_settings = MODELS_DICT[model_type][model_index]
 
         # Use either a trained local model or a Hugging Face model
         if is_trained:
-            self.model_name = f"trained/{self.model_settings.get_saved_name()}"
+            self.model_name = f"trained/{self.model_settings.__str__()}"
         else:
             self.model_name = self.model_settings.model_name
 
