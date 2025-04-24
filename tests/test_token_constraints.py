@@ -179,7 +179,7 @@ def test_token_constraint_full_flow():
         [[1, 2, value_token_id, 4, colon_token_id, quote_token_id, true_token_id]]
     )
     new_scores = processor(input_ids, scores.clone())
-    assert processor.state[0] == GenerationState.ALLOW_QUOTE
+    assert processor.state[0] == GenerationState.AWAIT_BRACKET_END
 
     # Check that only quote tokens have valid scores
     for token_id in range(vocab_size):

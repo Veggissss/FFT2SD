@@ -100,28 +100,33 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         return False
 
     def _get_allowed_tokens_for_value(
-        self, batch_index: int, last_token_id: int
+        self, batch_index: int, last_token_ids: list[int]
     ) -> list[int]:
         """Get the allowed tokens for value generation based on the last_token_id"""
         allowed_token_ids = []
-
+        last_token_id = last_token_ids[-1]
         # If the last token is not a quote, check for sub-tokens
         if last_token_id not in self.quote_tokens:
-            # Update state to allow quote in next iteration
-            self.state[batch_index] = GenerationState.ALLOW_QUOTE
+            # Only get the generated value tokens without quotes
+            if any(quote_id in last_token_ids for quote_id in self.quote_tokens):
+                quote_index = max(
+                    i
+                    for i, token_id in enumerate(last_token_ids)
+                    if token_id in self.quote_tokens
+                )
+                # Extract only tokens after the quote
+                last_token_ids = last_token_ids[quote_index + 1 :]
 
-            sub_token_ids = self._get_next_subtokens(batch_index, last_token_id)
+            sub_token_ids = self._get_next_subtokens(batch_index, last_token_ids)
             if len(sub_token_ids) > 0:
-                allowed_token_ids.extend(self.quote_tokens)
                 allowed_token_ids.extend(sub_token_ids)
             else:
-                # If a value has been generated and no sub token is found, allow only quotes
+                # If a value has been generated and no sub token is found, only allow quotes next and then the end bracket token
                 allowed_token_ids = self.quote_tokens
+                self.state[batch_index] = GenerationState.AWAIT_BRACKET_END
         else:
             # If the last token is a quote and a value has been generated, allow the end bracket token
-            if self.state[batch_index] == GenerationState.ALLOW_QUOTE:
-                if DEBUG_MODE_ENABLED:
-                    print("Value generated, allowing end bracket token.")
+            if self.state[batch_index] == GenerationState.AWAIT_BRACKET_END:
                 allowed_token_ids = [self.bracket_end_token_id]
                 self.state[batch_index] = None
             else:
@@ -134,18 +139,29 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                         allowed_token_ids.append(item)
         return allowed_token_ids
 
-    def _get_next_subtokens(self, batch_index: int, last_token_id: int) -> list[int]:
+    def _get_next_subtokens(
+        self, batch_index: int, last_value_token_ids: list[int]
+    ) -> list[int]:
         """Get the next tokens in multi-token sequences where the last_token_id appears"""
         sub_token_ids = []
         for allowed_token_id in self.allowed_token_ids_list[batch_index]:
             if not isinstance(allowed_token_id, list):
                 continue
-            if last_token_id in allowed_token_id:
-                # Get the index of the token in the sequence
-                sub_token_index = allowed_token_id.index(last_token_id)
-                if sub_token_index < len(allowed_token_id) - 1:
-                    # Add the next token in the sequence
-                    sub_token_ids.append(allowed_token_id[sub_token_index + 1])
+            # Check if last_value_token_ids is a sublist of allowed_token_id
+            for i in range(len(allowed_token_id) - len(last_value_token_ids) + 1):
+                if (
+                    allowed_token_id[i : i + len(last_value_token_ids)]
+                    == last_value_token_ids
+                ):
+                    # Found matching subsequence, append next token if it exists
+                    if i + len(last_value_token_ids) < len(allowed_token_id):
+                        next_token = allowed_token_id[i + len(last_value_token_ids)]
+                        sub_token_ids.append(next_token)
+                        if DEBUG_MODE_ENABLED:
+                            print(
+                                f"Found matching sequence: {self.tokenizer.decode(last_value_token_ids)} -> {self.tokenizer.decode([next_token])}"
+                            )
+                    break
         return sub_token_ids
 
     def __call__(
@@ -174,13 +190,19 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                     self.state[i] = GenerationState.AWAIT_VALUE
                     scores[i] = add_score_mask(scores[i], self.quote_tokens)
 
-            elif self.state[i] == GenerationState.AWAIT_VALUE:
+            elif (
+                self.state[i] == GenerationState.AWAIT_VALUE
+                or self.state[i] == GenerationState.AWAIT_BRACKET_END
+            ):
                 # Handle the case for string generation
                 if self._is_string_type_enabled(i):
                     continue
 
-                last_token_id = input_ids[i, -1].item()
-                allowed_token_ids = self._get_allowed_tokens_for_value(i, last_token_id)
+                # Some enums might be longer than five tokens, but is still a sub-list of the allowed tokens
+                last_token_ids = input_ids[i, -5:].tolist()
+                allowed_token_ids = self._get_allowed_tokens_for_value(
+                    i, last_token_ids
+                )
 
                 scores[i] = add_score_mask(scores[i], allowed_token_ids)
                 log_token_probabilities(self.tokenizer, scores[i], allowed_token_ids)
