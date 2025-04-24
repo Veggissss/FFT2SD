@@ -241,6 +241,15 @@ class DecoderStrategy(BaseModelStrategy):
                 low_cpu_mem_usage=True,
             )
 
+            # For using untrained decoder
+            self.tokenizer.add_special_tokens(
+                {
+                    "pad_token": "<PAD>",
+                }
+            )
+            # Resize to fit the pad. If trained also fit newly added token embeddings
+            model.resize_token_embeddings(len(self.tokenizer))
+
         return model, self.tokenizer
 
     def generate(
