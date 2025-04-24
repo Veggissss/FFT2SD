@@ -26,15 +26,12 @@ CORRECTED_OUT_DIR = "data/corrected/"
 
 def load_model(model_type: ModelType, model_index: int) -> str:
     """Function to load the specified LLM model based on type."""
+    # Only gemma and deepseek are untrained
+    is_trained = model_type != ModelType.DECODER or model_index < 3
 
     # Update the global model_loader variable
     global model_loader
-    model_loader = ModelLoader(
-        model_type,
-        model_index,
-        is_trained=model_type != ModelType.DECODER
-        and model_index < 3,  # Only gemma and deepseek are untrained
-    )
+    model_loader = ModelLoader(model_type, model_index, is_trained=is_trained)
     model_loader.model.eval()
 
     return f"Loaded model: {model_loader.model_name} | {model_type}"

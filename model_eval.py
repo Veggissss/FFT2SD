@@ -47,7 +47,7 @@ def evaluate(
                     "file": file_path.name,
                     "report_type": report_type.name,
                     "model_name": server.model_loader.model_name,
-                    "model_type": model_type.name,
+                    "model_type": model_type.value,
                     "type": value_type,
                     "y_true": y_true,
                     "y_pred": y_pred,
@@ -88,7 +88,7 @@ def add_bar_labels(ax):
 
 def visualize(
     model_type: ModelType,
-    output_dir: Path = Path("./figures/"),
+    output_dir: Path = Path("./figures/eval"),
     results_path: Path = Path("./eval_results.json"),
     ignore_strings: bool = True,
 ):
@@ -114,7 +114,7 @@ def visualize(
     )
     ax = report_summary.plot(kind="bar", figsize=(12, 6))
     add_bar_labels(ax)
-    plt.title("Accuracy by Report Type")
+    plt.title(f"Accuracy by Report Type ({model_type.value})")
     plt.xlabel("Report Type")
     plt.ylabel("Average Accuracy")
     plt.ylim(0, 1)
@@ -128,7 +128,7 @@ def visualize(
     type_summary = df.groupby(["type", "model_name"])["accuracy"].mean().unstack()
     ax = type_summary.plot(kind="bar", figsize=(12, 6))
     add_bar_labels(ax)
-    plt.title("Accuracy by Value Type")
+    plt.title(f"Accuracy by Value Type ({model_type.value})")
     plt.xlabel("Value Type")
     plt.ylabel("Average Accuracy")
     plt.ylim(0, 1)
@@ -172,17 +172,22 @@ def visualize(
 
 if __name__ == "__main__":
     for m_type in ModelType:
-        i = 0
+        # Test with small models
+        break
         evaluate(
             model_type=m_type,
-            model_index=i,
-            is_trained=m_type != ModelType.DECODER
-            and i < 3,  # Gemma and DeepSeek should just be evaluated
+            model_index=0,
+            is_trained=True,
         )
 
-    for m_type in ModelType:
-        break  # Skip eval generation
+        continue
         for i in range(len(MODELS_DICT[m_type])):
-            evaluate(model_type=m_type, model_index=i, is_trained=False)
+            is_trained = m_type != ModelType.DECODER or i < 3
+            evaluate(
+                model_type=m_type,
+                model_index=i,
+                is_trained=is_trained,  # Only gemma and deepseek are not trained
+            )
 
-    visualize(ModelType.DECODER)
+    for m_type in ModelType:
+        visualize(model_type=m_type, ignore_strings=True)
