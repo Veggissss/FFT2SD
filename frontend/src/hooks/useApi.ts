@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { JsonItem, LoadingState, LabeledJsonItem as UnlabeledJsonItem } from '../types';
+import { JsonItem, LoadingState, ModelsJson, LabeledJsonItem as UnlabeledJsonItem } from '../types';
 
 const useApi = () => {
     const [isLoading, setIsLoading] = useState<LoadingState>({
@@ -20,7 +20,7 @@ const useApi = () => {
         return await response.json();
     }
 
-    const loadModel = async (modelType: string): Promise<JsonItem> => {
+    const loadModel = async (modelType: string, modelIndex: number): Promise<JsonItem> => {
         setIsLoading(prev => ({ ...prev, loadModel: true }));
         try {
             const response = await fetch(`${apiBaseUrl}/load_model`, {
@@ -28,7 +28,7 @@ const useApi = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ model_type: modelType }),
+                body: JSON.stringify({ model_type: modelType, model_index: modelIndex }),
             });
             return await response.json();
         } finally {
@@ -77,12 +77,28 @@ const useApi = () => {
         }
     };
 
+    const getModels = async (): Promise<ModelsJson> => {
+        try {
+            const response = await fetch(`${apiBaseUrl}/models`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching models:', error);
+            throw error;
+        }
+    };
+
     return {
         isLoading,
         loadModel,
         generateReport,
         submitCorrection,
-        getUnlabeled
+        getUnlabeled,
+        getModels,
     };
 };
 

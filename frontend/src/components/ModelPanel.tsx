@@ -1,6 +1,24 @@
-import { ModelPanelProps } from '../types';
+import { ModelPanelProps, ModelsJson } from '../types';
 import '../styles/ModelPanel.css';
-const ModelPanel = ({ modelType, onModelTypeChange, onLoadModel, isLoading }: ModelPanelProps) => {
+import { useState } from 'react';
+import useApi from '../hooks/useApi';
+
+const ModelPanel = ({ modelType, onModelTypeChange, onModelSelectionChange, onLoadModel, index, isLoading }: ModelPanelProps) => {
+    const { getModels } = useApi();
+    const [models, setModels] = useState<ModelsJson>();
+    const handleGetModels = async () => {
+        try {
+            setModels(await getModels());
+        } catch (error) {
+            console.error('Error fetching models:', error);
+            return null;
+        }
+    }
+
+    // Fetch models only once
+    if (!models) {
+        handleGetModels();
+    }
     return (
         <div className="model-panel">
             <select
@@ -9,11 +27,30 @@ const ModelPanel = ({ modelType, onModelTypeChange, onLoadModel, isLoading }: Mo
                 disabled={isLoading}
             >
                 <option value="encoder">Encoder</option>
-                <option value="encoder-decoder">Encoder-Decoder</option>
+                <option value="encoder_decoder">Encoder-Decoder</option>
                 <option value="decoder">Decoder</option>
             </select>
+            {models && models[modelType as keyof typeof models] && (
+                <select
+                    value={index}
+                    onChange={(e) => onModelSelectionChange(Number(e.target.value))}
+                    disabled={isLoading}
+                >
+                    {models[modelType as keyof typeof models].map((model, index) => (
+                        <option key={index} value={index}>
+                            {model}
+                        </option>
+                    ))}
+                </select>
+            )}
+            {(!models || !models[modelType as keyof typeof models]) && (
+                <select disabled className="placeholder-select">
+                    <option>Fetching models</option>
+                </select>
+            )}
+
             <button
-                onClick={onLoadModel}
+                onClick={() => onLoadModel()}
                 className="action-button"
                 disabled={isLoading}
             >
@@ -23,4 +60,4 @@ const ModelPanel = ({ modelType, onModelTypeChange, onLoadModel, isLoading }: Mo
     );
 };
 
-export default ModelPanel; 
+export default ModelPanel;

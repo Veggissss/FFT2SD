@@ -10,6 +10,8 @@ function App() {
     const [inputText, setInputText] = useState('');
     const [outputText, setOutputText] = useState('');
     const [modelType, setModelType] = useState('encoder');
+    const [selectedIndex, setSelectedIndex] = useState<number>(0);
+
     const [reportType, setReportType] = useState('auto');
     const [totalContainers, setTotalContainers] = useState<number | null>(null);
     const [jsonList, setJsonList] = useState<JsonItem[]>([]);
@@ -22,7 +24,7 @@ function App() {
 
     const handleLoadModel = async () => {
         try {
-            const data = await loadModel(modelType);
+            const data = await loadModel(modelType, selectedIndex);
             console.log(data);
         } catch (error) {
             alert('Error loading model. Please try again.');
@@ -178,7 +180,9 @@ function App() {
             <ModelPanel
                 modelType={modelType}
                 onModelTypeChange={setModelType}
+                onModelSelectionChange={setSelectedIndex}
                 onLoadModel={handleLoadModel}
+                index={selectedIndex}
                 isLoading={isLoading.loadModel}
             />
 

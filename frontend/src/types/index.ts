@@ -9,6 +9,12 @@ export interface TargetJsonItem {
     }>;
 }
 
+export interface ModelsJson {
+    decoder: [string],
+    encoder: [string],
+    encoder_decoder: [string],
+}
+
 export interface LabeledJsonItem {
     id: string,
     is_diagnose: boolean,
@@ -67,6 +73,8 @@ export interface InputPanelProps {
 export interface ModelPanelProps {
     modelType: string;
     onModelTypeChange: (value: string) => void;
+    onModelSelectionChange: (index: number) => void;
     onLoadModel: () => void;
+    index: number;
     isLoading: boolean;
 } 
