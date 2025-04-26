@@ -125,18 +125,13 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                 allowed_token_ids = self.quote_tokens
                 self.state[batch_index] = GenerationState.AWAIT_BRACKET_END
         else:
-            # If the last token is a quote and a value has been generated, allow the end bracket token
-            if self.state[batch_index] == GenerationState.AWAIT_BRACKET_END:
-                allowed_token_ids = [self.bracket_end_token_id]
-                self.state[batch_index] = None
-            else:
-                # Allow first tokens in sub-token sequences and all other "full" tokens
-                for item in self.allowed_token_ids_list[batch_index]:
-                    if isinstance(item, list):
-                        if item[0] not in allowed_token_ids:
-                            allowed_token_ids.append(item[0])
-                    elif item not in allowed_token_ids:
-                        allowed_token_ids.append(item)
+            # Allow first tokens in sub-token sequences and all other "full" tokens
+            for item in self.allowed_token_ids_list[batch_index]:
+                if isinstance(item, list):
+                    if item[0] not in allowed_token_ids:
+                        allowed_token_ids.append(item[0])
+                elif item not in allowed_token_ids:
+                    allowed_token_ids.append(item)
         return allowed_token_ids
 
     def _get_next_subtokens(
@@ -185,28 +180,38 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
             if input_ids.shape[1] < 5:
                 break
 
-            if self.state[i] == GenerationState.WAITING:
-                if self._is_value_pattern_found(input_ids):
+            match self.state[i]:
+                case GenerationState.WAITING:
+                    # Check if the "value": is generated
+                    if not self._is_value_pattern_found(input_ids):
+                        continue
+
+                    # Generate first quote token and wait for value
                     self.state[i] = GenerationState.AWAIT_VALUE
                     scores[i] = add_score_mask(scores[i], self.quote_tokens)
+                case GenerationState.AWAIT_VALUE:
+                    # Allow unrestricted tokens for string type when enabled
+                    if self._is_string_type_enabled(i):
+                        continue
 
-            elif (
-                self.state[i] == GenerationState.AWAIT_VALUE
-                or self.state[i] == GenerationState.AWAIT_BRACKET_END
-            ):
-                # Handle the case for string generation
-                if self._is_string_type_enabled(i):
-                    continue
+                    # NOTE: Some enums might be longer than five tokens, but is still a sub-list of the allowed tokens
+                    last_token_ids = input_ids[i, -5:].tolist()
+                    allowed_token_ids = self._get_allowed_tokens_for_value(
+                        i, last_token_ids
+                    )
 
-                # Some enums might be longer than five tokens, but is still a sub-list of the allowed tokens
-                last_token_ids = input_ids[i, -5:].tolist()
-                allowed_token_ids = self._get_allowed_tokens_for_value(
-                    i, last_token_ids
-                )
+                    scores[i] = add_score_mask(scores[i], allowed_token_ids)
+                    log_token_probabilities(
+                        self.tokenizer, scores[i], allowed_token_ids
+                    )
 
-                scores[i] = add_score_mask(scores[i], allowed_token_ids)
-                log_token_probabilities(self.tokenizer, scores[i], allowed_token_ids)
+                case GenerationState.AWAIT_BRACKET_END:
+                    scores[i] = add_score_mask(scores[i], [self.bracket_end_token_id])
+                    self.state[i] = None
 
+                case _:
+                    # Stopping criteria should stop the generation
+                    scores[i] = add_score_mask(scores[i], [self.tokenizer.unk_token_id])
         return scores
 
 
@@ -252,7 +257,10 @@ def log_token_probabilities(
 
 
 def get_allowed_tokens(
-    tokenizer: AutoTokenizer, token_type: str, enums: list = None
+    tokenizer: AutoTokenizer,
+    token_type: str,
+    enums: list = None,
+    include_null: bool = True,
 ) -> list[int] | list[list[int]]:
     """
     Get the token ids corresponding to the allowed token types.
@@ -261,8 +269,9 @@ def get_allowed_tokens(
     allowed_token_ids = []
 
     # Add token ID for null token, if data can't be extracted as its not defined in the input text
-    null_token_id = tokenizer.convert_tokens_to_ids("null")
-    allowed_token_ids.append(null_token_id)
+    if include_null:
+        null_token_id = tokenizer.convert_tokens_to_ids("null")
+        allowed_token_ids.append(null_token_id)
 
     match token_type:
         case "int":
