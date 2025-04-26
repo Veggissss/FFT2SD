@@ -1,9 +1,8 @@
-import copy
-import json
 import torch
 
 from utils.file_loader import json_to_str
-from utils.enums import ModelType, ReportType
+from utils.enums import ModelType
+from utils.data_classes import TemplateGeneration, TokenOptions
 from config import SYSTEM_PROMPT, MODELS_DICT, INCLUDE_ENUMS
 from model_strategy import (
     BaseModelStrategy,
@@ -22,13 +21,12 @@ class ModelLoader:
         is_trained (bool): Flag indicating if the model is fine-tuned and is saved locally.
 
     Attributes:
+        model_settings: The settings for the model, including its name and other specific configs.
         model_name (str): The name of the model/path to local if is_trained.
-        device (torch.device): The device to run the model on (CPU or GPU).
-        strategy (BaseModelStrategy): The strategy for handling the model based on its type.
         model: The loaded transformer model.
         tokenizer: The tokenizer associated with the model.
-        model_settings: The settings for the model, including its name and other specific configs.
-        strategy: The strategy for handling the model based on its type.
+        strategy (BaseModelStrategy): The strategy for handling the model based on its type.
+        device (torch.device): The device to run the model on (CPU or GPU).
     """
 
     def __init__(
@@ -38,10 +36,10 @@ class ModelLoader:
         is_trained: bool = True,
     ):
         self.model_type = model_type
-        self.is_trained = is_trained
         self.model_index = model_index
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.is_trained = is_trained
         self.model_settings = MODELS_DICT[model_type][model_index]
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Use either a trained local model or a Hugging Face model
         if is_trained:
@@ -62,78 +60,34 @@ class ModelLoader:
         print(f"Model loaded: {self.model_name}")
         print(f"Device: {self.device}")
 
-    def __generate(
-        self,
-        prompts: list[str],
-        full_template_json: list[dict],
-        report_type: ReportType,
-    ) -> str:
-        """Generate model output based on the input prompt.
-        :param prompt: Text input prompt for the model.
-        :return: Generated output text.
-        """
-        inputs = self.tokenizer(
-            prompts,
-            return_tensors="pt",
-            padding=True,
-        ).to(self.device)
-
-        # Check prompt size TODO: temp set to 100 will stop at } anyways
-        # amount_prompt_tokens = inputs["input_ids"].shape[1]
-        # print(f"Prompt tokens/Max new tokens: {amount_prompt_tokens}")
-
-        # Generate output based on the strategy
-        return self.strategy.generate(
-            self, inputs, 100, full_template_json, report_type
-        )
-
-    def __output_to_json(self, output_text: str, template_entry: dict) -> dict:
-        """
-        Convert the model output text to a JSON object.
-        :param output_text: Model output text to convert.
-        :return: JSON object.
-        """
-        filled_json = {}
-        try:
-            filled_json = self.strategy.output_to_json(output_text, template_entry)
-        except json.JSONDecodeError:
-            print("Failed to parse model output into JSON! Raw output:", output_text)
-            filled_json = template_entry
-            filled_json["value"] = None
-
-        return filled_json
-
     def generate_filled_json(
         self,
-        input_text: str,
-        container_number: str,
-        template_json: list[dict],
-        report_type: ReportType,
+        generation: TemplateGeneration,
+        token_options: TokenOptions = None,
     ) -> list[dict]:
         """
-        Fill out the JSON values based on the input text.
-        :param model_loader: ModelLoader object with the loaded model and tokenizer.
-        :param text: Input text to extract information from.
-        :param template_entry: JSON template with value field to be filled.
-        :return: JSON with filled values.
-        """
-        # Convert JSON template to string to be used in generation with enum field
-        full_template_json = copy.deepcopy(template_json)
+        Generate filled JSON objects based on the input text and template.
 
+        Args:
+            generation (TemplateGeneration): The input text and template JSON to fill.
+            token_options (TokenOptions): Optional token options for generation.
+        Returns:
+            list[dict]: A list of filled JSON objects based on the input text and template.
+        """
         if not INCLUDE_ENUMS:
             # Remove enum field from prompt to save tokens
-            for template_entry in template_json:
+            for template_entry in generation.template_json:
                 if "enum" in template_entry:
                     template_entry.pop("enum")
 
         # Convert JSON template to a string to include in the prompt.
         prompts = []
-        for template_entry in template_json:
+        for template_entry in generation.template_json:
             template_entry_str = json_to_str(template_entry, indent=None)
 
             prompt = SYSTEM_PROMPT.format(
-                input_text=input_text,
-                container_number=container_number,
+                input_text=generation.input_text,
+                container_id=generation.container_id,
                 # Strip the value field if the model is a decoder speed up generation
                 template_json=(
                     template_entry_str.rsplit('"value":', 1)[0] + '"value":'
@@ -145,12 +99,28 @@ class ModelLoader:
             prompts.append(prompt)
 
         # Generate the filled JSON based on the prompt
-        outputs = self.__generate(prompts, full_template_json, report_type)
+        inputs = self.tokenizer(
+            prompts,
+            return_tensors="pt",
+            padding=True,
+        ).to(self.device)
+
+        # Set max_tokens to the length of the input IDs
+        # NOTE: Stopping criteria should setop the generation before hitting the max tokens
+        max_tokens = inputs["input_ids"].shape[1]
+        output_texts = self.strategy.generate(
+            self,
+            inputs,
+            max_tokens,
+            generation.original_template_json,
+            token_options,
+        )
+
+        assert (
+            len(generation.original_template_json) == inputs["input_ids"].shape[0]
+        ), "Batch size mismatch with template length!"
 
         # Format every model output text in the batch to JSON
-        filled_json_list = []
-        for i, output in enumerate(outputs):
-            filled_json_list.append(
-                self.__output_to_json(output, full_template_json[i])
-            )
-        return filled_json_list
+        return self.strategy.outputs_to_json(
+            output_texts, generation.original_template_json
+        )

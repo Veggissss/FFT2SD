@@ -1,3 +1,4 @@
+import json
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 import torch
@@ -22,7 +23,7 @@ from token_constraints import (
 )
 from config import JSON_START_MARKER, MODELS_DICT, REDUCE_NULL_BIAS
 from utils.file_loader import str_to_json
-from utils.enums import ReportType
+from utils.data_classes import TokenOptions
 
 if TYPE_CHECKING:  # just for type definition
     from model_loader import ModelLoader
@@ -54,8 +55,8 @@ class BaseModelStrategy:
         inputs: dict[str, torch.Tensor],
         amount_new_tokens: int,
         full_template_json: list[dict],
-        report_type: ReportType,
-    ) -> str:
+        token_options: TokenOptions,
+    ) -> list[str]:
         """
         Generate model output text based on the input prompt.
         :param model_loader: The model loader object.
@@ -89,7 +90,14 @@ class BaseModelStrategy:
         """
         Convert generated output text back into just a JSON.
         """
-        output_json: list[dict] = str_to_json(output_text.split(JSON_START_MARKER)[-1])
+        try:
+            output_json: list[dict] = str_to_json(
+                output_text.split(JSON_START_MARKER)[-1]
+            )
+        except json.JSONDecodeError:
+            print("Failed to parse model output into JSON! Raw output:", output_text)
+            output_json = template_entry
+            output_json["value"] = None
 
         # Clean and convert string values to appropriate types
         cleaned_data = self.clean_json(output_json)
@@ -100,8 +108,26 @@ class BaseModelStrategy:
 
         return cleaned_data
 
-    def get_type_allowed_tokens(
-        self, full_template_json: list[dict], report_type: ReportType | None
+    def outputs_to_json(
+        self,
+        output_texts: list[str],
+        full_template_json: list[dict],
+    ) -> list[dict]:
+        """
+        Convert the model output text to a JSON object.
+        :param outputs: Model output text to convert.
+        :param full_template_json: The untokenized full template as a JSON.
+        :return: JSON object.
+        """
+        filled_json_list = []
+        for i, output in enumerate(output_texts):
+            filled_json_list.append(self.output_to_json(output, full_template_json[i]))
+        return filled_json_list
+
+    def get_template_allowed_tokens(
+        self,
+        full_template_json: list[dict],
+        token_options: TokenOptions,
     ) -> list[list[int]]:
         """
         Get the allowed tokens based on the template type.
@@ -110,8 +136,11 @@ class BaseModelStrategy:
         :return: List of token IDs that are allowed for the given template type.
         """
         # Check for cached allowed tokens
-        if report_type and report_type in self.allowed_tokens_map:
-            return self.allowed_tokens_map[report_type]
+        if (
+            token_options.report_type
+            and token_options.report_type in self.allowed_tokens_map
+        ):
+            return self.allowed_tokens_map[token_options.report_type]
 
         allowed_token_ids_list = []
         for template_json_entry in full_template_json:
@@ -127,12 +156,13 @@ class BaseModelStrategy:
                     self.tokenizer,
                     template_type,
                     template_enums,
+                    token_options.allow_null,
                 )
             )
 
         # Store the allowed tokens in the map for caching
-        if report_type:
-            self.allowed_tokens_map[report_type] = allowed_token_ids_list
+        if token_options.report_type:
+            self.allowed_tokens_map[token_options.report_type] = allowed_token_ids_list
 
         return allowed_token_ids_list
 
@@ -143,7 +173,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
     Sequence-to-sequence model with encoder and decoder.
     """
 
-    def load(self, model_loader: "ModelLoader") -> None:
+    def load(self, model_loader: "ModelLoader") -> tuple[AutoModel, AutoTokenizer]:
         # Load tokenizer
         super().load(model_loader)
 
@@ -160,13 +190,13 @@ class EncoderDecoderStrategy(BaseModelStrategy):
         inputs,
         amount_new_tokens,
         full_template_json,
-        report_type,
-    ) -> str:
+        token_options: TokenOptions,
+    ) -> list[str]:
         logits_processor = LogitsProcessorList(
             [
                 TokenTypeConstraintProcessor(
                     self.tokenizer,
-                    self.get_type_allowed_tokens(full_template_json, report_type),
+                    self.get_template_allowed_tokens(full_template_json, token_options),
                 )
             ]
         )
@@ -183,7 +213,14 @@ class EncoderDecoderStrategy(BaseModelStrategy):
 
     def output_to_json(self, output_text: str, template_entry: dict) -> dict:
         # Parse output text to JSON and clean string values
-        cleaned_data = self.clean_json(str_to_json(output_text))
+        try:
+            output_json = str_to_json(output_text)
+        except json.JSONDecodeError:
+            print("Failed to parse model output into JSON! Raw output:", output_text)
+            output_json = template_entry
+            output_json["value"] = None
+
+        cleaned_data = self.clean_json(output_json)
 
         # Add the output value to the template JSON
         template_entry["value"] = cleaned_data["value"]
@@ -196,72 +233,77 @@ class DecoderStrategy(BaseModelStrategy):
     Next token prediction model.
     """
 
-    def load(self, model_loader) -> None:
+    def load(self, model_loader: "ModelLoader") -> tuple[AutoModel, AutoTokenizer]:
         # Load tokenizer
         super().load(model_loader)
 
+        q_config = None
         if model_loader.model_settings.use_peft:
+            # Use 4-bit quantization
             q_config = BitsAndBytesConfig(
-                load_in_4bit=True,  # Use 4-bit quantization
+                load_in_4bit=True,
                 bnb_4bit_compute_dtype=torch.float16,
             )
-
-            # Load the untrained base model.
-            model = AutoModelForCausalLM.from_pretrained(
-                MODELS_DICT[model_loader.model_type][
-                    model_loader.model_index
-                ].model_name,  # Will not include the '_peft'
-                quantization_config=q_config,
-                device_map="auto",
-                # Don’t use low_cpu_mem_usage=True when creating a new PEFT adapter for training.
-                # # https://huggingface.co/docs/peft/v0.15.0/en/package_reference/peft_model#peft.PeftModel.low_cpu_mem_usage
-            )
-
-            # For using untrained decoder
-            self.tokenizer.add_special_tokens(
-                {
-                    "pad_token": "<PAD>",
-                }
-            )
-            # Resize to fit the pad. If trained also fit newly added token embeddings
-            model.resize_token_embeddings(len(self.tokenizer))
-            if model_loader.is_trained:
-                # Load the PEFT model
-                model = PeftModel.from_pretrained(
-                    model,
-                    model_loader.model_name,
-                    # ephemeral_gpu_offloading=True,
-                    # is_trainable=True,
-                )
+            # Load the base model without "_peft" in the name
+            model_name = MODELS_DICT[model_loader.model_type][
+                model_loader.model_index
+            ].model_name
         else:
-            # Load non-quant non-PEFT model
-            model = AutoModelForCausalLM.from_pretrained(
-                model_loader.model_name,
-                device_map="auto",
-                low_cpu_mem_usage=True,
-            )
+            model_name = model_loader.model_name
 
-            # For using untrained decoder
+        # Load the untrained base model.
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            quantization_config=q_config,
+            device_map="auto",
+        )
+
+        if (
+            self.tokenizer.pad_token is None
+            or self.tokenizer.pad_token is self.tokenizer.unk_token
+        ):
+            # Add pad token if unset
             self.tokenizer.add_special_tokens(
                 {
                     "pad_token": "<PAD>",
                 }
             )
-            # Resize to fit the pad. If trained also fit newly added token embeddings
-            model.resize_token_embeddings(len(self.tokenizer))
+        else:
+            print(f"Using existing pad token: {self.tokenizer.pad_token}")
+
+        # Resize to fit the pad. If trained also fit other new tokens from the base model to match the peft model.
+        model.resize_token_embeddings(len(self.tokenizer))
+
+        if model_loader.model_settings.use_peft and model_loader.is_trained:
+            # Load the PEFT model
+            is_trainable = False
+            model = PeftModel.from_pretrained(
+                model,
+                model_loader.model_name,
+                # NOTE: Don’t use low_cpu_mem_usage=True when creating a new PEFT adapter for training.
+                # https://huggingface.co/docs/peft/v0.15.0/en/package_reference/peft_model#peft.PeftModel.low_cpu_mem_usage
+                low_cpu_mem_usage=(not is_trainable),
+                is_trainable=is_trainable,
+                # ephemeral_gpu_offloading=True,
+            )
 
         return model, self.tokenizer
 
     def generate(
-        self, model_loader, inputs, amount_new_tokens, full_template_json, report_type
-    ) -> str:
+        self,
+        model_loader,
+        inputs,
+        amount_new_tokens,
+        full_template_json,
+        token_options: TokenOptions,
+    ) -> list[str]:
         # Generate decoder output
         inputs.pop("token_type_ids", None)
         logits_processor = LogitsProcessorList(
             [
                 TokenTypeConstraintProcessor(
                     self.tokenizer,
-                    self.get_type_allowed_tokens(full_template_json, report_type),
+                    self.get_template_allowed_tokens(full_template_json, token_options),
                 )
             ]
         )
@@ -283,7 +325,7 @@ class EncoderStrategy(BaseModelStrategy):
     Random masked token prediction model with constrained unmasking tokens.
     """
 
-    def load(self, model_loader):
+    def load(self, model_loader: "ModelLoader") -> tuple[AutoModel, AutoTokenizer]:
         # Load tokenizer
         super().load(model_loader)
 
@@ -301,7 +343,7 @@ class EncoderStrategy(BaseModelStrategy):
         inputs,
         amount_new_tokens,
         full_template_json,
-        report_type,
+        token_options: TokenOptions,
     ) -> list[str]:
         # Forward pass to get logits
         with torch.no_grad():
@@ -312,14 +354,12 @@ class EncoderStrategy(BaseModelStrategy):
             # [batch_size, seq_length]
             input_ids = inputs.input_ids
             batch_size = logits.shape[0]
-        assert len(full_template_json) == batch_size
 
-        # bool mask [batch_size, seq_length]
-        is_mask_token = input_ids == model_loader.tokenizer.mask_token_id
-
-        # Find masked indices for the whole batch
-        batch_indices, token_indices = is_mask_token.nonzero(as_tuple=True)
-        assert all((batch_indices.bincount() == 1)), "Max 1 mask!"
+        # Find masked token positions
+        batch_indices, token_indices = (
+            input_ids == model_loader.tokenizer.mask_token_id
+        ).nonzero(as_tuple=True)
+        assert all(batch_indices.bincount() == 1), "Max 1 mask!"
 
         # Get logits for the masked token [batch_size, vocab_size]
         masked_scores = logits[batch_indices, token_indices]
@@ -329,8 +369,8 @@ class EncoderStrategy(BaseModelStrategy):
         masked_scores[:, null_token_id] -= REDUCE_NULL_BIAS
 
         # Prepare allowed token IDs for the batch
-        allowed_token_ids_batch = self.get_type_allowed_tokens(
-            full_template_json, report_type
+        allowed_token_ids_batch = self.get_template_allowed_tokens(
+            full_template_json, token_options
         )
 
         # Apply masking and collect predictions

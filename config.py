@@ -1,24 +1,5 @@
-from dataclasses import dataclass
 from utils.enums import ModelType
-
-
-@dataclass
-class ModelSettings:
-    """
-    Model settings for the Hugging Face models.
-    """
-
-    model_name: str
-    use_peft: bool = False
-
-    def __str__(self) -> str:
-        """
-        Get the saved model name.
-        """
-        if self.use_peft:
-            return self.model_name + "_peft"
-        return self.model_name
-
+from utils.data_classes import ModelSettings
 
 # Definitions of Hugging Face models
 MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
@@ -59,7 +40,7 @@ Whether or not to generate unrestricted string output then the "type" is set to 
 This speeds up the generation process, but all the "value" for the strings will be set to null.
 Used for fast eval metrics generation.
 """
-STRING_GENERATION_ENABLED = False
+STRING_GENERATION_ENABLED = True
 
 """
 Mark the end of the model prompt and before the template JSON in the prompt.
@@ -72,12 +53,12 @@ The prompt for the system to ask the model to fill in the missing JSON values.
 
 Parameters:
 - input_text: The input text to extract information from.
-- container_number: The number of the container. Example: "Glass nummer 3"
+- container_id: The number of the container. Example: "Glass nummer 3"
 - template_json: The JSON template to fill in.
 """
 SYSTEM_PROMPT = (
     "Gitt teksten: {input_text}."
-    + "\nGlass nummer {container_number}."
+    + "\nGlass nummer {container_id}."
     + '\nFyll ut den manglede verdien for JSON feltet "value": '
     + JSON_START_MARKER
     + "\n{template_json}"
@@ -87,4 +68,4 @@ SYSTEM_PROMPT = (
 Used for masking out "Glass nummer X." in the input prompt.
 Only used for when asking for glass amount in training and inference.
 """
-CONTAINER_NUMBER_MASK = "?"
+CONTAINER_ID_MASK = "?"

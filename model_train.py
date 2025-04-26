@@ -126,11 +126,6 @@ def add_tokens_to_tokenizer(model_loader: ModelLoader, enums: list[str]) -> None
 
     # Add tokens to the tokenizer.
     model_loader.tokenizer.add_tokens(new_tokens)
-    model_loader.tokenizer.add_special_tokens(
-        {
-            "pad_token": "<PAD>",
-        }
-    )
 
     # Resize the model's token embeddings to fit the new tokens.
     model_loader.model.resize_token_embeddings(len(model_loader.tokenizer))

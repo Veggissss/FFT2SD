@@ -5,7 +5,7 @@ from utils.file_loader import load_json, json_to_str
 from utils.enums import ModelType
 from config import (
     SYSTEM_PROMPT,
-    CONTAINER_NUMBER_MASK,
+    CONTAINER_ID_MASK,
     DATA_MODEL_OUTPUT_FOLDER,
     INCLUDE_ENUMS,
 )
@@ -71,15 +71,15 @@ def process_json_file(file_path: str, model_type: ModelType, enums: list) -> dic
 
         # Remove the value field from antall glass as it should be not given in the input
         if template_entry.get("field") == "Antall glass":
-            container_number = CONTAINER_NUMBER_MASK
+            container_id = CONTAINER_ID_MASK
         else:
-            container_number = json_to_str(metadata_json[1]["value"])
+            container_id = json_to_str(metadata_json[1]["value"])
 
         add_prompt_entry(
             dataset_entries,
             model_type,
             input_text,
-            container_number,
+            container_id,
             target_entry["value"],
             target_entry,
             template_entry,
@@ -92,7 +92,7 @@ def add_prompt_entry(
     dataset_dict: dict,
     model_type: ModelType,
     input_text: str,
-    container_number: str,
+    container_id: str,
     correct_value: str,
     target_entry: dict,
     template_entry: dict,
@@ -104,7 +104,7 @@ def add_prompt_entry(
     """
     input_prompt = SYSTEM_PROMPT.format(
         input_text=input_text,
-        container_number=container_number,
+        container_id=container_id,
         template_json=json_to_str(
             (
                 target_entry

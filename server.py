@@ -5,8 +5,9 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from model_loader import ModelLoader
-from config import CONTAINER_NUMBER_MASK, MODELS_DICT
+from config import CONTAINER_ID_MASK, MODELS_DICT
 from utils.enums import ModelType, ReportType, DatasetField
+from utils.data_classes import TemplateGeneration, TokenOptions
 from utils.file_loader import load_json, save_json
 from dataset_loader import reset_value_fields
 
@@ -38,21 +39,21 @@ def load_model(model_type: ModelType, model_index: int) -> str:
 
 
 def fill_json(
-    input_text: str,
-    container_str: str,
-    template_json: list[dict],
-    report_type: ReportType = None,
+    generation: TemplateGeneration,
+    token_options: TokenOptions = None,
 ) -> list[dict]:
     """Function to fill a single JSON template using the loaded model."""
     mask_token = "null"
     if model_loader.model_type == ModelType.ENCODER:
         mask_token = model_loader.tokenizer.mask_token
-    template_json = reset_value_fields(template_json, value=mask_token)
+    generation.template_json = reset_value_fields(
+        generation.template_json, value=mask_token
+    )
+    # Reset original template with masked token
+    generation.copy_template()
 
     # Generate filled JSON using the model
-    return model_loader.generate_filled_json(
-        input_text, container_str, copy.deepcopy(template_json), report_type
-    )
+    return model_loader.generate_filled_json(generation, token_options)
 
 
 def generate(
@@ -68,7 +69,10 @@ def generate(
 
     # Determine report type if not provided
     if not report_type:
-        filled_report = fill_json(input_text, CONTAINER_NUMBER_MASK, [report_json])[0]
+        filled_report = fill_json(
+            TemplateGeneration(input_text, CONTAINER_ID_MASK, [report_json]),
+            TokenOptions(allow_null=False),
+        )[0]
         report_type_str = filled_report.get("value", "")
         if (
             not report_type_str
@@ -81,7 +85,8 @@ def generate(
     # Determine total containers if not provided
     if not total_containers:
         filled_container = fill_json(
-            input_text, CONTAINER_NUMBER_MASK, [glass_amount_json]
+            TemplateGeneration(input_text, CONTAINER_ID_MASK, [glass_amount_json]),
+            TokenOptions(allow_null=False),
         )[0]
         total_containers = filled_container.get("value")
         if not total_containers or not str(total_containers).isdigit():
@@ -99,10 +104,10 @@ def generate(
 
     # Get the filled JSON for each container, 1 indexed
     reports = []
-    for container_number in range(1, total_containers + 1):
+    for container_id_int in range(1, total_containers + 1):
         glass_amount_json["value"] = total_containers
         report_json["value"] = report_type.value
-        container_id_json["value"] = container_number
+        container_id_json["value"] = container_id_int
         generated_report = {
             "input_text": input_text,
             "target_json": [],
@@ -116,7 +121,8 @@ def generate(
             report_type = report_type if batch_size == len(template_json) else None
             batch = copy.deepcopy(template_json[i : i + batch_size])
             batch_filled = fill_json(
-                input_text, str(container_number), batch, report_type
+                TemplateGeneration(input_text, str(container_id_int), batch),
+                TokenOptions(report_type=report_type),
             )
             generated_report["target_json"].extend(batch_filled)
 
