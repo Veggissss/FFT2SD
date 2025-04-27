@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score, recall_score, f1_score
 
+from utils.data_classes import TokenOptions
 from utils.file_loader import load_json, save_json
 from utils.enums import ModelType, ReportType
 from model_loader import ModelLoader
@@ -16,6 +17,7 @@ def evaluate(
     is_trained: bool = True,
     data_dir: Path = Path("data/corrected"),
     output_path: Path = Path("./eval_results.json"),
+    token_options: TokenOptions = None,
 ):
     """
     Runs evaluation on all labeled JSON files
@@ -33,7 +35,9 @@ def evaluate(
         metadata = data["metadata_json"]
         report_type = ReportType(metadata[0]["value"])
 
-        response = server.generate(input_text, report_type, total_containers=1)
+        response = server.generate(
+            input_text, report_type, total_containers=1, token_options=token_options
+        )
         predicted = response[0].get("target_json", [])
 
         for target_item, predicted_item in zip(target, predicted):

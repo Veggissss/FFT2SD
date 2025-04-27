@@ -21,7 +21,7 @@ from token_constraints import (
     TokenTypeConstraintProcessor,
     StopOnToken,
 )
-from config import JSON_START_MARKER, MODELS_DICT, REDUCE_NULL_BIAS
+from config import JSON_START_MARKER, MODELS_DICT
 from utils.file_loader import str_to_json
 from utils.data_classes import TokenOptions
 
@@ -197,6 +197,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
                 TokenTypeConstraintProcessor(
                     self.tokenizer,
                     self.get_template_allowed_tokens(full_template_json, token_options),
+                    token_options.generate_strings,
                 )
             ]
         )
@@ -304,6 +305,7 @@ class DecoderStrategy(BaseModelStrategy):
                 TokenTypeConstraintProcessor(
                     self.tokenizer,
                     self.get_template_allowed_tokens(full_template_json, token_options),
+                    token_options.generate_strings,
                 )
             ]
         )
@@ -366,7 +368,7 @@ class EncoderStrategy(BaseModelStrategy):
 
         # Reduce preference for "null" token
         null_token_id = self.tokenizer.convert_tokens_to_ids("null")
-        masked_scores[:, null_token_id] -= REDUCE_NULL_BIAS
+        masked_scores[:, null_token_id] -= token_options.reduce_null_bias
 
         # Prepare allowed token IDs for the batch
         allowed_token_ids_batch = self.get_template_allowed_tokens(

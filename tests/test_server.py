@@ -26,6 +26,8 @@ def test_load_model_endpoint(client: FlaskClient):
     )
     assert response.status_code == 200
     assert "Loaded model:" in response.json["message"]
+    # Encoder models are always trained
+    assert "trained" in response.json["message"]
 
     # Test with invalid model type
     response = client.post(
@@ -38,6 +40,26 @@ def test_load_model_endpoint(client: FlaskClient):
     response = client.post("/load_model", json={"model_index": 0})
     assert response.status_code == 400
     assert "Model type is required" in response.json["error"]
+
+    # Test with trained set to True
+    response = client.post(
+        "/load_model",
+        json={"model_type": "encoder_decoder", "model_index": 0, "is_trained": True},
+    )
+    assert response.status_code == 200
+    print(response.json["message"])
+    assert "Loaded model:" in response.json["message"]
+    assert "trained" in response.json["message"]
+
+    # Test with trained set to True
+    response = client.post(
+        "/load_model",
+        json={"model_type": "encoder_decoder", "model_index": 0, "is_trained": False},
+    )
+    assert response.status_code == 200
+    print(response.json["message"])
+    assert "Loaded model:" in response.json["message"]
+    assert "trained" not in response.json["message"]
 
 
 def test_generate_endpoint(client: FlaskClient):

@@ -1,7 +1,8 @@
 import torch
 from transformers import AutoTokenizer, StoppingCriteria, LogitsProcessor
 from utils.enums import GenerationState
-from config import DEBUG_MODE_ENABLED, REDUCE_NULL_BIAS, STRING_GENERATION_ENABLED
+from utils.data_classes import TokenOptions
+from config import DEBUG_MODE_ENABLED
 
 
 class StopOnToken(StoppingCriteria):
@@ -50,6 +51,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         self,
         tokenizer: AutoTokenizer,
         allowed_token_ids_list: list[list[int]] | list[list[list[int]]],
+        token_options: TokenOptions = None,
     ) -> None:
         """
         Initialize the processor with allowed token IDs for a specific type.
@@ -62,6 +64,15 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         super().__init__()
         self.tokenizer = tokenizer
         self.allowed_token_ids_list = allowed_token_ids_list
+
+        # Set token options or default values
+        if token_options is not None:
+            self.generate_strings = token_options.generate_strings
+            self.reduce_null_bias = token_options.reduce_null_bias
+        else:
+            self.generate_strings = False
+            self.reduce_null_bias = 0.0
+
         self.state = {}
 
         # Define the token IDs for the expected pattern and json
@@ -90,10 +101,10 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
     def _is_string_type_enabled(self, batch_index: int) -> bool:
         """
         Handle when token type is a string, giving it unrestricted tokens.
-        Will just produce a 'null' value if STRING_GENERATION_ENABLED is false.
+        Will just produce a 'null' value if self.generate_strings is false.
         """
         if len(self.allowed_token_ids_list[batch_index]) <= 1:
-            if STRING_GENERATION_ENABLED:
+            if self.generate_strings:
                 return True
             if DEBUG_MODE_ENABLED:
                 print("String generation disabled.")
@@ -170,7 +181,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         batch_size = scores.shape[0]
 
         # Decrease preference for null token
-        scores[:, self.null_token_id] -= REDUCE_NULL_BIAS
+        scores[:, self.null_token_id] -= self.reduce_null_bias
 
         for i in range(batch_size):
             if i not in self.state:

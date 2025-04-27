@@ -54,9 +54,12 @@ def fill_json(
 
 
 def generate(
-    input_text: str, report_type: ReportType = None, total_containers: int = None
+    input_text: str,
+    report_type: ReportType = None,
+    total_containers: int = None,
+    token_options: TokenOptions = None,
 ) -> dict | None:
-    """Function to generate text using the loaded model."""
+    """Function to generate structured data using the loaded model."""
 
     # Load metadata template to determine the report type and container count
     metadata_json = load_json("data_model/out/generated-metadata.json")
@@ -116,9 +119,16 @@ def generate(
         for i in range(0, len(template_json), batch_size):
             # Determine if caching should be used, only if the full template is used
             report_type = report_type if batch_size == len(template_json) else None
-            batch = copy.deepcopy(template_json[i : i + batch_size])
+            template_batch = copy.deepcopy(template_json[i : i + batch_size])
+
+            # Set the optional parameters for the token options
+            if token_options is None:
+                token_options = TokenOptions(report_type=report_type)
+            else:
+                token_options.report_type = report_type
+
             batch_filled = fill_json(
-                TemplateGeneration(input_text, str(container_id_int), batch),
+                TemplateGeneration(input_text, str(container_id_int), template_batch),
                 TokenOptions(report_type=report_type),
             )
             generated_report["target_json"].extend(batch_filled)
@@ -193,7 +203,12 @@ def generate_endpoint():
             report_type = ReportType.MIKROSKOPISK
     total_containers: int | None = request.json.get("total_containers")
 
-    reports = generate(input_text, report_type, total_containers)
+    # Set custom token options
+    token_options = TokenOptions()
+    token_options.include_enums = model_loader.model_type == ModelType.DECODER
+    # token_options.generate_strings = False
+
+    reports = generate(input_text, report_type, total_containers, token_options)
     if reports is None:
         return jsonify({"error": "Failed to generate structured data"}), 500
 

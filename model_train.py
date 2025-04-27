@@ -177,7 +177,9 @@ def train(model_type: ModelType, model_index: int) -> None:
     )
 
     # Load the dataset.
-    dataset, enums = dataset_loader.create_dataset(dataset_dir, model_loader.model_type)
+    dataset, enums = dataset_loader.create_dataset(
+        dataset_dir, model_loader.model_type, include_enums=False
+    )
     print(dataset["input"][:2])
     dataset.batch(batch_size=batch_size)
 

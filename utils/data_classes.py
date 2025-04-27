@@ -26,17 +26,23 @@ class TemplateGeneration:
         self.original_template_json = copy.deepcopy(self.template_json)
 
 
-@dataclass(frozen=True)
+@dataclass()
 class TokenOptions:
     """
     Optional token options for model generation.
 
     report_type: Report type used for caching of allowed tokens.
     allow_null: Whether to allow null values in the output.
+    reduce_null_bias: Reduce the chance of generating null values by subtracting the value from the logits.
+    include_enums: Whether to include enum values in the prompt. (Won't affect the encoder type)
+    generate_strings: Whether to generate string values in the output, if False string values will be 'null'.
     """
 
     report_type: ReportType | None = None
     allow_null: bool = True
+    reduce_null_bias: float = 0.0
+    include_enums: bool = False
+    generate_strings: bool = False
 
 
 @dataclass(frozen=True)

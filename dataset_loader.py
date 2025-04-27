@@ -7,15 +7,17 @@ from config import (
     SYSTEM_PROMPT,
     CONTAINER_ID_MASK,
     DATA_MODEL_OUTPUT_FOLDER,
-    INCLUDE_ENUMS,
 )
 
 
-def create_dataset(dataset_path: str, model_type: ModelType) -> tuple[Dataset, list]:
+def create_dataset(
+    dataset_path: str, model_type: ModelType, include_enums: bool
+) -> tuple[Dataset, list]:
     """
     Create a Hugging Face Dataset from the labeled JSON files in the dataset path.
     :param dataset_path: Path to the dataset files.
     :param model_type: Model type to train.
+    :param include_enums: Whether to include the possible enum values inside the prompt.
     :return: Tuple of the dataset and the enum values.
     """
     dataset_dict = {"input": [], "output": []}
@@ -23,7 +25,7 @@ def create_dataset(dataset_path: str, model_type: ModelType) -> tuple[Dataset, l
 
     for filename in filter(lambda f: f.endswith(".json"), os.listdir(dataset_path)):
         file_path = os.path.join(dataset_path, filename)
-        processed_data = process_json_file(file_path, model_type, enums)
+        processed_data = process_json_file(file_path, model_type, enums, include_enums)
         dataset_dict["input"].extend(processed_data["input"])
         dataset_dict["output"].extend(processed_data["output"])
 
@@ -31,14 +33,16 @@ def create_dataset(dataset_path: str, model_type: ModelType) -> tuple[Dataset, l
         lambda f: f.endswith(".json"), os.listdir(DATA_MODEL_OUTPUT_FOLDER)
     ):
         file_path = os.path.join(DATA_MODEL_OUTPUT_FOLDER, filename)
-        processed_data = process_enum_file(file_path, model_type)
+        processed_data = process_enum_file(file_path, model_type, include_enums)
         dataset_dict["input"].extend(processed_data["input"])
         dataset_dict["output"].extend(processed_data["output"])
 
     return Dataset.from_dict(dataset_dict), enums
 
 
-def process_json_file(file_path: str, model_type: ModelType, enums: list) -> dict:
+def process_json_file(
+    file_path: str, model_type: ModelType, enums: list, include_enums: bool
+) -> dict:
     """
     Process a single JSON file and extract input-output pairs for the dataset.
     """
@@ -65,9 +69,11 @@ def process_json_file(file_path: str, model_type: ModelType, enums: list) -> dic
                 if enum_value not in enums:
                     enums.append(enum_value)
             # Remove the enum form input and output to save a lot of tokens/max_length
-            if not INCLUDE_ENUMS:
-                del target_entry["enum"]
-                del template_entry["enum"]
+            if not include_enums:
+                if "enum" in template_entry:
+                    del template_entry["enum"]
+                if "enum" in target_entry:
+                    del target_entry["enum"]
 
         # Remove the value field from antall glass as it should be not given in the input
         if template_entry.get("field") == "Antall glass":
@@ -124,7 +130,9 @@ def add_prompt_entry(
     dataset_dict["output"].append(target_text)
 
 
-def process_enum_file(file_path: str, model_type: ModelType) -> dict:
+def process_enum_file(
+    file_path: str, model_type: ModelType, include_enums: bool
+) -> dict:
     """
     Process a single JSON file to extract enum-based dataset entries.
     """
@@ -148,10 +156,12 @@ def process_enum_file(file_path: str, model_type: ModelType) -> dict:
                 prompt = enum_dict["value"]
 
             correct_enum = enum_dict["value"]
-            if "enum" in template_entry:
-                del template_entry["enum"]
-            if "enum" in target_entry:
-                del target_entry["enum"]
+
+            if not include_enums:
+                if "enum" in template_entry:
+                    del template_entry["enum"]
+                if "enum" in target_entry:
+                    del target_entry["enum"]
 
             add_prompt_entry(
                 dataset_entries,

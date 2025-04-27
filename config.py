@@ -25,22 +25,8 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
 # Output path for the data models combined struct/template
 DATA_MODEL_OUTPUT_FOLDER = "data_model/out"
 
-# Print out contstrained token probabilities
+# Print out contstrained token probabilities and other debug information
 DEBUG_MODE_ENABLED = True
-
-# Whether the input prompt and training data should include the enum definitions or not.
-# This uses a lot of tokens, but gives more context, specifically to untrained models.
-INCLUDE_ENUMS = False
-
-# Reduce the chance of null values in the output
-REDUCE_NULL_BIAS = 0
-
-"""
-Whether or not to generate unrestricted string output then the "type" is set to "string".
-This speeds up the generation process, but all the "value" for the strings will be set to null.
-Used for fast eval metrics generation.
-"""
-STRING_GENERATION_ENABLED = True
 
 """
 Mark the end of the model prompt and before the template JSON in the prompt.

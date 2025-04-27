@@ -8,7 +8,9 @@ DATA_PATH = "data/test_data"
 
 
 def test_dataset_loader_decoder():
-    dataset, enums = dataset_loader.create_dataset(DATA_PATH, ModelType.DECODER)
+    dataset, enums = dataset_loader.create_dataset(
+        DATA_PATH, ModelType.DECODER, include_enums=True
+    )
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
 
@@ -19,12 +21,15 @@ def test_dataset_loader_decoder():
     # Check that the output column is not used
     assert dataset["output"][0] == "[UNUSED BY THE DECODER TYPE]"
 
+    # Check that enum values are in the prompt
+    assert '"type": "enum", "enum"' in dataset["input"][0]
+
     print(dataset["input"][0])
     print(dataset["output"][0])
 
 
 def test_dataset_loader_encoder():
-    dataset, enums = dataset_loader.create_dataset(DATA_PATH, ModelType.ENCODER)
+    dataset, enums = dataset_loader.create_dataset(DATA_PATH, ModelType.ENCODER, False)
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
 
@@ -35,12 +40,17 @@ def test_dataset_loader_encoder():
     # Check that the output column is not used
     assert dataset["output"][0] == "[UNUSED BY THE ENCODER TYPE]"
 
+    # Check that enum values are NOT in the prompt
+    assert '"type": "enum", "enum"' not in dataset["input"][0]
+
     print(dataset["input"][0])
     print(dataset["output"][0])
 
 
 def test_dataset_loader_encoder_decoder():
-    dataset, enums = dataset_loader.create_dataset(DATA_PATH, ModelType.ENCODER_DECODER)
+    dataset, enums = dataset_loader.create_dataset(
+        DATA_PATH, ModelType.ENCODER_DECODER, False
+    )
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
 
@@ -51,6 +61,9 @@ def test_dataset_loader_encoder_decoder():
     # Confirm that the correct answer is not filled out
     print(dataset["input"][0])
     assert "null" in dataset["input"][0]
+
+    # Check that enum values are NOT in the prompt
+    assert '"type": "enum", "enum"' not in dataset["input"][0]
 
     # Assert that the output is a json with a filled out value
     assert json.loads(dataset["output"][0]).get("value") is not None

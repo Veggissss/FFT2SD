@@ -3,7 +3,7 @@ import torch
 from utils.file_loader import json_to_str
 from utils.enums import ModelType
 from utils.data_classes import TemplateGeneration, TokenOptions
-from config import SYSTEM_PROMPT, MODELS_DICT, INCLUDE_ENUMS
+from config import SYSTEM_PROMPT, MODELS_DICT, DEBUG_MODE_ENABLED
 from model_strategy import (
     BaseModelStrategy,
     EncoderDecoderStrategy,
@@ -74,7 +74,7 @@ class ModelLoader:
         Returns:
             list[dict]: A list of filled JSON objects based on the input text and template.
         """
-        if not INCLUDE_ENUMS:
+        if not token_options.include_enums:
             # Remove enum field from prompt to save tokens
             for template_entry in generation.template_json:
                 if "enum" in template_entry:
@@ -105,9 +105,12 @@ class ModelLoader:
             padding=True,
         ).to(self.device)
 
+        prompt_tokens = inputs["input_ids"].shape[1]
+        if DEBUG_MODE_ENABLED:
+            print(f"Amount of prompt tokens: {prompt_tokens}")
         # Set max_tokens to the length of the input IDs
-        # NOTE: Stopping criteria should setop the generation before hitting the max tokens
-        max_tokens = inputs["input_ids"].shape[1]
+        # NOTE: Stopping criteria should stop the generation before hitting the max tokens
+        max_tokens = prompt_tokens
         output_texts = self.strategy.generate(
             self,
             inputs,
