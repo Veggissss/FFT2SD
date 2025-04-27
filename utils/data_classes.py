@@ -52,12 +52,12 @@ class ModelSettings:
     """
 
     model_name: str
-    use_peft: bool = False
+    use_4bit_quant: bool = False
 
     def __str__(self) -> str:
         """
         Get the saved model name.
         """
-        if self.use_peft:
-            return self.model_name + "_peft"
+        if self.use_4bit_quant:
+            return self.model_name + "_4bit_quant"
         return self.model_name

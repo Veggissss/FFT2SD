@@ -34,11 +34,12 @@ def evaluate(
         target = data["target_json"]
         metadata = data["metadata_json"]
         report_type = ReportType(metadata[0]["value"])
+        container_id = str(metadata[2]["value"])
 
-        response = server.generate(
-            input_text, report_type, total_containers=1, token_options=token_options
+        generated_report = server.generate_container(
+            input_text, report_type, container_id, metadata, token_options
         )
-        predicted = response[0].get("target_json", [])
+        predicted = generated_report.get("target_json", [])
 
         for target_item, predicted_item in zip(target, predicted):
             value_type = target_item.get("type", None)
@@ -50,7 +51,7 @@ def evaluate(
                 {
                     "file": file_path.name,
                     "report_type": report_type.name,
-                    "model_name": server.model_loader.model_name,
+                    "model_name": str(server.model_loader.model_settings),
                     "model_type": model_type.value,
                     "type": value_type,
                     "y_true": y_true,
@@ -175,18 +176,25 @@ def visualize(
 
 
 if __name__ == "__main__":
+    TEST_SMALLEST_ONLY = True
     for m_type in ModelType:
-        # Test with small models
-        break
-        evaluate(
-            model_type=m_type,
-            model_index=0,
-            is_trained=True,
-        )
+        token_options = TokenOptions()
+        token_options.include_enums = m_type == ModelType.DECODER
+        if TEST_SMALLEST_ONLY:
+            # Test with small models
+            evaluate(
+                model_type=m_type,
+                model_index=0,
+                is_trained=True,
+                token_options=token_options,
+            )
+            continue
 
-        continue
-        for i in range(len(MODELS_DICT[m_type])):
-            is_trained = m_type != ModelType.DECODER or i < 3
+        # Test all models
+        for i, model_setting in enumerate(MODELS_DICT[m_type]):
+            is_trained = (
+                m_type != ModelType.DECODER or "norallm" in model_setting.model_name
+            )
             evaluate(
                 model_type=m_type,
                 model_index=i,

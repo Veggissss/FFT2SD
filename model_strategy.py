@@ -197,7 +197,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
                 TokenTypeConstraintProcessor(
                     self.tokenizer,
                     self.get_template_allowed_tokens(full_template_json, token_options),
-                    token_options.generate_strings,
+                    token_options,
                 )
             ]
         )
@@ -239,7 +239,7 @@ class DecoderStrategy(BaseModelStrategy):
         super().load(model_loader)
 
         q_config = None
-        if model_loader.model_settings.use_peft:
+        if model_loader.model_settings.use_4bit_quant:
             # Use 4-bit quantization
             q_config = BitsAndBytesConfig(
                 load_in_4bit=True,
@@ -275,7 +275,7 @@ class DecoderStrategy(BaseModelStrategy):
         # Resize to fit the pad. If trained also fit other new tokens from the base model to match the peft model.
         model.resize_token_embeddings(len(self.tokenizer))
 
-        if model_loader.model_settings.use_peft and model_loader.is_trained:
+        if model_loader.model_settings.use_4bit_quant and model_loader.is_trained:
             # Load the PEFT model
             is_trainable = False
             model = PeftModel.from_pretrained(
@@ -305,7 +305,7 @@ class DecoderStrategy(BaseModelStrategy):
                 TokenTypeConstraintProcessor(
                     self.tokenizer,
                     self.get_template_allowed_tokens(full_template_json, token_options),
-                    token_options.generate_strings,
+                    token_options,
                 )
             ]
         )

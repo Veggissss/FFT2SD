@@ -155,7 +155,7 @@ def train(model_type: ModelType, model_index: int) -> None:
     """
     model_loader = ModelLoader(model_type, model_index, is_trained=False)
     dataset_dir = "data/corrected/"
-    output_dir = f"trained/{model_loader.model_settings.__str__()}"
+    output_dir = f"trained/{str(model_loader.model_settings)}"
     batch_size = 3
 
     print(f"Saving trained model to: {output_dir}")
@@ -210,6 +210,9 @@ if __name__ == "__main__":
     # Train all model types and sizes
     for m_type in ModelType:
         for i in range(len(MODELS_DICT[m_type])):
+            if i >= 3:
+                break
             train(m_type, i)
+
             # train(m_type, 1)
             # train(m_type, 2)

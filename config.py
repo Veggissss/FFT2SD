@@ -14,9 +14,9 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
         ModelSettings("ltg/norbert3-large"),
     ],
     ModelType.DECODER: [
-        ModelSettings("norallm/normistral-7b-warm", use_peft=True),
+        ModelSettings("norallm/normistral-7b-warm", use_4bit_quant=True),
         ModelSettings("norallm/normistral-7b-warm"),
-        ModelSettings("norallm/normistral-11b-warm"),
+        # UNTRAINED_4bit ("normallm/normistral-7b"),
         ModelSettings("google/gemma-3-27b-it"),
         ModelSettings("deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"),
     ],

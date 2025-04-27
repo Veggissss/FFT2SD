@@ -43,7 +43,7 @@ class ModelLoader:
 
         # Use either a trained local model or a Hugging Face model
         if is_trained:
-            self.model_name = f"trained/{self.model_settings.__str__()}"
+            self.model_name = f"trained/{str(self.model_settings)}"
         else:
             self.model_name = self.model_settings.model_name
 

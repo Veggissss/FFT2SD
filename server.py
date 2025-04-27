@@ -97,45 +97,67 @@ def generate(
             print("ERROR: container count out of range!")
             return None
 
+    # Get the filled JSON for each container, 1 indexed
+    reports = []
+    for container_id_int in range(1, total_containers + 1):
+        report_json["value"] = report_type.value
+        glass_amount_json["value"] = total_containers
+        container_id_json["value"] = container_id_int
+
+        # Generate report for glass container_id_int
+        generated_report = generate_container(
+            input_text,
+            report_type,
+            str(container_id_int),
+            copy.deepcopy(metadata_json),
+            token_options,
+        )
+
+        reports.append(generated_report)
+
+    return reports
+
+
+def generate_container(
+    input_text: str,
+    report_type: ReportType,
+    container_id: str,
+    metadata_json: list[dict],
+    token_options: TokenOptions = None,
+) -> dict:
+    """Function to generate a single JSON for container_id."""
     # Load the generated JSON template based on the report type
     template_json: list[dict] = load_json(
         f"data_model/out/generated-{report_type.value}.json"
     )
 
-    # Get the filled JSON for each container, 1 indexed
-    reports = []
-    for container_id_int in range(1, total_containers + 1):
-        glass_amount_json["value"] = total_containers
-        report_json["value"] = report_type.value
-        container_id_json["value"] = container_id_int
-        generated_report = {
-            "input_text": input_text,
-            "target_json": [],
-            "metadata_json": copy.deepcopy(metadata_json),
-        }
+    generated_report = {
+        "input_text": input_text,
+        "target_json": [],
+        "metadata_json": metadata_json,
+    }
 
-        # Process the template in batches to handle large templates
-        batch_size = len(template_json)
-        for i in range(0, len(template_json), batch_size):
-            # Determine if caching should be used, only if the full template is used
-            report_type = report_type if batch_size == len(template_json) else None
-            template_batch = copy.deepcopy(template_json[i : i + batch_size])
+    # Process the template in batches to handle large templates
+    # NOTE: If the len is always template_json then this can be simplified, as it seems to be within memory limits
+    # For metadata/single queries it is important to set report_type to None
+    batch_size = len(template_json)
+    for i in range(0, len(template_json), batch_size):
+        # Determine if caching should be used, only if the full template is used
+        report_type = report_type if batch_size == len(template_json) else None
+        template_batch = copy.deepcopy(template_json[i : i + batch_size])
 
-            # Set the optional parameters for the token options
-            if token_options is None:
-                token_options = TokenOptions(report_type=report_type)
-            else:
-                token_options.report_type = report_type
+        # Set the optional parameters for the token options
+        if token_options is None:
+            token_options = TokenOptions(report_type=report_type)
+        else:
+            token_options.report_type = report_type
 
-            batch_filled = fill_json(
-                TemplateGeneration(input_text, str(container_id_int), template_batch),
-                TokenOptions(report_type=report_type),
-            )
-            generated_report["target_json"].extend(batch_filled)
-
-        reports.append(generated_report)
-
-    return reports
+        batch_filled = fill_json(
+            TemplateGeneration(input_text, container_id, template_batch),
+            token_options,
+        )
+        generated_report["target_json"].extend(batch_filled)
+    return generated_report
 
 
 @app.route("/models", methods=["GET"])
