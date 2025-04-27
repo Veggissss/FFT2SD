@@ -25,14 +25,11 @@ LABELED_IDS_PATH = "data/large_batch/labeled_ids.json"
 CORRECTED_OUT_DIR = "data/corrected/"
 
 
-def load_model(model_type: ModelType, model_index: int) -> str:
+def load_model(model_type: ModelType, model_index: int, is_trained: bool) -> str:
     """Function to load the specified LLM model based on type."""
-    # Only gemma and deepseek are untrained
-    is_trained = model_type != ModelType.DECODER or model_index < 3
-
     # Update the global model_loader variable
     global model_loader
-    model_loader = ModelLoader(model_type, model_index, is_trained=is_trained)
+    model_loader = ModelLoader(model_type, model_index, is_trained)
     model_loader.model.eval()
 
     return f"Loaded model: {model_loader.model_name} | {model_type}"
@@ -132,7 +129,7 @@ def generate(
 
 
 @app.route("/models", methods=["GET"])
-def get_models():
+def get_models_endpoint():
     """Endpoint to get all available models from the configuration."""
     # Convert ModelSettings objects to string lists for JSON serialization
     serialized_models = {}
@@ -146,6 +143,8 @@ def load_model_endpoint():
     """Endpoint to load the specified model based on type."""
     model_type_str: str | None = request.json.get("model_type")
     model_index: int | None = request.json.get("model_index")
+    is_trained: bool | None = request.json.get("is_trained")
+
     if model_index is None:
         return (jsonify({"error": "Model index is required"}), 400)
     if not model_type_str:
@@ -165,7 +164,12 @@ def load_model_endpoint():
             jsonify({"error": "Model index out of range"}),
             404,
         )
-    return jsonify({"message": load_model(model_type, model_index)})
+    if is_trained is None:
+        is_trained = False
+    # Encoder models needs to be trained
+    if model_type == ModelType.ENCODER:
+        is_trained = True
+    return jsonify({"message": load_model(model_type, model_index, is_trained)}), 200
 
 
 @app.route("/generate", methods=["POST"])
