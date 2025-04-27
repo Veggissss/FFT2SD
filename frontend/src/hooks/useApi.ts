@@ -20,7 +20,7 @@ const useApi = () => {
         return await response.json();
     }
 
-    const loadModel = async (modelType: string, modelIndex: number): Promise<JsonItem> => {
+    const loadModel = async (modelType: string, modelIndex: number, isTrained: boolean): Promise<JsonItem> => {
         setIsLoading(prev => ({ ...prev, loadModel: true }));
         try {
             const response = await fetch(`${apiBaseUrl}/load_model`, {
@@ -28,7 +28,7 @@ const useApi = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ model_type: modelType, model_index: modelIndex }),
+                body: JSON.stringify({ model_type: modelType, model_index: modelIndex, is_trained: isTrained }),
             });
             return await response.json();
         } finally {

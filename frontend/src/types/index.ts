@@ -72,9 +72,11 @@ export interface InputPanelProps {
 
 export interface ModelPanelProps {
     modelType: string;
+    onIsTrainedChange: (value: boolean) => void;
     onModelTypeChange: (value: string) => void;
     onModelSelectionChange: (index: number) => void;
     onLoadModel: () => void;
     index: number;
+    isTrained: boolean;
     isLoading: boolean;
 } 

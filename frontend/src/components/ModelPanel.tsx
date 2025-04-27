@@ -3,15 +3,15 @@ import '../styles/ModelPanel.css';
 import { useState } from 'react';
 import useApi from '../hooks/useApi';
 
-const ModelPanel = ({ modelType, onModelTypeChange, onModelSelectionChange, onLoadModel, index, isLoading }: ModelPanelProps) => {
+const ModelPanel = ({ modelType, onIsTrainedChange, onModelTypeChange, onModelSelectionChange, onLoadModel, isTrained, index, isLoading }: ModelPanelProps) => {
     const { getModels } = useApi();
-    const [models, setModels] = useState<ModelsJson>();
+    const [models, setModels] = useState<ModelsJson | null>(null);
     const handleGetModels = async () => {
         try {
             setModels(await getModels());
         } catch (error) {
             console.error('Error fetching models:', error);
-            return null;
+            setModels(null);
         }
     }
 
@@ -48,6 +48,20 @@ const ModelPanel = ({ modelType, onModelTypeChange, onModelSelectionChange, onLo
                     <option>Fetching models</option>
                 </select>
             )}
+            <br />
+            <div className="trained-checkbox">
+                <h4>Trained: </h4>
+                <label className="switch">
+                    <input
+                        type="checkbox"
+                        checked={isTrained}
+                        onChange={(e) => onIsTrainedChange(e.target.checked)}
+                        disabled={isLoading || modelType === "encoder"}
+                    />
+                    <span className="slider round"></span>
+                </label>
+            </div>
+            <br />
 
             <button
                 onClick={() => onLoadModel()}

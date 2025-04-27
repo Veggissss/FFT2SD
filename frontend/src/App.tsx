@@ -9,8 +9,9 @@ import './App.css';
 function App() {
     const [inputText, setInputText] = useState('');
     const [outputText, setOutputText] = useState('');
-    const [modelType, setModelType] = useState('encoder');
+    const [modelType, setModelType] = useState('decoder');
     const [selectedIndex, setSelectedIndex] = useState<number>(0);
+    const [isTrained, setIsTrained] = useState<boolean>(false);
 
     const [reportType, setReportType] = useState('auto');
     const [totalContainers, setTotalContainers] = useState<number | null>(null);
@@ -22,9 +23,24 @@ function App() {
     // API hooks
     const { isLoading, loadModel, generateReport, submitCorrection, getUnlabeled } = useApi();
 
+    const handleSetModelType = (type: string) => {
+        if (type === "encoder") {
+            setIsTrained(true);
+        }
+        setModelType(type);
+    }
+
+    const handleIsTrainedChange = (checked: boolean) => {
+        if (modelType === "encoder") {
+            setIsTrained(true);
+            return;
+        }
+        setIsTrained(checked);
+    }
+
     const handleLoadModel = async () => {
         try {
-            const data = await loadModel(modelType, selectedIndex);
+            const data = await loadModel(modelType, selectedIndex, isTrained);
             console.log(data);
         } catch (error) {
             alert('Error loading model. Please try again.');
@@ -179,9 +195,11 @@ function App() {
 
             <ModelPanel
                 modelType={modelType}
-                onModelTypeChange={setModelType}
+                onModelTypeChange={handleSetModelType}
                 onModelSelectionChange={setSelectedIndex}
                 onLoadModel={handleLoadModel}
+                onIsTrainedChange={handleIsTrainedChange}
+                isTrained={isTrained}
                 index={selectedIndex}
                 isLoading={isLoading.loadModel}
             />
