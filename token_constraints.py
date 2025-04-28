@@ -64,6 +64,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         super().__init__()
         self.tokenizer = tokenizer
         self.allowed_token_ids_list = allowed_token_ids_list
+        self.state = {}
 
         # Set token options or default values
         if token_options is not None:
@@ -73,29 +74,24 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
             self.generate_strings = False
             self.reduce_null_bias = 0.0
 
-        self.state = {}
-
-        # Define the token IDs for the expected pattern and json
-        self.value_token_id = tokenizer.convert_tokens_to_ids("value")
-        self.colon_token_id = tokenizer.convert_tokens_to_ids(":")
-        self.null_token_id = tokenizer.convert_tokens_to_ids("null")
+        # (All values will be forced as strings and converted to the correct type later)
+        self.quote_token_id = tokenizer.convert_tokens_to_ids('"')
         self.bracket_end_token_id = tokenizer.convert_tokens_to_ids("}")
 
-        # Define quotes that are used in the json string
-        # (All values will be forced as strings and converted to the correct type later)
-        quote_token_id = tokenizer.convert_tokens_to_ids('"')
-        quote2_token_id = tokenizer.convert_tokens_to_ids(' "')
-        self.quote_tokens = [quote_token_id]
-        if quote2_token_id != tokenizer.unk_token_id:
-            self.quote_tokens.append(quote2_token_id)
+        if self.quote_token_id == self.tokenizer.unk_token_id:
+            raise ValueError("Quote token ID is not valid!")
+        if self.bracket_end_token_id == self.tokenizer.unk_token_id:
+            raise ValueError("Bracket end token ID is not valid!")
 
     def _is_value_pattern_found(self, input_ids: torch.LongTensor) -> bool:
         """Check if the "value": pattern is detected in recent tokens"""
         recent_tokens_ids = input_ids[:, -5:].tolist()
         last_items = [sublist[-1] for sublist in recent_tokens_ids]
+        last_items_str = self.tokenizer.decode(last_items, skip_special_tokens=False)
 
-        return self.colon_token_id in last_items and any(
-            self.value_token_id in batch_list for batch_list in recent_tokens_ids
+        return ":" in last_items_str and any(
+            "value" in self.tokenizer.decode(batch_list, skip_special_tokens=False)
+            for batch_list in recent_tokens_ids
         )
 
     def _is_string_type_enabled(self, batch_index: int) -> bool:
@@ -117,25 +113,37 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         allowed_token_ids = []
         last_token_id = last_token_ids[-1]
         # If the last token is not a quote, check for sub-tokens
-        if last_token_id not in self.quote_tokens:
-            # Only get the generated value tokens without quotes
-            if any(quote_id in last_token_ids for quote_id in self.quote_tokens):
-                quote_index = max(
-                    i
-                    for i, token_id in enumerate(last_token_ids)
-                    if token_id in self.quote_tokens
+        if last_token_id is not self.quote_token_id:
+            if self.quote_token_id in last_token_ids:
+                # Reverse the list to find and find the last quote token index
+                quote_index = len(last_token_ids) - last_token_ids[::-1].index(
+                    self.quote_token_id
                 )
-                # Extract only tokens after the quote
-                last_token_ids = last_token_ids[quote_index + 1 :]
+                # Only get the generated value tokens without quotes
+                last_token_ids = last_token_ids[quote_index:]
 
             sub_token_ids = self._get_next_subtokens(batch_index, last_token_ids)
             if len(sub_token_ids) > 0:
+                # If a complete token has been generated, allow quotes
+                for token in self.allowed_token_ids_list[batch_index]:
+                    if isinstance(token, list):
+                        continue
+                    if token in last_token_ids:
+                        allowed_token_ids.append(self.quote_token_id)
+                        self.state[batch_index] = GenerationState.GENERATING_VALUE
+                        break
+
                 allowed_token_ids.extend(sub_token_ids)
             else:
                 # If a value has been generated and no sub token is found, only allow quotes next and then the end bracket token
-                allowed_token_ids = self.quote_tokens
+                allowed_token_ids = [self.quote_token_id]
                 self.state[batch_index] = GenerationState.AWAIT_BRACKET_END
         else:
+            # If a complete token is found and a closing quote is generated, allow the end bracket token
+            if self.state[batch_index] == GenerationState.GENERATING_VALUE:
+                allowed_token_ids = [self.bracket_end_token_id]
+                self.state[batch_index] = None
+
             # Allow first tokens in sub-token sequences and all other "full" tokens
             for item in self.allowed_token_ids_list[batch_index]:
                 if isinstance(item, list):
@@ -178,11 +186,12 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         input_ids [batch_size, sequence_length]
         scores shape [batch_size, config.vocab_size]
         """
-        batch_size = scores.shape[0]
-
         # Decrease preference for null token
-        scores[:, self.null_token_id] -= self.reduce_null_bias
+        if self.reduce_null_bias > 0.0:
+            null_token_id = self.tokenizer.encode("null", add_special_tokens=False)[0]
+            scores[:, null_token_id] -= self.reduce_null_bias
 
+        batch_size = scores.shape[0]
         for i in range(batch_size):
             if i not in self.state:
                 self.state[i] = GenerationState.WAITING
@@ -199,8 +208,8 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
 
                     # Generate first quote token and wait for value
                     self.state[i] = GenerationState.AWAIT_VALUE
-                    scores[i] = add_score_mask(scores[i], self.quote_tokens)
-                case GenerationState.AWAIT_VALUE:
+                    scores[i] = add_score_mask(scores[i], [self.quote_token_id])
+                case GenerationState.AWAIT_VALUE | GenerationState.GENERATING_VALUE:
                     # Allow unrestricted tokens for string type when enabled
                     if self._is_string_type_enabled(i):
                         continue

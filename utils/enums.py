@@ -53,4 +53,5 @@ class GenerationState(Enum):
 
     WAITING = 0
     AWAIT_VALUE = 1
-    AWAIT_BRACKET_END = 2
+    GENERATING_VALUE = 2
+    AWAIT_BRACKET_END = 3
