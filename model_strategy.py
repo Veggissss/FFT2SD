@@ -203,10 +203,23 @@ class EncoderDecoderStrategy(BaseModelStrategy):
         )
         stopping_criteria = StoppingCriteriaList([StopOnToken(self.tokenizer, "}")])
 
+        # Add start tokens for the decoder to speed up generation and allow untrained models to work with constrained tokens
+        start_tokens = []
+        for token in ["{", '"', "value", '"', ":"]:
+            token_ids = model_loader.tokenizer(
+                token, add_special_tokens=False
+            ).input_ids
+            start_tokens.extend(token_ids)
+        start_tokens = torch.tensor(start_tokens).to(model_loader.device)
+
+        # Make start tokens match the batch size
+        start_tokens = start_tokens.expand(inputs["input_ids"].shape[0], -1)
+
         output_ids = model_loader.model.generate(
             input_ids=inputs["input_ids"],
             attention_mask=inputs["attention_mask"],
             max_new_tokens=amount_new_tokens,
+            decoder_input_ids=start_tokens,
             logits_processor=logits_processor,
             stopping_criteria=stopping_criteria,
         )
