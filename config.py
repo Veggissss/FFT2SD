@@ -43,11 +43,11 @@ Parameters:
 - template_json: The JSON template to fill in.
 """
 SYSTEM_PROMPT = (
-    "Gitt teksten: {input_text}."
-    + "\nGlass nummer {container_id}."
-    + '\nFyll ut den manglede verdien for JSON feltet "value": '
-    + JSON_START_MARKER
-    + "\n{template_json}"
+    "Gitt teksten:\n{input_text}\n\n"
+    'Fyll ut feltet "value" basert på beskrivelsen av glass nummer {container_id}.\n'
+    'Hvis det ikke finnes en gyldig verdi, sett "value" til null.\n'
+    f"{JSON_START_MARKER}\n"
+    "{template_json}"
 )
 
 """

@@ -14,9 +14,7 @@ from utils.enums import ModelType, GenerationState
 def test_allowed_tokens_enum():
     test_enums = ["Hello", "World", "Test", "59jfa9fjFJFj29", "null"]
     test_tokens = [AddedToken(enum, single_word=True) for enum in test_enums]
-    tokenizer = AutoTokenizer.from_pretrained(
-        MODELS_DICT[ModelType.ENCODER][0].__str__()
-    )
+    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
     tokenizer.add_tokens(test_tokens)
     allowed_token_ids = get_allowed_tokens(tokenizer, "enum", test_enums)
 
@@ -29,9 +27,7 @@ def test_allowed_tokens_enum():
 
 def test_allowed_tokens_boolean():
     test_booleans = ["true", "false", "null"]
-    tokenizer = AutoTokenizer.from_pretrained(
-        MODELS_DICT[ModelType.ENCODER][0].__str__()
-    )
+    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
     tokenizer.add_tokens(test_booleans)
     allowed_token_ids = get_allowed_tokens(tokenizer, "boolean")
 
@@ -45,9 +41,7 @@ def test_allowed_tokens_boolean():
 def test_allowed_tokens_int():
     test_ints = ["1", "2", "3", "99", "null"]
     test_invalid_ints = ["100", "1000", "994"]
-    tokenizer = AutoTokenizer.from_pretrained(
-        MODELS_DICT[ModelType.ENCODER][0].__str__()
-    )
+    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
     tokenizer.add_tokens(test_ints)
     tokenizer.add_tokens(test_invalid_ints)
     allowed_token_ids = get_allowed_tokens(tokenizer, "int")
@@ -64,9 +58,7 @@ def test_allowed_tokens_int():
 
 
 def test_stop_on_token_call():
-    tokenizer = AutoTokenizer.from_pretrained(
-        MODELS_DICT[ModelType.ENCODER][0].__str__()
-    )
+    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
     stop_token = "}"
     stop_token_id = tokenizer.convert_tokens_to_ids(stop_token)
     stop_criteria = StopOnToken(tokenizer, stop_token)
@@ -93,9 +85,7 @@ def test_stop_on_token_call():
 
 
 def test_token_constraint_per_sequence():
-    tokenizer = AutoTokenizer.from_pretrained(
-        MODELS_DICT[ModelType.ENCODER][0].__str__()
-    )
+    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
     true_token_id = tokenizer.convert_tokens_to_ids("true")
     false_token_id = tokenizer.convert_tokens_to_ids("false")
 
@@ -107,8 +97,8 @@ def test_token_constraint_per_sequence():
     processor = TokenTypeConstraintProcessor(tokenizer, allowed_token_ids_list)
 
     # Mock input_ids and scores
-    value_token_id = processor.value_token_id
-    colon_token_id = processor.colon_token_id
+    value_token_id = tokenizer.encode("value", add_special_tokens=False)[0]
+    colon_token_id = tokenizer.convert_tokens_to_ids(":")
 
     # Create input_ids with "value" and ":" tokens
     input_ids = torch.tensor(
@@ -131,16 +121,14 @@ def test_token_constraint_per_sequence():
     # Check that scores are modified to only allow quote tokens
     for i in range(batch_size):
         for j in range(vocab_size):
-            if j in processor.quote_tokens:
+            if j == processor.quote_token_id:
                 assert new_scores[i][j] == original_scores[i][j]
             else:
                 assert new_scores[i][j] == float("-inf") + original_scores[i][j]
 
 
 def test_token_constraint_full_flow():
-    tokenizer = AutoTokenizer.from_pretrained(
-        MODELS_DICT[ModelType.ENCODER][0].__str__()
-    )
+    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
     true_token_id = tokenizer.convert_tokens_to_ids("true")
     false_token_id = tokenizer.convert_tokens_to_ids("false")
 
@@ -149,18 +137,19 @@ def test_token_constraint_full_flow():
     processor = TokenTypeConstraintProcessor(tokenizer, allowed_token_ids_list)
 
     # Find token IDs for test
-    value_token_id = processor.value_token_id
-    colon_token_id = processor.colon_token_id
-    quote_token_id = processor.quote_tokens[0]
+    value_token_id = tokenizer.encode("value", add_special_tokens=False)[0]
+    null_token_id = tokenizer.convert_tokens_to_ids("null")
+    colon_token_id = tokenizer.convert_tokens_to_ids(":")
+    quote_token_id = processor.quote_token_id
     vocab_size = tokenizer.vocab_size
     scores = torch.randn(1, vocab_size)
 
-    # Initial state (WAITING)
+    # Initial state (WAITING->AWAITING_VALUE)
     input_ids = torch.tensor([[1, 2, value_token_id, 4, colon_token_id]])
     new_scores = processor(input_ids, scores.clone())
     assert processor.state[0] == GenerationState.AWAIT_VALUE
 
-    # After first quote (AWAITING_QUOTE)
+    # After first quote (AWAITING_VALUE)
     input_ids = torch.tensor(
         [[1, 2, value_token_id, 4, colon_token_id, quote_token_id]]
     )
@@ -169,7 +158,7 @@ def test_token_constraint_full_flow():
 
     # Check that only allowed tokens have valid scores
     for token_id in range(vocab_size):
-        if token_id in [true_token_id, false_token_id, processor.null_token_id]:
+        if token_id in [true_token_id, false_token_id, null_token_id]:
             assert new_scores[0][token_id] > float("-inf")
         else:
             assert new_scores[0][token_id] == float("-inf") + scores[0][token_id]
@@ -183,7 +172,7 @@ def test_token_constraint_full_flow():
 
     # Check that only quote tokens have valid scores
     for token_id in range(vocab_size):
-        if token_id in processor.quote_tokens:
+        if token_id == quote_token_id:
             assert new_scores[0][token_id] > float("-inf")
         else:
             assert new_scores[0][token_id] == float("-inf") + scores[0][token_id]

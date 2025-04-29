@@ -96,6 +96,7 @@ def visualize(
     output_dir: Path = Path("./figures/eval"),
     results_path: Path = Path("./eval_results.json"),
     ignore_strings: bool = True,
+    included_model_names: list[str] = None,
 ):
     """
     Loads evaluation results and visualizes:
@@ -111,6 +112,15 @@ def visualize(
     results = [
         entry for entry in results if entry.get("model_type") == model_type.value
     ]
+
+    # Filter out other model names if specified
+    if included_model_names:
+        results = [
+            entry
+            for entry in results
+            if entry.get("model_name") in included_model_names
+        ]
+
     df = pd.DataFrame(results)
 
     # Accuracy by Report Type

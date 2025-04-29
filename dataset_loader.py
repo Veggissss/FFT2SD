@@ -11,7 +11,7 @@ from config import (
 
 
 def create_dataset(
-    dataset_path: str, model_type: ModelType, include_enums: bool
+    dataset_path: str, model_type: ModelType, include_enums: bool = False
 ) -> tuple[Dataset, list]:
     """
     Create a Hugging Face Dataset from the labeled JSON files in the dataset path.
@@ -29,13 +29,14 @@ def create_dataset(
         dataset_dict["input"].extend(processed_data["input"])
         dataset_dict["output"].extend(processed_data["output"])
 
-    for filename in filter(
-        lambda f: f.endswith(".json"), os.listdir(DATA_MODEL_OUTPUT_FOLDER)
-    ):
-        file_path = os.path.join(DATA_MODEL_OUTPUT_FOLDER, filename)
-        processed_data = process_enum_file(file_path, model_type, include_enums)
-        dataset_dict["input"].extend(processed_data["input"])
-        dataset_dict["output"].extend(processed_data["output"])
+    if not include_enums:
+        for filename in filter(
+            lambda f: f.endswith(".json"), os.listdir(DATA_MODEL_OUTPUT_FOLDER)
+        ):
+            file_path = os.path.join(DATA_MODEL_OUTPUT_FOLDER, filename)
+            processed_data = process_enum_file(file_path, model_type)
+            dataset_dict["input"].extend(processed_data["input"])
+            dataset_dict["output"].extend(processed_data["output"])
 
     return Dataset.from_dict(dataset_dict), enums
 
@@ -130,9 +131,7 @@ def add_prompt_entry(
     dataset_dict["output"].append(target_text)
 
 
-def process_enum_file(
-    file_path: str, model_type: ModelType, include_enums: bool
-) -> dict:
+def process_enum_file(file_path: str, model_type: ModelType) -> dict:
     """
     Process a single JSON file to extract enum-based dataset entries.
     """
@@ -157,11 +156,10 @@ def process_enum_file(
 
             correct_enum = enum_dict["value"]
 
-            if not include_enums:
-                if "enum" in template_entry:
-                    del template_entry["enum"]
-                if "enum" in target_entry:
-                    del target_entry["enum"]
+            if "enum" in template_entry:
+                del template_entry["enum"]
+            if "enum" in target_entry:
+                del target_entry["enum"]
 
             add_prompt_entry(
                 dataset_entries,
