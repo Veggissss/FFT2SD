@@ -23,6 +23,8 @@ def evaluate(
     Runs evaluation on all labeled JSON files
     Saves per-file metrics to a JSON file for each model_type.
     """
+    if server.model_loader:
+        server.model_loader.unload_model()
     server.model_loader = ModelLoader(model_type, model_index, is_trained)
 
     files = list(data_dir.glob("*.json"))
@@ -108,7 +110,7 @@ def visualize(
     if ignore_strings:
         results = [entry for entry in results if entry.get("type") != "string"]
 
-    # Filter out other model sizes
+    # Filter out other model types
     results = [
         entry for entry in results if entry.get("model_type") == model_type.value
     ]
@@ -186,30 +188,75 @@ def visualize(
 
 
 if __name__ == "__main__":
-    TEST_SMALLEST_ONLY = True
     for m_type in ModelType:
         token_options = TokenOptions()
         token_options.include_enums = m_type == ModelType.DECODER
-        if TEST_SMALLEST_ONLY:
-            # Test with small models
-            evaluate(
-                model_type=m_type,
-                model_index=0,
-                is_trained=True,
-                token_options=token_options,
-            )
-            continue
+        # token_options.generate_strings = True
 
         # Test all models
         for i, model_setting in enumerate(MODELS_DICT[m_type]):
-            is_trained = (
-                m_type != ModelType.DECODER or "norallm" in model_setting.model_name
-            )
+            # All decoder models are evaluated untrained (0-shot), the rest are trained
             evaluate(
                 model_type=m_type,
                 model_index=i,
-                is_trained=is_trained,  # Only gemma and deepseek are not trained
+                is_trained=m_type != ModelType.DECODER,
+                token_options=token_options,
             )
 
-    for m_type in ModelType:
-        visualize(model_type=m_type, ignore_strings=True)
+            # Evaluate trained decoder norallm models as well
+            if "norallm" in model_setting.model_name:
+                evaluate(
+                    model_type=m_type,
+                    model_index=i,
+                    is_trained=True,
+                    token_options=token_options,
+                )
+
+    # Trained Encoder
+    visualize(
+        model_type=ModelType.ENCODER,
+        ignore_strings=True,
+        included_model_names=[
+            "trained/ltg/norbert3-small",
+            "trained/ltg/norbert3-base",
+            "trained/ltg/norbert3-large",
+        ],
+        output_dir=Path("./figures/eval/encoder"),
+    )
+
+    # Trained Encoder-Decoder models
+    visualize(
+        model_type=ModelType.ENCODER_DECODER,
+        ignore_strings=True,
+        included_model_names=[
+            "trained/ltg/nort5-small",
+            "trained/ltg/nort5-base",
+            "trained/ltg/nort5-large",
+        ],
+        output_dir=Path("./figures/eval/encoder_decoder"),
+    )
+
+    # Trained Small decoder models and all its variants tained and untrained with/without 4bit quantization
+    visualize(
+        model_type=ModelType.DECODER,
+        ignore_strings=True,
+        included_model_names=[
+            "norallm/normistral-7b-warm_4bit_quant",
+            "norallm/normistral-7b-warm",
+            "trained/norallm/normistral-7b-warm_4bit_quant",
+            "trained/norallm/normistral-7b-warm",
+        ],
+        output_dir=Path("./figures/eval/decoder"),
+    )
+
+    # 0 shot test for larger untrained decoder models
+    visualize(
+        model_type=ModelType.DECODER,
+        ignore_strings=True,
+        included_model_names=[
+            "norallm/normistral-7b-warm",
+            "google/gemma-3-27b-it",
+            "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+        ],
+        output_dir=Path("./figures/eval/0_shot"),
+    )
