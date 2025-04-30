@@ -52,8 +52,18 @@ master-project.wip.exe.zip.lib.rar
     - [*Flask*](https://pypi.org/project/Flask/)
 
 ### Installation:
-1. [Install torch](https://pytorch.org/get-started/locally/), preferably CUDA for GPU support.
-2. `pip install -r requirements.txt` for rest of dependencies
+
+Setup virtual env
+1. `python -m venv venv`
+
+    a. `venv\Scripts\activate` for Windows
+    
+    b. `source venv/bin/activate` for Unix
+
+Install dependencies
+
+2. `pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu118` for CUDA for GPU support. Newer/other CUDA versions: `https://pytorch.org/get-started/locally/`.
+
 
 ## Structured Data Model
 The data model is based upon the [strukturert-rekvisisjon-og-svarrapport-for-patologirapportering-0.76.xlsx](https://www.kreftregisteret.no/globalassets/tarmkreftscreening/dokumenter/kvalitetsmanualen/vedlegg/strukturert-rekvisisjon-og-svarrapport-for-patologirapportering-0.76.xlsx) spreadsheet. 
