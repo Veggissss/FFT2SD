@@ -16,7 +16,6 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
     ModelType.DECODER: [
         ModelSettings("norallm/normistral-7b-warm", use_4bit_quant=True),
         ModelSettings("norallm/normistral-7b-warm"),
-        # UNTRAINED_4bit ("normallm/normistral-7b"),
         ModelSettings("google/gemma-3-27b-it"),
         ModelSettings("deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"),
     ],
@@ -26,7 +25,7 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
 DATA_MODEL_OUTPUT_FOLDER = "data_model/out"
 
 # Print out contstrained token probabilities and other debug information
-DEBUG_MODE_ENABLED = True
+DEBUG_MODE_ENABLED = True  # TODO: Add propper logging
 
 """
 Mark the end of the model prompt and before the template JSON in the prompt.

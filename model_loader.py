@@ -74,11 +74,21 @@ class ModelLoader:
         Returns:
             list[dict]: A list of filled JSON objects based on the input text and template.
         """
-        if not token_options.include_enums:
-            # Remove enum field from prompt to save tokens
+        if token_options.include_enums:
+            # Remove group field from enum (if excists) to save tokens
             for template_entry in generation.template_json:
                 if "enum" in template_entry:
-                    template_entry.pop("enum")
+                    for enum_entry in template_entry["enum"]:
+                        if "group" in enum_entry:
+                            del enum_entry["group"]
+                            continue
+                        # Exit early if group field is not found
+                        break
+        else:
+            # Remove whole enum field from prompt to save tokens
+            for template_entry in generation.template_json:
+                if "enum" in template_entry:
+                    del template_entry["enum"]
 
         # Convert JSON template to a string to include in the prompt.
         prompts = []
@@ -127,3 +137,23 @@ class ModelLoader:
         return self.strategy.outputs_to_json(
             output_texts, generation.original_template_json
         )
+
+    def unload_model(self) -> None:
+        """
+        Unload the model from memory.
+        """
+        if hasattr(self, "model"):
+            # Move model to CPU and delete it
+            self.model.to("cpu")
+            del self.model
+
+            # Clear PEFT adapters
+            if hasattr(self, "peft_model"):
+                print("Unloading PEFT model...")
+                del self.peft_model
+
+            # Clear CUDA cache
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+            print(f"Model unloaded: {self.model_name}")

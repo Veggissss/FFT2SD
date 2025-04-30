@@ -11,7 +11,8 @@ const ModelPanel = ({ modelType, onIsTrainedChange, onModelTypeChange, onModelSe
             setModels(await getModels());
         } catch (error) {
             console.error('Error fetching models:', error);
-            setModels(null);
+            // Retry fetching models on error
+            handleGetModels();
         }
     }
 

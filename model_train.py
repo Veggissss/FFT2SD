@@ -205,12 +205,15 @@ def train(model_type: ModelType, model_index: int) -> None:
     # Train/Fine-tune and save the model.
     train_model(model_loader, tokenized_dataset, output_dir, training_args)
 
+    # Unload the model
+    model_loader.unload_model()
+
 
 if __name__ == "__main__":
     # Train all model types and sizes
     for m_type in ModelType:
         for i in range(len(MODELS_DICT[m_type])):
-            if i >= 3:
+            if i >= 2:
                 break
             train(m_type, i)
 

@@ -17,7 +17,7 @@ app = Flask(__name__)
 CORS(app, origins="*")
 
 # Global variable to store the loaded model
-model_loader = None
+model_loader: ModelLoader = None
 
 # Unlabeled dataset path
 UNLABELED_BATCH_PATH = "data/large_batch/export_2025-03-17.json"
@@ -29,6 +29,9 @@ def load_model(model_type: ModelType, model_index: int, is_trained: bool) -> str
     """Function to load the specified LLM model based on type."""
     # Update the global model_loader variable
     global model_loader
+    if model_loader:
+        model_loader.unload_model()
+
     model_loader = ModelLoader(model_type, model_index, is_trained)
     model_loader.model.eval()
 
@@ -289,7 +292,7 @@ def correct_endpoint(report_id: str):
                 ),
                 None,
             )
-            # Hacky way to detect if the report is a diagnose since its the same report_type/data model
+            # NOTE: Hacky way to detect if the report is a diagnose since its the same report_type/data model
             # Manually labeling diagnose for a case and then a microscopisk would result in a mislabeling of filenames
             # Correcting this would mean changing the json itself and updating it before storing which is not ideal either
             if count > total_glass_amount:
