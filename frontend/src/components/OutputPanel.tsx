@@ -6,7 +6,9 @@ import '../styles/OutputPanel.css';
 const OutputPanel = ({
     reportId,
     useFormInput,
-    onToggleChange,
+    includeEnums,
+    onToggleFormChange,
+    onToggleEnumsChange,
     outputText,
     onOutputChange,
     currentItem,
@@ -23,27 +25,40 @@ const OutputPanel = ({
     return (
         <div className="right-panel">
             <div className="editor-toggle">
-                <h4>Form Input: </h4>
-                <label className="switch">
-                    <input
-                        type="checkbox"
-                        checked={useFormInput}
-                        onChange={(e) => onToggleChange(e.target.checked)}
-                        disabled={isLoading.correct}
-                    />
-                    <span className="slider round"></span>
-                </label>
-                <div
-                    className="report-id"
-                    onClick={onClearReportId}
-                    style={{ cursor: reportId ? 'pointer' : 'default' }}
-                    title={reportId ? "Click to clear report ID" : ""}
-                >
+                <div>
+                    <h4>Form Input: </h4>
+                    <label className="switch">
+                        <input
+                            type="checkbox"
+                            checked={useFormInput}
+                            onChange={(e) => onToggleFormChange(e.target.checked)}
+                            disabled={isLoading.correct}
+                        />
+                        <span className="slider round"></span>
+                    </label>
+                </div>
+                <div>
+                    <h4>Include enums: </h4>
+                    <label className="switch">
+                        <input
+                            type="checkbox"
+                            checked={includeEnums}
+                            onChange={(e) => onToggleEnumsChange(e.target.checked)}
+                            disabled={isLoading.correct}
+                        />
+                        <span className="slider round"></span>
+                    </label>
+                </div>
+                <div>
+                    <h4>ID: </h4>
                     {reportId ? (
-                        <div>
-                            ID: {reportId} ❌
-                        </div>
-                    ) : ""}
+                        <a
+                            onClick={onClearReportId}
+                            style={{ cursor: reportId ? 'pointer' : 'default' }}
+                            title={reportId ? "Click to clear report ID" : ""}>
+                            {reportId} ❌
+                        </a>
+                    ) : "N/A"}
                 </div>
             </div>
             <div className="editor-container">

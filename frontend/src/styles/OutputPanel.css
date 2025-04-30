@@ -14,11 +14,7 @@
 .editor-toggle {
     margin-bottom: 0.5rem;
     display: flex;
-    align-items: center;
-}
-
-.report-id {
-    margin-left: auto;
+    justify-content: space-around;
 }
 
 .switch {

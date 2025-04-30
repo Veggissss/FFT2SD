@@ -39,7 +39,8 @@ const useApi = () => {
     const generateReport = async (
         inputText: string,
         reportType: string,
-        totalContainers: number | null
+        totalContainers: number | null,
+        includeEnums: boolean,
     ): Promise<JsonItem[]> => {
         setIsLoading(prev => ({ ...prev, generate: true }));
         try {
@@ -51,7 +52,8 @@ const useApi = () => {
                 body: JSON.stringify({
                     input_text: inputText,
                     report_type: reportType,
-                    total_containers: totalContainers
+                    total_containers: totalContainers,
+                    include_enums: includeEnums,
                 }),
             });
             return await response.json();

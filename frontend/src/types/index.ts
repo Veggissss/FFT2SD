@@ -37,7 +37,9 @@ export interface LoadingState {
 export interface OutputPanelProps {
     reportId: string | null;
     useFormInput: boolean;
-    onToggleChange: (checked: boolean) => void;
+    onToggleFormChange: (checked: boolean) => void;
+    onToggleEnumsChange: (checked: boolean) => void;
+    includeEnums: boolean;
     outputText: string;
     onOutputChange: (value: string | undefined) => void;
     currentItem: JsonItem | null;

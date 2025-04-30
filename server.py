@@ -227,7 +227,9 @@ def generate_endpoint():
 
     # Set custom token options
     token_options = TokenOptions()
-    token_options.include_enums = model_loader.model_type == ModelType.DECODER
+    include_enums: bool | None = request.json.get("include_enums")
+    if include_enums is not None:
+        token_options.include_enums = include_enums
     # token_options.generate_strings = False
 
     reports = generate(input_text, report_type, total_containers, token_options)

@@ -18,6 +18,7 @@ function App() {
     const [jsonList, setJsonList] = useState<JsonItem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [useFormInput, setUseFormInput] = useState(false);
+    const [includeEnums, setIncludeEnums] = useState(true);
     const [reportId, setReportId] = useState<string | null>(null)
 
     // API hooks
@@ -50,7 +51,7 @@ function App() {
     const handleGenerate = async () => {
         try {
             const reportTypeToUse = reportType === "diagnose" ? "mikroskopisk" : reportType;
-            const data = await generateReport(inputText, reportTypeToUse, totalContainers);
+            const data = await generateReport(inputText, reportTypeToUse, totalContainers, includeEnums);
             if (reportType === 'auto') {
                 setJsonList([]);
             }
@@ -153,7 +154,7 @@ function App() {
         }
     }
 
-    const handleToggleChange = (checked: boolean) => {
+    const handleToggleFormChange = (checked: boolean) => {
         if (!checked) {
             setUseFormInput(false);
         } else {
@@ -169,6 +170,10 @@ function App() {
             }
         }
     };
+
+    const handleToggleEnumsChange = (checked: boolean) => {
+        setIncludeEnums(checked);
+    }
 
     const handleFieldChange = (index: number, newValue: string | number | boolean | null) => {
         const updatedJsonList = [...jsonList];
@@ -221,7 +226,9 @@ function App() {
                 <OutputPanel
                     reportId={reportId}
                     useFormInput={useFormInput}
-                    onToggleChange={handleToggleChange}
+                    onToggleFormChange={handleToggleFormChange}
+                    includeEnums={includeEnums}
+                    onToggleEnumsChange={handleToggleEnumsChange}
                     outputText={outputText}
                     onOutputChange={handleOutputChange}
                     currentItem={jsonList[currentIndex]}
