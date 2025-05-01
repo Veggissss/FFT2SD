@@ -233,6 +233,7 @@ def generate_endpoint():
     include_enums: bool | None = request.json.get("include_enums")
     if include_enums is not None:
         token_options.include_enums = include_enums
+    # token_options.reduce_null_bias = 0.8
     # token_options.generate_strings = False
 
     reports = generate(input_text, report_type, total_containers, token_options)
@@ -367,7 +368,10 @@ def unlabeled_endpoint(text_type_str: str):
                         break
 
                 # Check for unlabeled diagnose as special case
-                if not labeled_info.get(DatasetField.DIAGNOSE.value, False):
+                if (
+                    not labeled_info.get(DatasetField.DIAGNOSE.value, False)
+                    and report_type is None
+                ):
                     report_type = ReportType.MIKROSKOPISK
                     field_map[report_type] = DatasetField.DIAGNOSE.value
                     is_diagnose = True
@@ -392,7 +396,7 @@ def unlabeled_endpoint(text_type_str: str):
                     }
                 )
 
-    # No suitable unlabeled cases found
+    # No unlabeled cases found
     return jsonify({"error": "No unlabeled cases found!"}), 404
 
 

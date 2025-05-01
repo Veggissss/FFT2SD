@@ -82,7 +82,7 @@ const FormEditor = ({ targetJson, onFieldChange }: FormEditorProps) => {
                         {item.type === 'enum' ? (
                             <select
                                 value={item.value as string || ''}
-                                onChange={(e) => onFieldChange(index, e.target.value)}
+                                onChange={(e) => onFieldChange(index, e.target.value !== '' ? e.target.value : null)}
                             >
                                 <option value="">Select an option</option>
                                 {item.enum?.map((option, optIndex) => (

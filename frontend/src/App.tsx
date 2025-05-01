@@ -28,6 +28,7 @@ function App() {
         if (type === "encoder") {
             setIsTrained(true);
         }
+        setIncludeEnums(type === "decoder");
         setModelType(type);
     }
 
@@ -113,7 +114,7 @@ function App() {
             setJsonList(updatedJsonList);
 
             const data = await submitCorrection(updatedJsonList, reportId);
-            setOutputText(JSON.stringify(data, null, 2));
+            console.log(data);
 
             // Automatically set next report type
             if (reportType === "klinisk") {

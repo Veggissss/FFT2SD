@@ -43,8 +43,9 @@ Parameters:
 """
 SYSTEM_PROMPT = (
     "Gitt teksten:\n{input_text}\n\n"
-    'Fyll ut feltet "value" basert på beskrivelsen av glass nummer {container_id}.\n'
-    'Hvis det ikke finnes en gyldig verdi, sett "value" til null.\n'
+    "Finn informasjon om glass nummer {container_id}.\n"
+    'Fyll ut feltet "value" basert på denne informasjonen.\n'
+    'Hvis det ikke finnes en gyldig verdi, sett "value" til null.\n\n'
     f"{JSON_START_MARKER}\n"
     "{template_json}"
 )
