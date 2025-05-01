@@ -261,48 +261,55 @@ def correct_endpoint(report_id: str):
 
     # Save every JSON in the list as a separate file
     last_type = None
-    count = 1
+    is_diagnose = False
+    is_type_changed = False
     for report in reports:
+        # Verify metadata_json structure
+        if not report["metadata_json"] or len(report["metadata_json"]) < 3:
+            return jsonify({"error": "Invalid report format"}), 400
+        for item in report["metadata_json"]:
+            if "value" not in item:
+                return jsonify({"error": "Invalid report format"}), 400
+
+        # Extract metadata values
         report_type_str: str = report["metadata_json"][0]["value"]
         total_glass_amount: int = report["metadata_json"][1]["value"]
+        container_id: int = report["metadata_json"][2]["value"]
 
-        count = count + 1 if last_type == report_type_str else 1
-        last_type = report_type_str
+        if is_type_changed:
+            is_type_changed = False
+            # If the count the glass count is finished, but the report type is the same, its a diagnose text
+            if last_type == report_type_str:
+                is_diagnose = True
+            last_type = report_type_str
+
+        # Flag that the report type has changed
+        if container_id == total_glass_amount:
+            is_type_changed = True
 
         # Verify if the report type is valid
         if report_type_str not in ReportType.get_enum_map():
             return jsonify({"error": "Invalid report type"}), 400
-        path = f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_{count}.json"
 
-        if os.path.exists(path):
-            # See if file contains the same data
-            duplicate_json = load_json(path)
-            if duplicate_json.get("input_text") == report.get("input_text"):
-                continue
-
-            # Save the new 'diagnose' JSON with a different name
-            path = f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_diag_{count}.json"
+        if is_diagnose:
+            path = f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_diag_{container_id}.json"
             labeled_type = DatasetField.DIAGNOSE.value
         else:
+            path = (
+                f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_{container_id}.json"
+            )
             # Find the matching report type in the DatasetField enum
             labeled_type = next(
                 (
                     member.value
                     for member in DatasetField
-                    if report_type_str in member.name.lower()
+                    if report_type_str.upper() in member.name
                 ),
                 None,
             )
-            # NOTE: Hacky way to detect if the report is a diagnose since its the same report_type/data model
-            # Manually labeling diagnose for a case and then a microscopisk would result in a mislabeling of filenames
-            # Correcting this would mean changing the json itself and updating it before storing which is not ideal either
-            if count > total_glass_amount:
-                labeled_type = DatasetField.DIAGNOSE.value
-
-        # Save the report JSON
         save_json(report, path)
 
-        # Update which report type was labeled
+        # Update which report type was labeled in the dataset
         if not random_id:
             labeled_ids_json.setdefault(report_id, {})[labeled_type] = True
 

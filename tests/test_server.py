@@ -135,7 +135,26 @@ def test_correct_endpoint(client: FlaskClient):
     server.LABELED_IDS_PATH = labeled_path
     report_id = "TEST_ID"
 
-    # Test using invalid report_type (test_type)
+    # Test using invalid format
+    response = client.post(
+        f"/correct/{report_id}",
+        json=[
+            {
+                "input_text": "text",
+                "metadata_json": [
+                    {"value": "klinisk"},
+                    {"value": 1},
+                    {"RANDOM_KEY": 1},
+                    {"RANDOM_KEY": 2},
+                ],
+                "target_json": [{"key": "value"}],
+            }
+        ],
+    )
+    assert response.status_code == 400
+    assert response.json["error"] == "Invalid report format"
+
+    # Test using invalid report (test_type)
     response = client.post(
         f"/correct/{report_id}",
         json=[
@@ -147,7 +166,7 @@ def test_correct_endpoint(client: FlaskClient):
         ],
     )
     assert response.status_code == 400
-    assert response.json["error"] == "Invalid report type"
+    assert response.json["error"] == "Invalid report format"
 
     # Test correcting without reports
     response = client.post(f"/correct/{report_id}", json=[])
@@ -160,7 +179,7 @@ def test_correct_endpoint(client: FlaskClient):
         json=[
             {
                 "input_text": "text",
-                "metadata_json": [{"value": "klinisk"}, {"value": 1}],
+                "metadata_json": [{"value": "klinisk"}, {"value": 1}, {"value": 1}],
                 "target_json": [{"key": "value"}],
             }
         ],
