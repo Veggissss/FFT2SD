@@ -1,3 +1,4 @@
+import math
 import torch
 from transformers import AutoTokenizer, StoppingCriteria, LogitsProcessor
 from utils.enums import GenerationState
@@ -186,11 +187,6 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         input_ids [batch_size, sequence_length]
         scores shape [batch_size, config.vocab_size]
         """
-        # Decrease preference for null token
-        if self.reduce_null_bias > 0.0:
-            null_token_id = self.tokenizer.encode("null", add_special_tokens=False)[0]
-            scores[:, null_token_id] -= self.reduce_null_bias
-
         batch_size = scores.shape[0]
         for i in range(batch_size):
             if i not in self.state:
@@ -219,11 +215,16 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                     allowed_token_ids = self._get_allowed_tokens_for_value(
                         i, last_token_ids
                     )
-
                     scores[i] = add_score_mask(scores[i], allowed_token_ids)
-                    log_token_probabilities(
-                        self.tokenizer, scores[i], allowed_token_ids
+                    scores[i] = reduce_null_bias(
+                        self.tokenizer, scores[i], threshold=self.reduce_null_bias
                     )
+
+                    # Ignore logging quote token probabilities
+                    if allowed_token_ids != [self.quote_token_id]:
+                        log_token_probabilities(
+                            self.tokenizer, scores[i], allowed_token_ids
+                        )
 
                 case GenerationState.AWAIT_BRACKET_END:
                     scores[i] = add_score_mask(scores[i], [self.bracket_end_token_id])
@@ -236,8 +237,8 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
 
 
 def add_score_mask(
-    vocab_scores: torch.LongTensor, allowed_ids: list[int] | int
-) -> torch.Tensor:
+    vocab_scores: torch.FloatTensor, allowed_ids: list[int] | int
+) -> torch.FloatTensor:
     """
     Apply a mask to the scores based on the allowed token IDs.
     args:
@@ -249,9 +250,31 @@ def add_score_mask(
     return vocab_scores + mask
 
 
+def reduce_null_bias(
+    tokenizer: AutoTokenizer, vocab_scores: torch.FloatTensor, threshold: float = 0.8
+) -> torch.FloatTensor:
+    """Reduce the null token chance if its probability is below a certain threshold."""
+    if threshold <= 0.0 or threshold >= 1.0:
+        return vocab_scores
+
+    null_token_id = tokenizer.encode("null", add_special_tokens=False)[0]
+    probs = torch.nn.functional.softmax(vocab_scores, dim=-1)
+    null_probs = probs[null_token_id]
+
+    # Reduce by the set treshold probability
+    # If the treshhold is 0.8(80% chance), the null token will be reduced by 80% of its probability
+    if null_probs < threshold:
+        vocab_scores[null_token_id] -= math.log(1 / (1 - threshold))
+
+    new_probs = torch.nn.functional.softmax(vocab_scores, dim=-1)
+    new_null_probs = new_probs[null_token_id]
+    print(f"Null token probability: {new_null_probs:.4f} | Original: {null_probs:.4f}")
+    return vocab_scores
+
+
 def log_token_probabilities(
     tokenizer: AutoTokenizer,
-    vocab_scores: torch.Tensor,
+    vocab_scores: torch.FloatTensor,
     allowed_token_ids: list[int],
     limit: int = 5,
 ):
@@ -290,12 +313,16 @@ def get_allowed_tokens(
 
     # Add token ID for null token, if data can't be extracted as its not defined in the input text
     if include_null:
-        null_token_id = tokenizer.convert_tokens_to_ids("null")
-        allowed_token_ids.append(null_token_id)
+        null_token_id = tokenizer.encode("null", add_special_tokens=False)
+        if len(null_token_id) == 1:
+            allowed_token_ids.append(null_token_id[0])
+        else:
+            allowed_token_ids.append(null_token_id)
+            print(f"Null token {null_token_id} is not a single token!")
 
     match token_type:
         case "int":
-            for num in range(100):
+            for num in range(1, 100):
                 # Convert the number to a string and then to token IDs
                 token_ids = tokenizer.encode(str(num), add_special_tokens=False)
                 # Only add if number maps to a single token to avoid multi-tokens

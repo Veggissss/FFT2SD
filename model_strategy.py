@@ -17,6 +17,7 @@ from transformers import (
 from token_constraints import (
     get_allowed_tokens,
     log_token_probabilities,
+    reduce_null_bias,
     add_score_mask,
     TokenTypeConstraintProcessor,
     StopOnToken,
@@ -379,10 +380,6 @@ class EncoderStrategy(BaseModelStrategy):
         # Get logits for the masked token [batch_size, vocab_size]
         masked_scores = logits[batch_indices, token_indices]
 
-        # Reduce preference for "null" token
-        null_token_id = self.tokenizer.convert_tokens_to_ids("null")
-        masked_scores[:, null_token_id] -= token_options.reduce_null_bias
-
         # Prepare allowed token IDs for the batch
         allowed_token_ids_batch = self.get_template_allowed_tokens(
             full_template_json, token_options
@@ -391,11 +388,13 @@ class EncoderStrategy(BaseModelStrategy):
         # Apply masking and collect predictions
         masked_scores_masked = []
         for i in range(batch_size):
-            allowed_ids = allowed_token_ids_batch[i]
-            log_token_probabilities(
-                model_loader.tokenizer, masked_scores[i], allowed_ids
+            masked_score = add_score_mask(masked_scores[i], allowed_token_ids_batch[i])
+            masked_score = reduce_null_bias(
+                self.tokenizer, masked_score, token_options.reduce_null_bias
             )
-            masked_score = add_score_mask(masked_scores[i], allowed_ids)
+            log_token_probabilities(
+                model_loader.tokenizer, masked_score, allowed_token_ids_batch[i]
+            )
             masked_scores_masked.append(masked_score)
 
         # Stack masked scores and get predicted tokens [batch_size, vocab_size]

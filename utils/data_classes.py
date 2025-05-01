@@ -33,7 +33,7 @@ class TokenOptions:
 
     report_type: Report type used for caching of allowed tokens.
     allow_null: Whether to allow null values in the output.
-    reduce_null_bias: Reduce the chance of generating null values by subtracting the value from the logits.
+    reduce_null_bias: Set a value between 0 and 1 to reduce the bias towards null values. If the value is set to 0.8, if the confidence is below 80% the chance will be reduced by 80% of the null value.
     include_enums: Whether to include possible enum values in the prompt, increasing prompt token amount.
     generate_strings: Whether to generate string values in the output, if False string values will be 'null'. (Does not affect the encoder models)
     """
