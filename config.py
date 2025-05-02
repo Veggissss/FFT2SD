@@ -17,7 +17,7 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
         ModelSettings("norallm/normistral-7b-warm", use_4bit_quant=True),
         ModelSettings("norallm/normistral-7b-warm"),
         ModelSettings("google/gemma-3-27b-it"),
-        ModelSettings("deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"),
+        ModelSettings("Qwen/Qwen3-32B"),
     ],
 }
 

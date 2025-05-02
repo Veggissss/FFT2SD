@@ -210,10 +210,10 @@ def train(model_type: ModelType, model_index: int) -> None:
 
 
 if __name__ == "__main__":
-    # Train all model types and sizes except gemma and deekseek
+    # Train all model types and sizes except gemma and qwen
     for m_type in ModelType:
         for i in range(len(MODELS_DICT[m_type])):
-            # Don't fine-tune gemma and deekseek
+            # Don't fine-tune gemma and qwen
             if m_type == ModelType.DECODER and i >= 2:
                 break
             train(m_type, i)

@@ -256,7 +256,7 @@ if __name__ == "__main__":
         included_model_names=[
             "norallm/normistral-7b-warm",
             "google/gemma-3-27b-it",
-            "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+            "Qwen/Qwen3-32B",
         ],
         output_dir=Path("./figures/eval/0_shot"),
     )

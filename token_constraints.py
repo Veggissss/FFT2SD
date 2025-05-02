@@ -88,10 +88,10 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         """Check if the "value": pattern is detected in recent tokens"""
         recent_tokens_ids = input_ids[:, -5:].tolist()
         last_items = [sublist[-1] for sublist in recent_tokens_ids]
-        last_items_str = self.tokenizer.decode(last_items, skip_special_tokens=False)
+        last_items_str = self.tokenizer.decode(last_items, skip_special_tokens=True)
 
         return ":" in last_items_str and any(
-            "value" in self.tokenizer.decode(batch_list, skip_special_tokens=False)
+            "value" in self.tokenizer.decode(batch_list, skip_special_tokens=True)
             for batch_list in recent_tokens_ids
         )
 
