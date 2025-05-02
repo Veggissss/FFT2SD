@@ -291,13 +291,21 @@ def correct_endpoint(report_id: str):
         if report_type_str not in ReportType.get_enum_map():
             return jsonify({"error": "Invalid report type"}), 400
 
+        save_path = (
+            f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_{container_id}.json"
+        )
+        diag_path = (
+            f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_diag_{container_id}.json"
+        )
+
+        # If the microskopisk report excists, but the diagnose does not, set the diagnose flag to true
+        if os.path.exists(save_path) and not os.path.exists(diag_path):
+            is_diagnose = True
+
         if is_diagnose:
-            path = f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_diag_{container_id}.json"
+            save_path = diag_path
             labeled_type = DatasetField.DIAGNOSE.value
         else:
-            path = (
-                f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_{container_id}.json"
-            )
             # Find the matching report type in the DatasetField enum
             labeled_type = next(
                 (
@@ -307,7 +315,7 @@ def correct_endpoint(report_id: str):
                 ),
                 None,
             )
-        save_json(report, path)
+        save_json(report, save_path)
 
         # Update which report type was labeled in the dataset
         if not random_id:
