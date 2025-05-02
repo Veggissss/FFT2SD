@@ -62,7 +62,7 @@ Setup virtual env
 
 Install dependencies
 
-2. `pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu118` for CUDA for GPU support. Newer/other CUDA versions: `https://pytorch.org/get-started/locally/`.
+2. `pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu118 --extra-index-url https://pypi.org/simple` for CUDA for GPU support. Newer/other CUDA versions: `https://pytorch.org/get-started/locally/`.
 
 
 ## Structured Data Model

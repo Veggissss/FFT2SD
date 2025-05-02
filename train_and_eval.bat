@@ -7,7 +7,7 @@ echo "Activating venv" &^
 .\venv\Scripts\activate &^
 
 echo "Installing dependencies" &^
-pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu118 &^
+pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu118 --extra-index-url https://pypi.org/simple&^
 
 echo "Fine tuning models" &^
 python model_train.py &^
