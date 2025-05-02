@@ -7,11 +7,61 @@ from transformers import (
     DataCollatorForSeq2Seq,
     AddedToken,
 )
+from transformers.data.data_collator import DataCollatorMixin
 from datasets import Dataset
 from model_loader import ModelLoader
-from config import JSON_START_MARKER, MODELS_DICT
+from config import JSON_START_MARKER, MODELS_DICT, ENCODER_MASK_ONLY_VALUES
 from utils.enums import ModelType
-import dataset_loader
+from dataset_loader import DatasetLoader
+import torch
+
+
+class DataCollatorForMaskedValueTokens(DataCollatorMixin):
+    """
+    Data collator to make the labels the same length as the input_ids.
+    """
+
+    def __init__(self, tokenizer: AutoTokenizer):
+        self.tokenizer = tokenizer
+
+    def __call__(
+        self, dataset: list[dict[str, torch.LongTensor]], return_tensors="pt"
+    ) -> dict[str, torch.LongTensor]:
+        # Convert from lazy rows to list
+        input_ids = [sample["input_ids"] for sample in dataset]
+        labels = [sample["labels"] for sample in dataset]
+        batch = self.tokenizer.pad(
+            {"input_ids": input_ids}, return_tensors=return_tensors
+        )
+
+        # Pad the labels to the same length as input_ids, use -100 to ignore the loss
+        max_len = batch["input_ids"].size(1)
+        batch["labels"] = torch.tensor(
+            [label + ([-100] * (max_len - len(label))) for label in labels],
+            dtype=torch.long,
+        )
+        return batch
+
+
+def mask_value_pair(dataset: Dataset, tokenizer: AutoTokenizer) -> Dataset:
+    """
+    Mask the value pair in the dataset.
+    :param dataset: Dataset where the input_ids have the true values and the labels have the [MASK] token. (NOTE: This will be swapped on return, makes it simpler for random mlm)
+    :param tokenizer: Model tokenizer.
+    :return: Masked dataset with input_ids having the [MASK] and the labels having -100 except the true masked value.
+    """
+    mask_token_id = tokenizer.mask_token_id
+    return dataset.map(
+        lambda data: {
+            # Swap the input_ids and labels fields.
+            "input_ids": data["labels"],
+            "labels": [
+                token if mask_id == mask_token_id else -100
+                for mask_id, token in zip(data["labels"], data["input_ids"])
+            ],
+        },
+        num_proc=1,
+    )
 
 
 def tokenize_dataset(
@@ -51,7 +101,6 @@ def train_model(
     """
     # Remove untokenized input and output columns.
     training_data = training_data.remove_columns(["input", "output"])
-    training_data = training_data.train_test_split(test_size=0.01)
 
     match loader.model_type:
         case ModelType.ENCODER_DECODER:
@@ -60,13 +109,19 @@ def train_model(
                 return_tensors="pt",
             )
         case ModelType.ENCODER:
-            training_data = training_data.remove_columns(["labels"])
-            data_collator = DataCollatorForLanguageModeling(
-                tokenizer=loader.tokenizer,
-                mlm=True,
-                mlm_probability=0.15,
-                return_tensors="pt",
-            )
+            if ENCODER_MASK_ONLY_VALUES:
+                # Create a labels tensor with -100 for all non-masked tokens positions
+                training_data = mask_value_pair(training_data, loader.tokenizer)
+                data_collator = DataCollatorForMaskedValueTokens(loader.tokenizer)
+            else:
+                # Remove the labels column as its handled by the data collator
+                training_data = training_data.remove_columns(["labels"])
+                data_collator = DataCollatorForLanguageModeling(
+                    tokenizer=loader.tokenizer,
+                    mlm=True,
+                    mlm_probability=0.15,
+                    return_tensors="pt",
+                )
         case ModelType.DECODER:
             training_data = training_data.remove_columns(["labels"])
             data_collator = DataCollatorForLanguageModeling(
@@ -74,13 +129,9 @@ def train_model(
                 mlm=False,
                 return_tensors="pt",
             )
-
-    # null_token_id = loader.tokenizer.convert_tokens_to_ids("null")
-    # weights = torch.ones(len(loader.tokenizer), dtype=torch.float32)
-    # weights[null_token_id] = 0.2
+    training_data = training_data.train_test_split(test_size=0.01)
 
     trainer = Trainer(
-        # weights=weights,
         model=loader.model,
         args=training_args,
         train_dataset=training_data["train"],
@@ -130,7 +181,7 @@ def add_tokens_to_tokenizer(model_loader: ModelLoader, enums: list[str]) -> None
     # Resize the model's token embeddings to fit the new tokens.
     model_loader.model.resize_token_embeddings(len(model_loader.tokenizer))
 
-    # Fix for: "CUDA Assertion `t >= 0 && t < n_classes` failed" for the ltg encoder and encoder-decoder models
+    # NOTE: Fix for: "CUDA Assertion `t >= 0 && t < n_classes` failed" for the ltg encoder and encoder-decoder models
     # The Classifier does not get resized when calling model.resize_token_embeddings() so needs to be manually re-initialized
     if model_loader.model_type == ModelType.ENCODER:
         model_loader.model.classifier.__init__(
@@ -142,7 +193,7 @@ def add_tokens_to_tokenizer(model_loader: ModelLoader, enums: list[str]) -> None
 
 
 def reinitialize_weights(module):
-    """TODO: Simulate untrained model by reinitializing the weights of the model layers."""
+    """Simulate untrained model by reinitializing the weights of the model layers."""
     if hasattr(module, "reset_parameters"):
         module.reset_parameters()
         print(f"Reinitialized weights for {module.__class__.__name__}")
@@ -177,10 +228,12 @@ def train(model_type: ModelType, model_index: int) -> None:
     )
 
     # Load the dataset.
-    dataset, enums = dataset_loader.create_dataset(
-        dataset_dir, model_loader.model_type, include_enums=False
+    mask_token = "null"
+    if model_type == ModelType.ENCODER:
+        mask_token = model_loader.tokenizer.mask_token
+    dataset, enums = DatasetLoader(model_type, mask=mask_token).create_dataset(
+        dataset_dir, include_enums=False
     )
-    print(dataset["input"][:2])
     dataset.batch(batch_size=batch_size)
 
     # Quantized models can't be trained directly.
@@ -211,6 +264,7 @@ def train(model_type: ModelType, model_index: int) -> None:
 
 if __name__ == "__main__":
     # Train all model types and sizes except gemma and qwen
+    # train(ModelType.ENCODER, 0)  # BERT
     for m_type in ModelType:
         for i in range(len(MODELS_DICT[m_type])):
             # Don't fine-tune gemma and qwen
