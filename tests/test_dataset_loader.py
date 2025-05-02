@@ -1,6 +1,6 @@
 import pytest
 import json
-import dataset_loader
+from dataset_loader import DatasetLoader
 from utils.enums import ModelType
 
 # Test data path
@@ -8,8 +8,8 @@ DATA_PATH = "data/test_data"
 
 
 def test_dataset_loader_decoder():
-    dataset, enums = dataset_loader.create_dataset(
-        DATA_PATH, ModelType.DECODER, include_enums=True
+    dataset, enums = DatasetLoader(ModelType.DECODER).create_dataset(
+        DATA_PATH, include_enums=True
     )
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
@@ -29,7 +29,9 @@ def test_dataset_loader_decoder():
 
 
 def test_dataset_loader_encoder():
-    dataset, enums = dataset_loader.create_dataset(DATA_PATH, ModelType.ENCODER, False)
+    dataset, enums = DatasetLoader(
+        ModelType.ENCODER, mask="[TEST_MASK]"
+    ).create_dataset(DATA_PATH, False)
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
 
@@ -37,8 +39,8 @@ def test_dataset_loader_encoder():
     assert not "None" in enums
     assert "null" in enums
 
-    # Check that the output column is not used
-    assert dataset["output"][0] == "[UNUSED BY THE ENCODER TYPE]"
+    # Check that the output column is used for masking value position
+    assert "[TEST_MASK]" in dataset["output"][0]
 
     # Check that enum values are NOT in the prompt
     assert '"type": "enum", "enum"' not in dataset["input"][0]
@@ -48,8 +50,8 @@ def test_dataset_loader_encoder():
 
 
 def test_dataset_loader_encoder_decoder():
-    dataset, enums = dataset_loader.create_dataset(
-        DATA_PATH, ModelType.ENCODER_DECODER, False
+    dataset, enums = DatasetLoader(ModelType.ENCODER_DECODER).create_dataset(
+        DATA_PATH, False
     )
     assert len(dataset["input"]) == len(dataset["output"])
     assert len(enums) > 0
