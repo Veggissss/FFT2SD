@@ -37,8 +37,10 @@ export interface LoadingState {
 export interface OutputPanelProps {
     reportId: string | null;
     useFormInput: boolean;
+    onToggleGenerateStringsChange: (checked: boolean) => void;
     onToggleFormChange: (checked: boolean) => void;
     onToggleEnumsChange: (checked: boolean) => void;
+    generateStrings: boolean;
     includeEnums: boolean;
     outputText: string;
     onOutputChange: (value: string | undefined) => void;

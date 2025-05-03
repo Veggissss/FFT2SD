@@ -41,6 +41,7 @@ const useApi = () => {
         reportType: string,
         totalContainers: number | null,
         includeEnums: boolean,
+        generateStrings: boolean
     ): Promise<JsonItem[]> => {
         setIsLoading(prev => ({ ...prev, generate: true }));
         try {
@@ -54,6 +55,7 @@ const useApi = () => {
                     report_type: reportType,
                     total_containers: totalContainers,
                     include_enums: includeEnums,
+                    generate_strings: generateStrings,
                 }),
             });
             return await response.json();

@@ -201,9 +201,14 @@ def load_model_endpoint():
         )
     if is_trained is None:
         is_trained = False
+
     # Encoder models needs to be trained
     if model_type == ModelType.ENCODER:
         is_trained = True
+    # Prevent trying to load local models that are not trained (e.g. Gemma and Qwen)
+    elif model_type == ModelType.DECODER and model_index >= 2:
+        is_trained = False
+
     return jsonify({"message": load_model(model_type, model_index, is_trained)}), 200
 
 
@@ -230,11 +235,17 @@ def generate_endpoint():
 
     # Set custom token options
     token_options = TokenOptions()
-    include_enums: bool | None = request.json.get("include_enums")
+    include_enums = request.json.get("include_enums")
     if include_enums is not None:
+        if not isinstance(include_enums, bool):
+            return jsonify({"error": "include_enums must be a boolean"}), 400
         token_options.include_enums = include_enums
-    # token_options.reduce_null_bias = 0.8
-    # token_options.generate_strings = False
+
+    generate_strings = request.json.get("generate_strings")
+    if generate_strings is not None:
+        if not isinstance(generate_strings, bool):
+            return jsonify({"error": "generate_strings must be a boolean"}), 400
+        token_options.generate_strings = generate_strings
 
     reports = generate(input_text, report_type, total_containers, token_options)
     if reports is None:
@@ -298,8 +309,13 @@ def correct_endpoint(report_id: str):
             f"{CORRECTED_OUT_DIR}{report_type_str}_{report_id}_diag_{container_id}.json"
         )
 
-        # If the microskopisk report excists, but the diagnose does not, set the diagnose flag to true
-        if os.path.exists(save_path) and not os.path.exists(diag_path):
+        # Detect labeling diagnose text on a refreshed session.
+        if (
+            report_type_str == ReportType.MIKROSKOPISK.value
+            and os.path.exists(save_path)
+            and not os.path.exists(diag_path)
+            and len(reports) == total_glass_amount
+        ):
             is_diagnose = True
 
         if is_diagnose:

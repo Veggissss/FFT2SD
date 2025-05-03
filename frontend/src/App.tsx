@@ -17,9 +17,10 @@ function App() {
     const [totalContainers, setTotalContainers] = useState<number | null>(null);
     const [jsonList, setJsonList] = useState<JsonItem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [reportId, setReportId] = useState<string | null>(null)
     const [useFormInput, setUseFormInput] = useState(false);
     const [includeEnums, setIncludeEnums] = useState(true);
-    const [reportId, setReportId] = useState<string | null>(null)
+    const [generateStrings, setGenerateStrings] = useState(false);
 
     // API hooks
     const { isLoading, loadModel, generateReport, submitCorrection, getUnlabeled } = useApi();
@@ -27,12 +28,13 @@ function App() {
     const handleSetModelType = (type: string) => {
         if (type === "encoder") {
             setIsTrained(true);
+            setGenerateStrings(false);
         }
         setIncludeEnums(type === "decoder");
         setModelType(type);
     }
 
-    const handleIsTrainedChange = (checked: boolean) => {
+    const handleIsTrained = (checked: boolean) => {
         if (modelType === "encoder") {
             setIsTrained(true);
             return;
@@ -52,7 +54,7 @@ function App() {
     const handleGenerate = async () => {
         try {
             const reportTypeToUse = reportType === "diagnose" ? "mikroskopisk" : reportType;
-            const data = await generateReport(inputText, reportTypeToUse, totalContainers, includeEnums);
+            const data = await generateReport(inputText, reportTypeToUse, totalContainers, includeEnums, generateStrings);
             if (reportType === 'auto') {
                 setJsonList([]);
             }
@@ -155,7 +157,7 @@ function App() {
         }
     }
 
-    const handleToggleFormChange = (checked: boolean) => {
+    const handleToggleForm = (checked: boolean) => {
         if (!checked) {
             setUseFormInput(false);
         } else {
@@ -172,11 +174,15 @@ function App() {
         }
     };
 
-    const handleToggleEnumsChange = (checked: boolean) => {
+    const handleToggleEnums = (checked: boolean) => {
         setIncludeEnums(checked);
     }
 
-    const handleFieldChange = (index: number, newValue: string | number | boolean | null) => {
+    const handleToggleGenerateStrings = (checked: boolean) => {
+        setGenerateStrings(checked);
+    }
+
+    const handleField = (index: number, newValue: string | number | boolean | null) => {
         const updatedJsonList = [...jsonList];
 
         // Replace empty strings with null value.
@@ -187,7 +193,7 @@ function App() {
         setOutputText(JSON.stringify(updatedJsonList[currentIndex], null, 2));
     };
 
-    const handleOutputChange = (value: string | undefined) => {
+    const handleOutput = (value: string | undefined) => {
         setOutputText(value || '');
     };
 
@@ -204,7 +210,7 @@ function App() {
                 onModelTypeChange={handleSetModelType}
                 onModelSelectionChange={setSelectedIndex}
                 onLoadModel={handleLoadModel}
-                onIsTrainedChange={handleIsTrainedChange}
+                onIsTrainedChange={handleIsTrained}
                 isTrained={isTrained}
                 index={selectedIndex}
                 isLoading={isLoading.loadModel}
@@ -227,13 +233,15 @@ function App() {
                 <OutputPanel
                     reportId={reportId}
                     useFormInput={useFormInput}
-                    onToggleFormChange={handleToggleFormChange}
+                    onToggleFormChange={handleToggleForm}
                     includeEnums={includeEnums}
-                    onToggleEnumsChange={handleToggleEnumsChange}
+                    generateStrings={generateStrings}
+                    onToggleGenerateStringsChange={handleToggleGenerateStrings}
+                    onToggleEnumsChange={handleToggleEnums}
                     outputText={outputText}
-                    onOutputChange={handleOutputChange}
+                    onOutputChange={handleOutput}
                     currentItem={jsonList[currentIndex]}
-                    onFieldChange={handleFieldChange}
+                    onFieldChange={handleField}
                     currentIndex={currentIndex}
                     totalItems={jsonList.length}
                     onPrevious={handlePrevious}

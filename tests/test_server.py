@@ -94,6 +94,27 @@ def test_generate_endpoint(client: FlaskClient):
     assert response.status_code == 400
     assert "Input text is required" in response.json["error"]
 
+    # Test with invalid data type
+    response = client.post(
+        "/generate",
+        json={
+            "input_text": "3 glass, merket 1 - 3\n1: 4  gryn i #1\n2: 3  gryn i #2\n3: 7  gryn i #3",
+            "generate_strings": "INVALID_TYPE",
+        },
+    )
+    assert response.status_code == 400
+    assert "generate_strings must be a boolean" in response.json["error"]
+
+    response = client.post(
+        "/generate",
+        json={
+            "input_text": "3 glass, merket 1 - 3\n1: 4  gryn i #1\n2: 3  gryn i #2\n3: 7  gryn i #3",
+            "include_enums": "INVALID_TYPE",
+        },
+    )
+    assert response.status_code == 400
+    assert "include_enums must be a boolean" in response.json["error"]
+
 
 def test_unlabeled_endpoint(client: FlaskClient):
     # Test getting an unlabeled case

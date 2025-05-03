@@ -7,8 +7,10 @@ const OutputPanel = ({
     reportId,
     useFormInput,
     includeEnums,
+    generateStrings,
     onToggleFormChange,
     onToggleEnumsChange,
+    onToggleGenerateStringsChange,
     outputText,
     onOutputChange,
     currentItem,
@@ -37,16 +39,24 @@ const OutputPanel = ({
                         <span className="slider round"></span>
                     </label>
                 </div>
-                <div>
-                    <h4>Include enums: </h4>
-                    <label className="switch">
+                <div className="generation-settings-container">
+                    <label className="generation-settings-item">
                         <input
                             type="checkbox"
                             checked={includeEnums}
                             onChange={(e) => onToggleEnumsChange(e.target.checked)}
                             disabled={isLoading.correct}
                         />
-                        <span className="slider round"></span>
+                        <span>Include enums</span>
+                    </label>
+                    <label className="generation-settings-item">
+                        <input
+                            type="checkbox"
+                            checked={generateStrings}
+                            onChange={(e) => onToggleGenerateStringsChange(e.target.checked)}
+                            disabled={isLoading.correct}
+                        />
+                        <span>Generate strings</span>
                     </label>
                 </div>
                 <div>
