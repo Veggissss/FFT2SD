@@ -27,9 +27,6 @@ DATA_MODEL_OUTPUT_FOLDER = "data_model/out"
 # Print out contstrained token probabilities and other debug information
 DEBUG_MODE_ENABLED = True  # TODO: Add propper logging
 
-# If True, the model will only be trained on the values in the JSON template.
-# If False, the model will be trained using random masked learning on the entire input sequence.
-ENCODER_MASK_ONLY_VALUES = True
 
 """
 Mark the end of the model prompt and before the template JSON in the prompt.

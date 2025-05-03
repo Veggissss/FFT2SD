@@ -49,10 +49,22 @@ class TokenOptions:
 class ModelSettings:
     """
     Model specific settings for the Hugging Face models.
+
+    :param model_name: The name of the model to be used.
+    :param use_4bit_quant: Whether to load the model using 4-bit quantization.
+    :param training_batch_size: The batch size to be used during training.
+    :param training_num_epochs: The number of epochs to train the model.
+    :param training_learning_rate: The learning rate to be used during training.
+    :param training_encoder_only_mask_values: Whether to ONLY mask out the values when training encoder models. If false, use random mlm.
     """
 
     model_name: str
     use_4bit_quant: bool = False
+
+    training_batch_size: int = 1
+    training_num_epochs: int = 50
+    training_learning_rate: float = 1e-5
+    training_encoder_only_mask_values: bool = True
 
     def __str__(self) -> str:
         """

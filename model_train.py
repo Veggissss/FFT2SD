@@ -10,7 +10,7 @@ from transformers import (
 from transformers.data.data_collator import DataCollatorMixin
 from datasets import Dataset
 from model_loader import ModelLoader
-from config import JSON_START_MARKER, MODELS_DICT, ENCODER_MASK_ONLY_VALUES
+from config import JSON_START_MARKER, MODELS_DICT
 from utils.enums import ModelType
 from dataset_loader import DatasetLoader
 import torch
@@ -19,6 +19,9 @@ import torch
 class DataCollatorForMaskedValueTokens(DataCollatorMixin):
     """
     Data collator to make the labels the same length as the input_ids.
+
+    NOTE: Regular DataCollatorWithPadding seems to not work with the labels.
+    Could pad the labels to max_length, but it would be a waste of memory.
     """
 
     def __init__(self, tokenizer: AutoTokenizer):
@@ -109,7 +112,7 @@ def train_model(
                 return_tensors="pt",
             )
         case ModelType.ENCODER:
-            if ENCODER_MASK_ONLY_VALUES:
+            if loader.model_settings.training_encoder_only_mask_values:
                 # Create a labels tensor with -100 for all non-masked tokens positions
                 training_data = mask_value_pair(training_data, loader.tokenizer)
                 data_collator = DataCollatorForMaskedValueTokens(loader.tokenizer)
@@ -119,7 +122,7 @@ def train_model(
                 data_collator = DataCollatorForLanguageModeling(
                     tokenizer=loader.tokenizer,
                     mlm=True,
-                    mlm_probability=0.15,
+                    mlm_probability=0.4,
                     return_tensors="pt",
                 )
         case ModelType.DECODER:
@@ -207,18 +210,17 @@ def train(model_type: ModelType, model_index: int) -> None:
     model_loader = ModelLoader(model_type, model_index, is_trained=False)
     dataset_dir = "data/corrected/"
     output_dir = f"trained/{str(model_loader.model_settings)}"
-    batch_size = 3
-
     print(f"Saving trained model to: {output_dir}")
 
     # Define training args
+    batch_size = model_loader.model_settings.training_batch_size
     training_args = TrainingArguments(
         output_dir=output_dir,
-        num_train_epochs=10,
-        learning_rate=4e-4,
+        num_train_epochs=model_loader.model_settings.training_num_epochs,
+        learning_rate=model_loader.model_settings.training_learning_rate,
         weight_decay=0.01,
         per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=batch_size,
+        per_device_eval_batch_size=1,
         eval_strategy="epoch",
         logging_dir="./logs",
         logging_steps=10,
