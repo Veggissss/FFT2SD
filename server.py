@@ -61,7 +61,7 @@ def generate(
     report_type: ReportType = None,
     total_containers: int = None,
     token_options: TokenOptions = None,
-) -> dict | None:
+) -> list[dict] | None:
     """Function to generate structured data using the loaded model."""
 
     # Load metadata template to determine the report type and container count

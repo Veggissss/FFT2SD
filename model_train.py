@@ -14,6 +14,7 @@ from config import JSON_START_MARKER, MODELS_DICT
 from utils.enums import ModelType
 from dataset_loader import DatasetLoader
 import torch
+from dotenv import dotenv_values
 
 
 class DataCollatorForMaskedValueTokens(DataCollatorMixin):
@@ -132,7 +133,7 @@ def train_model(
                 mlm=False,
                 return_tensors="pt",
             )
-    training_data = training_data.train_test_split(test_size=0.01)
+    training_data = training_data.train_test_split(test_size=0.1, seed=42)
 
     trainer = Trainer(
         model=loader.model,
@@ -146,9 +147,20 @@ def train_model(
     # Train the model.
     trainer.train()
 
+    # Evaluate the model on the test set.
+    eval_results = trainer.evaluate()
+    print("Final evaluation results:", eval_results)
+
     # Save the fine-tuned model and tokenizer.
     loader.model.save_pretrained(output_dir)
     loader.tokenizer.save_pretrained(output_dir)
+
+    # Push fined tuned model to HF
+    if trainer.args.push_to_hub:
+        print("Pushing to hub...")
+        trainer.push_to_hub("test")
+    else:
+        print("No .env file found. Pushing to hub skipped.")
 
 
 def apply_peft(model_loader: ModelLoader) -> PeftModel:
@@ -212,15 +224,27 @@ def train(model_type: ModelType, model_index: int) -> None:
     output_dir = f"trained/{str(model_loader.model_settings)}"
     print(f"Saving trained model to: {output_dir}")
 
+    # Huggingface token and repo path
+    env_config: dict = dotenv_values(".env")
+    hf_token = env_config.get("HUGGINGFACE_SECRET_TOKEN", None)
+    hf_username = env_config.get("HUGGINGFACE_USERNAME", None)
+
+    # Replace the old repo slash to make a valid repo name
+    hf_model_id = f"{hf_username}/{str(model_loader.model_settings).replace('/', '_')}"
+
     # Define training args
     batch_size = model_loader.model_settings.training_batch_size
     training_args = TrainingArguments(
+        hub_token=hf_token,
+        hub_model_id=hf_model_id,
+        hub_private_repo=True,
+        push_to_hub=True,
         output_dir=output_dir,
         num_train_epochs=model_loader.model_settings.training_num_epochs,
         learning_rate=model_loader.model_settings.training_learning_rate,
         weight_decay=0.01,
         per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=1,
+        per_device_eval_batch_size=batch_size,
         eval_strategy="epoch",
         logging_dir="./logs",
         logging_steps=10,
@@ -266,7 +290,6 @@ def train(model_type: ModelType, model_index: int) -> None:
 
 if __name__ == "__main__":
     # Train all model types and sizes except gemma and qwen
-    # train(ModelType.ENCODER, 0)  # BERT
     for m_type in ModelType:
         for i in range(len(MODELS_DICT[m_type])):
             # Don't fine-tune gemma and qwen

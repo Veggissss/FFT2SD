@@ -1,25 +1,28 @@
 from utils.enums import ModelType
 from utils.data_classes import ModelSettings
 
+# fmt: off
 # Definitions of Hugging Face models
 MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
     ModelType.ENCODER_DECODER: [
-        ModelSettings("ltg/nort5-small"),
-        ModelSettings("ltg/nort5-base"),
-        ModelSettings("ltg/nort5-large"),
+        ModelSettings("ltg/nort5-small", training_batch_size=16, training_learning_rate=5e-4),
+        ModelSettings("ltg/nort5-base", training_batch_size=8, training_learning_rate=3e-4),
+        ModelSettings("ltg/nort5-large", training_batch_size=1, training_learning_rate=1e-4),
     ],
     ModelType.ENCODER: [
-        ModelSettings("ltg/norbert3-small"),
-        ModelSettings("ltg/norbert3-base"),
-        ModelSettings("ltg/norbert3-large"),
+        #ModelSettings("ltg/norbert3-small", training_batch_size=16, training_learning_rate=5e-4, training_encoder_only_mask_values=True),
+        ModelSettings("ltg/norbert3-small", training_batch_size=16, training_learning_rate=5e-4),
+        ModelSettings("ltg/norbert3-base", training_batch_size=8, training_learning_rate=3e-4),
+        ModelSettings("ltg/norbert3-large", training_batch_size=4, training_learning_rate=2e-4),
     ],
     ModelType.DECODER: [
-        ModelSettings("norallm/normistral-7b-warm", use_4bit_quant=True),
-        ModelSettings("norallm/normistral-7b-warm"),
+        ModelSettings("norallm/normistral-7b-warm", training_batch_size=2, training_learning_rate=1e-4, use_4bit_quant=True),
+        ModelSettings("norallm/normistral-7b-warm", training_batch_size=1, training_learning_rate=5e-5),
         ModelSettings("google/gemma-3-27b-it"),
         ModelSettings("Qwen/Qwen3-32B"),
     ],
 }
+# fmt: on
 
 # Output path for the data models combined struct/template
 DATA_MODEL_OUTPUT_FOLDER = "data_model/out"
@@ -44,7 +47,8 @@ Parameters:
 """
 SYSTEM_PROMPT = (
     "Gitt teksten:\n{input_text}\n\n"
-    "Finn informasjon om glass nummer {container_id}.\n"
+    "Finn kun informasjon som gjelder glass nummer {container_id}.\n"
+    "Ignorer all informasjon om andre glass.\n"
     'Fyll ut feltet "value" basert på denne informasjonen.\n'
     'Hvis det ikke finnes en gyldig verdi, sett "value" til null.\n\n'
     f"{JSON_START_MARKER}\n"
