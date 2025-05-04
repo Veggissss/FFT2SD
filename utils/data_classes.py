@@ -62,14 +62,16 @@ class ModelSettings:
     use_4bit_quant: bool = False
 
     training_batch_size: int = 1
-    training_num_epochs: int = 50
-    training_learning_rate: float = 1e-5
-    training_encoder_only_mask_values: bool = True
+    training_num_epochs: int = 20
+    training_learning_rate: float = 5e-5
+    training_encoder_only_mask_values: bool = False
 
     def __str__(self) -> str:
         """
         Get the saved model name.
         """
+        if self.training_encoder_only_mask_values:
+            return self.model_name + "_mask_values"
         if self.use_4bit_quant:
             return self.model_name + "_4bit_quant"
         return self.model_name

@@ -53,7 +53,7 @@ def evaluate(
                 {
                     "file": file_path.name,
                     "report_type": report_type.name,
-                    "model_name": str(server.model_loader.model_settings),
+                    "model_name": server.model_loader.model_name,
                     "model_type": model_type.value,
                     "type": value_type,
                     "y_true": y_true,
@@ -98,6 +98,7 @@ def visualize(
     output_dir: Path = Path("./figures/eval"),
     results_path: Path = Path("./eval_results.json"),
     ignore_strings: bool = True,
+    ignore_null: bool = True,
     included_model_names: list[str] = None,
 ):
     """
@@ -107,14 +108,15 @@ def visualize(
     - Precision / Recall / F1 by Model Type
     """
     results = load_json(results_path)
+    # Filter strings and null if enabled
     if ignore_strings:
         results = [entry for entry in results if entry.get("type") != "string"]
-
+    if ignore_null:
+        results = [entry for entry in results if entry.get("y_true") != "null"]
     # Filter out other model types
     results = [
         entry for entry in results if entry.get("model_type") == model_type.value
     ]
-
     # Filter out other model names if specified
     if included_model_names:
         results = [
@@ -122,6 +124,10 @@ def visualize(
             for entry in results
             if entry.get("model_name") in included_model_names
         ]
+
+    if not results:
+        print(f"No results found for {model_type.value}:\n{included_model_names}")
+        return
 
     df = pd.DataFrame(results)
 
@@ -187,7 +193,26 @@ def visualize(
     print(f"Saved: precision_recall_f1_{model_type.value}.svg")
 
 
+def test_masked_value():
+    """
+    Small test to compare value only vs random mlm training.
+    """
+    evaluate(ModelType.ENCODER, 0, is_trained=True)
+    evaluate(ModelType.ENCODER, 1, is_trained=True)
+    visualize(
+        model_type=ModelType.ENCODER,
+        ignore_strings=True,
+        included_model_names=[
+            "trained/ltg/norbert3-small_mask_values",
+            "trained/ltg/norbert3-small",
+        ],
+        output_dir=Path("./figures/eval/value_training"),
+    )
+
+
 if __name__ == "__main__":
+    # test_masked_value()
+
     for m_type in ModelType:
         token_options = TokenOptions()
         token_options.include_enums = m_type == ModelType.DECODER
