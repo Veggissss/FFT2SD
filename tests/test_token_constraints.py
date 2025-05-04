@@ -14,7 +14,9 @@ from utils.enums import ModelType, GenerationState
 def test_allowed_tokens_enum():
     test_enums = ["Hello", "World", "Test", "59jfa9fjFJFj29", "null"]
     test_tokens = [AddedToken(enum, single_word=True) for enum in test_enums]
-    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
+    tokenizer = AutoTokenizer.from_pretrained(
+        MODELS_DICT[ModelType.ENCODER][0].model_name
+    )
     tokenizer.add_tokens(test_tokens)
     allowed_token_ids = get_allowed_tokens(tokenizer, "enum", test_enums)
 
@@ -27,7 +29,9 @@ def test_allowed_tokens_enum():
 
 def test_allowed_tokens_boolean():
     test_booleans = ["true", "false", "null"]
-    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
+    tokenizer = AutoTokenizer.from_pretrained(
+        MODELS_DICT[ModelType.ENCODER][0].model_name
+    )
     tokenizer.add_tokens(test_booleans)
     allowed_token_ids = get_allowed_tokens(tokenizer, "boolean")
 
@@ -41,7 +45,9 @@ def test_allowed_tokens_boolean():
 def test_allowed_tokens_int():
     test_ints = ["1", "2", "3", "99", "null"]
     test_invalid_ints = ["100", "1000", "994"]
-    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
+    tokenizer = AutoTokenizer.from_pretrained(
+        MODELS_DICT[ModelType.ENCODER][0].model_name
+    )
     tokenizer.add_tokens(test_ints)
     tokenizer.add_tokens(test_invalid_ints)
     allowed_token_ids = get_allowed_tokens(tokenizer, "int")
@@ -58,7 +64,9 @@ def test_allowed_tokens_int():
 
 
 def test_stop_on_token_call():
-    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
+    tokenizer = AutoTokenizer.from_pretrained(
+        MODELS_DICT[ModelType.ENCODER][0].model_name
+    )
     stop_token = "}"
     stop_token_id = tokenizer.convert_tokens_to_ids(stop_token)
     stop_criteria = StopOnToken(tokenizer, stop_token)
@@ -85,7 +93,9 @@ def test_stop_on_token_call():
 
 
 def test_token_constraint_per_sequence():
-    tokenizer = AutoTokenizer.from_pretrained(str(MODELS_DICT[ModelType.ENCODER][0]))
+    tokenizer = AutoTokenizer.from_pretrained(
+        MODELS_DICT[ModelType.ENCODER_DECODER][0].model_name
+    )
     true_token_ids = tokenizer.encode("true", add_special_tokens=False)
     false_token_ids = tokenizer.encode("false", add_special_tokens=False)
 
@@ -122,13 +132,13 @@ def test_token_constraint_per_sequence():
 
 def test_token_constraint_full_flow():
     tokenizer = AutoTokenizer.from_pretrained(
-        str(MODELS_DICT[ModelType.ENCODER_DECODER][0])
+        MODELS_DICT[ModelType.DECODER][0].model_name
     )
     true_token_ids = tokenizer.encode("true", add_special_tokens=False)
     false_token_ids = tokenizer.encode("false", add_special_tokens=False)
 
     start_tokens = []
-    for token in ['"', "value", '"', ":"]:
+    for token in ["{", '"', "value", '"', ":"]:
         token_ids = tokenizer(token, add_special_tokens=False).input_ids
         start_tokens.extend(token_ids)
 
