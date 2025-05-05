@@ -1,3 +1,4 @@
+from dotenv import dotenv_values
 from peft import LoraConfig, get_peft_model, PeftModel
 from transformers import (
     Trainer,
@@ -6,6 +7,7 @@ from transformers import (
     AutoTokenizer,
     DataCollatorForSeq2Seq,
     AddedToken,
+    EarlyStoppingCallback,
 )
 from transformers.data.data_collator import DataCollatorMixin
 from datasets import Dataset
@@ -14,7 +16,6 @@ from config import JSON_START_MARKER, MODELS_DICT
 from utils.enums import ModelType
 from dataset_loader import DatasetLoader
 import torch
-from dotenv import dotenv_values
 
 
 class DataCollatorForMaskedValueTokens(DataCollatorMixin):
@@ -135,6 +136,13 @@ def train_model(
             )
     training_data = training_data.train_test_split(test_size=0.1, seed=42)
 
+    # Stop training early
+    early_stopping_callback = EarlyStoppingCallback(
+        early_stopping_patience=2,
+        # Minimum eval improvement
+        early_stopping_threshold=0.01,
+    )
+
     trainer = Trainer(
         model=loader.model,
         args=training_args,
@@ -142,6 +150,7 @@ def train_model(
         eval_dataset=training_data["test"],
         processing_class=loader.tokenizer,
         data_collator=data_collator,
+        callbacks=[early_stopping_callback],
     )
 
     # Train the model.
@@ -214,7 +223,7 @@ def reinitialize_weights(module):
         print(f"Reinitialized weights for {module.__class__.__name__}")
 
 
-def train(model_type: ModelType, model_index: int) -> None:
+def train(model_type: ModelType, model_index: int, push_to_hub: bool = True) -> None:
     """
     Train the model using the provided dataset.
     :param model_type: Model type to train.
@@ -233,24 +242,31 @@ def train(model_type: ModelType, model_index: int) -> None:
     hf_model_id = f"{hf_username}/{str(model_loader.model_settings).replace('/', '_')}"
 
     # Define training args
+    simulated_batch_size = 32
     batch_size = model_loader.model_settings.training_batch_size
+    gradient_accumulation_steps = max(1, simulated_batch_size // batch_size)
     training_args = TrainingArguments(
         hub_token=hf_token,
         hub_model_id=hf_model_id,
         hub_private_repo=True,
-        push_to_hub=True,
+        push_to_hub=push_to_hub,
         output_dir=output_dir,
         num_train_epochs=model_loader.model_settings.training_num_epochs,
         learning_rate=model_loader.model_settings.training_learning_rate,
-        weight_decay=0.01,
+        gradient_accumulation_steps=gradient_accumulation_steps,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
+        fp16=True,  # Mixed precision
+        weight_decay=0.01,
+        warmup_ratio=0.1,  # 10% warmup
+        lr_scheduler_type="cosine",
+        max_grad_norm=1.0,  # Limit max gradient
         eval_strategy="epoch",
         logging_dir="./logs",
         logging_steps=10,
-        fp16=True,  # Mixed precision
-        warmup_ratio=0.1,  # 10% warmup
-        lr_scheduler_type="cosine",
+        save_strategy="epoch",
+        save_total_limit=3,
+        load_best_model_at_end=True,
     )
 
     # Load the dataset.
