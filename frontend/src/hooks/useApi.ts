@@ -8,10 +8,11 @@ const useApi = () => {
         correct: false
     });
 
-    if (import.meta.env.VITE_API_BASE_URL === undefined) {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
+    if (baseUrl.length === 0) {
         console.warn("VITE_API_BASE_URL is not defined in .env. Defaulting to http://localhost:5000");
     }
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
+    const apiBaseUrl = baseUrl ?? "http://localhost:5000";
 
     const getUnlabeled = async (reportType: string): Promise<UnlabeledJsonItem> => {
         const response = await fetch(`${apiBaseUrl}/unlabeled/${reportType}`, {

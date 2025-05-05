@@ -1,11 +1,12 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
 import { server } from "./mocks/server";
-import App from './App'
+import App from './App';
 
-if (import.meta.env.VITE_API_BASE_URL.includes("github.io")) {
-  server.listen()
+const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
+if (baseUrl.includes("github.io")) {
+  server.listen();
 }
 
 const rootElement = document.getElementById('root')
