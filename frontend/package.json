@@ -1,12 +1,12 @@
 {
   "name": "labeler-app",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "build:pages": "VITE_API_BASE_URL=https://veggissss.github.io/FFT2SD tsc && vite build",
+    "build:pages": "export BASE=https://veggissss.github.io/FFT2SD && VITE_BASE_URL=$BASE VITE_API_BASE_URL=$BASE tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --host",
     "type-check": "tsc --noEmit",

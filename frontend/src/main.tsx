@@ -4,7 +4,7 @@ import './index.css';
 import { server } from "./mocks/server";
 import App from './App';
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
+const baseUrl = import.meta.env.VITE_BASE_URL ?? '';
 if (baseUrl.includes("github.io")) {
   server.listen();
 }
