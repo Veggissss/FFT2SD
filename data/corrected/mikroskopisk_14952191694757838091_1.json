@@ -1,0 +1,510 @@
+{
+    "input_text": "1: Ileumslimhinne med fokal moderat kronisk aktiv betennelse. \n2: Colonslimhinne med fokal lett til moderat kronisk aktiv betennelse. \n3-6: Colonslimhinne uten påviste patologiske forandringer.",
+    "metadata_json": [
+        {
+            "enum": [
+                {
+                    "value": "klinisk"
+                },
+                {
+                    "value": "makroskopisk"
+                },
+                {
+                    "value": "mikroskopisk"
+                }
+            ],
+            "field": "Rapport type",
+            "id": 0,
+            "type": "enum",
+            "value": "mikroskopisk"
+        },
+        {
+            "field": "Antall glass",
+            "id": 1,
+            "type": "int",
+            "unit": "stk",
+            "value": 6
+        },
+        {
+            "field": "Beholder-ID",
+            "id": 128,
+            "type": "int",
+            "value": 1
+        }
+    ],
+    "target_json": [
+        {
+            "enum": [
+                {
+                    "group": "Adenom",
+                    "name": "tubulært adenom med lavgradig dysplasi",
+                    "value": "M82111"
+                },
+                {
+                    "group": "Adenom",
+                    "name": "tubulært adenom med høygradig dysplasi",
+                    "value": "M82112"
+                },
+                {
+                    "group": "Adenom",
+                    "name": "tubulovilløst adenom med lavgradig dysplasi",
+                    "value": "M82631"
+                },
+                {
+                    "group": "Adenom",
+                    "name": "tubulovilløst adenom med høygradig dysplasi",
+                    "value": "M82632"
+                },
+                {
+                    "group": "Adenom",
+                    "name": "villøst adenom med lavgradig dysplasi",
+                    "value": "M82611"
+                },
+                {
+                    "group": "Adenom",
+                    "name": "villøst adenom med høygradig dysplasi",
+                    "value": "M82612"
+                },
+                {
+                    "group": "Adenom",
+                    "name": "uklassifiserbart adenom med lavgradig dysplasi",
+                    "value": "M82101"
+                },
+                {
+                    "group": "Adenom",
+                    "name": "uklassifiserbart adenom med høygradig dysplasi",
+                    "value": "M82102"
+                },
+                {
+                    "group": "Sagtakkete lesjoner",
+                    "name": "hyperplastisk polypp",
+                    "value": "M72040"
+                },
+                {
+                    "group": "Sagtakkete lesjoner",
+                    "name": "bredbaset sagtakket lesjon uten dysplasi",
+                    "value": "M82140"
+                },
+                {
+                    "group": "Sagtakkete lesjoner",
+                    "name": "bredbaset sagtakket lesjon med dysplasi",
+                    "value": "M82142"
+                },
+                {
+                    "group": "Sagtakkete lesjoner",
+                    "name": "tradisjonelt sagtakket adenom med lavgradig dysplasi",
+                    "value": "M82131"
+                },
+                {
+                    "group": "Sagtakkete lesjoner",
+                    "name": "tradisjonelt sagtakket adenom med høygradig dysplasi",
+                    "value": "M82132"
+                },
+                {
+                    "group": "Sagtakkete lesjoner",
+                    "name": "uklassifiserbar sagtakket polypp uten dysplasi",
+                    "value": "M72004"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "betennelsespolypp",
+                    "value": "M76820"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "granulasjonspolypp",
+                    "value": "M44440"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "lymfoid polypp",
+                    "value": "M76880"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "inflammatorisk fibroid polypp",
+                    "value": "M76830"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "inflammatorisk kloakogen polypp",
+                    "value": "M76835"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "mukosalt prolaps",
+                    "value": "M76834"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "hamartomatøs polypp",
+                    "value": "M75630"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "juvenil polypp",
+                    "value": "M75640"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "lipom",
+                    "value": "M88500"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "leiomyom",
+                    "value": "M88900"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "ganglionevrom",
+                    "value": "M94900"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "nevrofibrom",
+                    "value": "M95400"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "nevrilemmom",
+                    "value": "M95600"
+                },
+                {
+                    "group": "Andre polypper",
+                    "name": "gastrointestinal stromal tumor",
+                    "value": "M89363"
+                },
+                {
+                    "group": "Annet",
+                    "name": "normal morfologi",
+                    "value": "M00100"
+                },
+                {
+                    "group": "Annet",
+                    "name": "for sparsomt materiale",
+                    "value": "M09000"
+                },
+                {
+                    "group": "Annet",
+                    "name": "materialet uegnet til diagnostikk",
+                    "value": "M09010"
+                },
+                {
+                    "group": "Annet",
+                    "name": "intet materiale mottatt",
+                    "value": "P00308"
+                },
+                {
+                    "group": "Annet",
+                    "name": "materialet forsvunnet under preparering",
+                    "value": "P00311"
+                },
+                {
+                    "group": "Dysplasi ved IBD/ «Flat» dysplasi",
+                    "name": "irregulær kjertelproliferasjon, usikker reaktiv/neoplastisk",
+                    "value": "M76055"
+                },
+                {
+                    "group": "Dysplasi ved IBD/ «Flat» dysplasi",
+                    "name": "lett/moderat dysplasi i sylinderepitel",
+                    "value": "M76086"
+                },
+                {
+                    "group": "Dysplasi ved IBD/ «Flat» dysplasi",
+                    "name": "grov dysplasi i sylinderepitel / adenokarsinom in situ",
+                    "value": "M81402"
+                },
+                {
+                    "group": "Polypose",
+                    "name": "familiær adenomatøs polypose",
+                    "value": "S29350"
+                },
+                {
+                    "group": "Polypose",
+                    "name": "sagtakket polypose",
+                    "value": "M8213P"
+                },
+                {
+                    "group": "Polypose",
+                    "name": "juvenil polypose",
+                    "value": "M76910"
+                },
+                {
+                    "group": "Polypose",
+                    "name": "Cowdens syndrom",
+                    "value": "S50020"
+                },
+                {
+                    "group": "Polypose",
+                    "name": "diffus gastrointestinal polyppose, Cronkhite-Canada",
+                    "value": "S61630"
+                },
+                {
+                    "group": "Adenokarsinom",
+                    "name": "adenokarsinom i adenomatøs polypp",
+                    "value": "M82103"
+                },
+                {
+                    "group": "Adenokarsinom",
+                    "name": "adenokarsinom i villøst adenom",
+                    "value": "M82613"
+                },
+                {
+                    "group": "Adenokarsinom",
+                    "name": "adenokarsinom i bredbaset sagtakket lesjon",
+                    "value": "M82143"
+                },
+                {
+                    "group": "Adenokarsinom",
+                    "name": "adenokarsinom i tradisjonelt sagtakket adenom",
+                    "value": "M82153"
+                },
+                {
+                    "group": "Adenokarsinom",
+                    "name": "adenokarsinom",
+                    "value": "M81403"
+                }
+            ],
+            "field": "Patologidiagnose",
+            "id": 109,
+            "type": "enum",
+            "value": "M00100"
+        },
+        {
+            "field": "Kommentar",
+            "id": 117,
+            "type": "string",
+            "value": "leumslimhinne med fokal moderat kronisk aktiv betennelse. "
+        },
+        {
+            "enum": [
+                {
+                    "value": "Lavgradig histologisk differensiering"
+                },
+                {
+                    "value": "Høygradig histologisk differensiering"
+                },
+                {
+                    "value": "Differensieringsgrad kan ikke vurderes"
+                }
+            ],
+            "field": "Differensieringsgrad",
+            "id": 110,
+            "type": "enum",
+            "value": null
+        },
+        {
+            "field": "Karsinomets største diameter",
+            "id": 111,
+            "type": "int",
+            "unit": "mm",
+            "value": null
+        },
+        {
+            "enum": [
+                {
+                    "value": "Lymfekarinnvekst ikke påvist"
+                },
+                {
+                    "value": "Lymfekarinnvekst påvist"
+                },
+                {
+                    "value": "Lymfekarinnvekst kan ikke vurderes"
+                }
+            ],
+            "field": "Lymfekarinnvekst",
+            "id": 112,
+            "type": "enum",
+            "value": null
+        },
+        {
+            "enum": [
+                {
+                    "value": "Venekarinnvekst ikke påvist"
+                },
+                {
+                    "value": "Venekarinnvekst påvist intramural"
+                },
+                {
+                    "value": "Venekarinnvekst kan ikke vurderes"
+                }
+            ],
+            "field": "Venekarinnvekst",
+            "id": 118,
+            "type": "enum",
+            "value": null
+        },
+        {
+            "enum": [
+                {
+                    "name": "Tumor vokser inn i submucosa",
+                    "value": "pT1"
+                },
+                {
+                    "name": "Tumor vokser inn i muscularis propria",
+                    "value": "pT2"
+                },
+                {
+                    "name": "Tumor vokser inn i subserosa eller ikke-peritonealisert perikolisk/perirektalt vev",
+                    "value": "pT3"
+                },
+                {
+                    "name": "Tumor perforerer viscerale peritoneum (involverer overflaten)",
+                    "value": "pT4a"
+                },
+                {
+                    "name": "Tumor invaderer andre organer eller strukturer",
+                    "value": "pT4b"
+                },
+                {
+                    "name": "pT kan ikke vurderes",
+                    "value": null
+                }
+            ],
+            "field": "Infiltrasjonsdybde",
+            "id": 113,
+            "type": "enum",
+            "value": null
+        },
+        {
+            "enum": [
+                {
+                    "name": "Infiltrasjon i polypphode",
+                    "value": "Nivå 1"
+                },
+                {
+                    "name": "Infiltrasjon i polypphals",
+                    "value": "Nivå 2"
+                },
+                {
+                    "name": "Infiltrasjon i polypstilk",
+                    "value": "Nivå 3"
+                },
+                {
+                    "name": "Infiltrasjon i submukosa nedenfor polyppstilken",
+                    "value": "Nivå 4"
+                },
+                {
+                    "name": "Haggitt-nivå kan ikke vurderes",
+                    "value": null
+                },
+                {
+                    "name": "Haggitt-nivå ikke relevant å vurdere",
+                    "value": null
+                }
+            ],
+            "field": "Haggitt-klassifikasjon",
+            "id": 114,
+            "type": "enum",
+            "value": null
+        },
+        {
+            "enum": [
+                {
+                    "name": "øvre tredjedel av submucosa",
+                    "value": "sm1"
+                },
+                {
+                    "name": "midtre tredjedel av submucosa",
+                    "value": "sm2"
+                },
+                {
+                    "name": "nedre tredjedel av submucosa",
+                    "value": "sm3"
+                },
+                {
+                    "name": "Infiltrasjonsdybde kan ikke vurderes",
+                    "value": null
+                }
+            ],
+            "field": "Sm-klassifikasjon",
+            "id": 120,
+            "type": "enum",
+            "value": null
+        },
+        {
+            "field": "Dybde submukosal infiltrasjon",
+            "id": 127,
+            "type": "int",
+            "unit": "µm",
+            "value": null
+        },
+        {
+            "enum": [
+                {
+                    "name": "frie reseksjonsrender",
+                    "value": "M09400"
+                },
+                {
+                    "name": "ikke frie reseksjonsrender",
+                    "value": "M09401"
+                },
+                {
+                    "name": "reseksjonsrender kan ikke vurderes",
+                    "value": "M09402"
+                },
+                {
+                    "name": "reseksjonsrender ikke relevant å vurdere",
+                    "value": null
+                }
+            ],
+            "field": "Reseksjonsrender",
+            "id": 116,
+            "type": "enum",
+            "value": null
+        },
+        {
+            "field": "Korteste avstand til reseksjonsrand",
+            "id": 122,
+            "type": "int",
+            "unit": "mm",
+            "value": null
+        },
+        {
+            "field": "Korteste avstand til nærmeste sidereseksjonsrand",
+            "id": 115,
+            "type": "int",
+            "unit": "mm",
+            "value": null
+        },
+        {
+            "field": "Korteste avstand til dyp reseksjonsrand",
+            "id": 121,
+            "type": "int",
+            "unit": "mm",
+            "value": null
+        },
+        {
+            "field": "Antall tumor 'buds'",
+            "id": 125,
+            "type": "int",
+            "unit": "stk",
+            "value": null
+        },
+        {
+            "enum": [
+                {
+                    "name": "lav grad av budding (0-4 buds)",
+                    "value": "Bd1"
+                },
+                {
+                    "name": "intermediær grad av budding (5-9 buds)",
+                    "value": "Bd2"
+                },
+                {
+                    "name": "høy grad av budding (>10 buds)",
+                    "value": "Bd3"
+                },
+                {
+                    "name": "budding kan ikke vurderes",
+                    "value": null
+                }
+            ],
+            "field": "Graden av tumor 'budding'",
+            "id": 126,
+            "type": "enum",
+            "value": null
+        }
+    ]
+}

@@ -1,22 +1,51 @@
 {
-    "input_text": "Cancersuspekte lesjon i rektum ca 10cm fra analåpningen. Ulcerert og nedsunket. Ber om CITO\nAdenokarsinom?\n\nAnatomisk lokalisasjon: \n1/1: Rektum\nRekvirent bekrefter at korrekt hastegrad er valgt\nEr prøven tatt i forbindels med tarmscreeningsprogrammet?: Ja\nLesjonene utseende: Nedsunket ulcerert\nEr lesjonen komplett fjernet?: Nei\nDiameter på lesjon (mm): ca 4x3 cm",
+    "input_text": "Flere mindre polypper  < 4 mm NICE 1-2  fra sigmo og ut. Pos  hemofec.\nAdenomer (fjernet  8  små polypper)\n\nAnatomisk lokalisasjon: \n1/1: sigmoideum\nRekvirent bekrefter at korrekt hastegrad er valgt\nEr prøven tatt i forbindels med tarmscreeningsprogrammet?: Ja",
+    "metadata_json": [
+        {
+            "enum": [
+                {
+                    "value": "klinisk"
+                },
+                {
+                    "value": "makroskopisk"
+                },
+                {
+                    "value": "mikroskopisk"
+                }
+            ],
+            "field": "Rapport type",
+            "id": 0,
+            "type": "enum",
+            "value": "klinisk"
+        },
+        {
+            "field": "Antall glass",
+            "id": 1,
+            "type": "int",
+            "unit": "stk",
+            "value": 1
+        },
+        {
+            "field": "Beholder-ID",
+            "id": 128,
+            "type": "int",
+            "value": 1
+        }
+    ],
     "target_json": [
         {
-            "id": 100,
-            "field": "Prøvekategori",
-            "type": "enum",
             "enum": [
                 {
                     "name": "tarmscreening",
                     "value": "P06020"
                 }
             ],
+            "field": "Prøvekategori",
+            "id": 100,
+            "type": "enum",
             "value": "P06020"
         },
         {
-            "id": 101,
-            "field": "Lokasjon klinikk",
-            "type": "enum",
             "enum": [
                 {
                     "name": "terminale ileum",
@@ -71,19 +100,19 @@
                     "value": "T67920"
                 }
             ],
-            "value": "T68000"
+            "field": "Lokasjon klinikk",
+            "id": 101,
+            "type": "enum",
+            "value": "T67700"
         },
         {
-            "id": 102,
             "field": "Diameter av lesjon",
+            "id": 102,
             "type": "int",
             "unit": "mm",
             "value": 4
         },
         {
-            "id": 103,
-            "field": "Uttaksmetode klinikk",
-            "type": "enum",
             "enum": [
                 {
                     "value": "Biopsitang"
@@ -110,12 +139,12 @@
                     "value": "Annen metode"
                 }
             ],
+            "field": "Uttaksmetode klinikk",
+            "id": 103,
+            "type": "enum",
             "value": null
         },
         {
-            "id": 104,
-            "field": "Makroskopisk utseende",
-            "type": "enum",
             "enum": [
                 {
                     "name": "Stilket",
@@ -146,57 +175,28 @@
                     "value": null
                 }
             ],
-            "value": "III"
-        },
-        {
-            "id": 105,
-            "field": "Vurdert komplett fjernet",
-            "type": "boolean",
+            "field": "Makroskopisk utseende",
+            "id": 104,
+            "type": "enum",
             "value": null
         },
         {
-            "id": 130,
-            "field": "Mistanke om kreft",
+            "field": "Vurdert komplett fjernet",
+            "id": 105,
             "type": "boolean",
-            "value": true
+            "value": false
         },
         {
-            "id": 106,
+            "field": "Mistanke om kreft",
+            "id": 130,
+            "type": "boolean",
+            "value": false
+        },
+        {
             "field": "Klinisk diagnose/problemstilling",
+            "id": 106,
             "type": "string",
-            "value": "Cancersuspekte lesjon i rektum ca 10cm fra analåpningen."
-        }
-    ],
-    "metadata_json": [
-        {
-            "id": 0,
-            "field": "Rapport type",
-            "type": "enum",
-            "enum": [
-                {
-                    "value": "klinisk"
-                },
-                {
-                    "value": "makroskopisk"
-                },
-                {
-                    "value": "mikroskopisk"
-                }
-            ],
-            "value": "klinisk"
-        },
-        {
-            "id": 1,
-            "field": "Antall glass",
-            "type": "int",
-            "unit": "stk",
-            "value": 1
-        },
-        {
-            "id": 128,
-            "field": "Beholder-ID",
-            "type": "int",
-            "value": 1
+            "value": "(fjernet  8  små polypper)"
         }
     ]
 }

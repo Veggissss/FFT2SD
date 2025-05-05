@@ -110,7 +110,7 @@
             "id": 102,
             "type": "int",
             "unit": "mm",
-            "value": null
+            "value": 30
         },
         {
             "enum": [
@@ -190,7 +190,7 @@
             "field": "Mistanke om kreft",
             "id": 130,
             "type": "boolean",
-            "value": null
+            "value": false
         },
         {
             "field": "Klinisk diagnose/problemstilling",

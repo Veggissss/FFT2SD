@@ -165,7 +165,7 @@ if __name__ == "__main__":
     input_json_dir = os.path.join(SCRIPT_PATH, "../data_model/out")
 
     # Output directory
-    output_dir = os.path.join(SCRIPT_PATH, "labeled_data")
+    output_dir = os.path.join(SCRIPT_PATH, "corrected")
 
     # Load the large batch JSON data
     dataset_json: list[dict] = load_json(

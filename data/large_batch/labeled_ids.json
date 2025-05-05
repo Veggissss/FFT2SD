@@ -140,10 +140,64 @@
     "5309886184308093371": {
         "kliniske_opplysninger": true,
         "makrobeskrivelse": true,
-        "mikrobeskrivelse": true
+        "mikrobeskrivelse": true,
+        "diagnose": true
     },
     "1553686882037744557": {
         "mikrobeskrivelse": true,
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "diagnose": true
+    },
+    "2710807299142739537": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "14952191694757838091": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "12370062740946278655": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "2281749462065384410": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "7512021964094965861": {
+        "kliniske_opplysninger": true,
+        "diagnose": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true
+    },
+    "17311026849397511653": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "6011812714647989730": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "4084497930299564480": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "6413961462004858133": {
         "kliniske_opplysninger": true,
         "makrobeskrivelse": true
     }

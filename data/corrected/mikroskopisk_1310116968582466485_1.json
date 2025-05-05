@@ -1,5 +1,5 @@
 {
-    "input_text": "Tubulovilløst adenom med lavgradig dysplasi, colon, slyngereseksjon.\n\nSe diagnose.",
+    "input_text": "Tubulovilløst adenom med lavgradig dysplasi, colon, slyngereseksjon.",
     "metadata_json": [
         {
             "enum": [
@@ -292,7 +292,7 @@
             "field": "Differensieringsgrad",
             "id": 110,
             "type": "enum",
-            "value": "Lavgradig histologisk differensiering"
+            "value": null
         },
         {
             "field": "Karsinomets største diameter",

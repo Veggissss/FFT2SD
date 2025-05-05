@@ -184,13 +184,13 @@
             "field": "Vurdert komplett fjernet",
             "id": 105,
             "type": "boolean",
-            "value": null
+            "value": false
         },
         {
             "field": "Mistanke om kreft",
             "id": 130,
             "type": "boolean",
-            "value": null
+            "value": false
         },
         {
             "field": "Klinisk diagnose/problemstilling",
