@@ -6,20 +6,20 @@ import useApi from '../hooks/useApi';
 const ModelPanel = ({ modelType, onIsTrainedChange, onModelTypeChange, onModelSelectionChange, onLoadModel, isTrained, index, isLoading }: ModelPanelProps) => {
     const { getModels } = useApi();
     const [models, setModels] = useState<ModelsJson | null>(null);
-    const handleGetModels = async () => {
-        try {
-            setModels(await getModels());
-        } catch (error) {
-            console.error('Error fetching models:', error);
-            // Retry fetching models on error
-            handleGetModels();
-        }
-    }
 
-    // Fetch models only once
-    if (!models) {
-        handleGetModels();
-    }
+    useState(() => {
+        const fetchModels = async () => {
+            try {
+                const modelData = await getModels();
+                setModels(modelData);
+            } catch (error) {
+                console.error('Error fetching models:', error);
+                // Retry after 5 seconds
+                setTimeout(fetchModels, 5000);
+            }
+        };
+        fetchModels();
+    });
     return (
         <div className="model-panel">
             <select

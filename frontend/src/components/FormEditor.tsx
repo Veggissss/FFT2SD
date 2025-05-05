@@ -95,6 +95,7 @@ const FormEditor = ({ targetJson, onFieldChange }: FormEditorProps) => {
                         ) : item.type === 'int' ? (
                             <input
                                 type="number"
+                                min={1}
                                 value={item.value !== null && item.value !== undefined ? item.value as number : ''}
                                 onChange={(e) => onFieldChange(index, e.target.value ? parseInt(e.target.value) : null)}
                                 placeholder="Enter a number"

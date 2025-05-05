@@ -310,13 +310,12 @@ def correct_endpoint(report_id: str):
         )
 
         # Detect labeling diagnose text on a refreshed session.
-        if (
-            report_type_str == ReportType.MIKROSKOPISK.value
-            and os.path.exists(save_path)
-            and not os.path.exists(diag_path)
-            and len(reports) == total_glass_amount
+        if report_type_str == ReportType.MIKROSKOPISK.value and os.path.exists(
+            save_path
         ):
-            is_diagnose = True
+            saved_json = load_json(save_path)
+            if saved_json["input_text"] != report["input_text"]:
+                is_diagnose = True
 
         if is_diagnose:
             save_path = diag_path
@@ -331,6 +330,7 @@ def correct_endpoint(report_id: str):
                 ),
                 None,
             )
+        print(f"Saving report to {save_path}")
         save_json(report, save_path)
 
         # Update which report type was labeled in the dataset
@@ -394,7 +394,7 @@ def unlabeled_endpoint(text_type_str: str):
                 # Find first unlabeled report type
                 for rt in ReportType:
                     field = field_map.get(rt)
-                    if not labeled_info.get(field, False) and entry.get(field):
+                    if not labeled_info.get(field, False):
                         report_type = rt
                         break
 
@@ -416,7 +416,7 @@ def unlabeled_endpoint(text_type_str: str):
                 continue
 
             # Get and return the report text if available
-            report_text = entry.get(field)
+            report_text = entry.get(field, None)
             if report_text:
                 return jsonify(
                     {
@@ -426,6 +426,12 @@ def unlabeled_endpoint(text_type_str: str):
                         "text": report_text.strip().replace("\r", "\n"),
                     }
                 )
+            # If missing text, mark the entry as labeled
+            if entry_id not in labeled_ids:
+                labeled_ids[entry_id] = {}
+            labeled_ids[entry_id][field] = True
+            save_json(labeled_ids, LABELED_IDS_PATH)
+            print(f"WARNING: No text found for entry ID {entry_id} and field {field}!")
 
     # No unlabeled cases found
     return jsonify({"error": "No unlabeled cases found!"}), 404
