@@ -40,6 +40,9 @@ jobs:
 
       - name: Build Vite Project
         run: npm run build:pages
+        env:
+          VITE_BASE_URL: https://veggissss.github.io/FFT2SD
+          VITE_API_BASE_URL: https://veggissss.github.io/FFT2SD
 
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
