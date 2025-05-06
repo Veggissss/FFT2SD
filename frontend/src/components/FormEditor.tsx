@@ -74,7 +74,7 @@ const FormEditor = ({ jsonList, currentJson, onFieldChange }: FormEditorProps) =
     };
 
     // Get the current container ID being edited in form
-    const currentContainerId: number | undefined = currentJson.metadata_json.find((item) => item.field === 'Beholder-ID')?.value as number | undefined;
+    const currentContainerId: number | undefined = currentJson.metadata_json?.find((item) => item.field === 'Beholder-ID')?.value as number | undefined;
     if (!currentContainerId) {
         return null;
     }

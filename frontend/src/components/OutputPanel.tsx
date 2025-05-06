@@ -100,8 +100,8 @@ const OutputPanel = ({
                 )}
             </div>
             <div className="navigation-controls">
-                <h4>Report Type: {currentItem?.metadata_json.find(item => item.field === "Rapport type")?.value}</h4>
-                <h4>Container: {currentItem?.metadata_json.find(item => item.field === "Beholder-ID")?.value ?? ""}</h4>
+                <h4>Report Type: {currentItem?.metadata_json?.find(item => item.field === "Rapport type")?.value}</h4>
+                <h4>Container: {currentItem?.metadata_json?.find(item => item.field === "Beholder-ID")?.value ?? ""}</h4>
             </div>
             <div className="navigation-controls">
                 <button
