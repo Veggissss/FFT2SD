@@ -178,10 +178,10 @@ def apply_peft(model_loader: ModelLoader) -> PeftModel:
     """
     # Configure LoRA
     lora_config = LoraConfig(
-        r=128,  # Rank of the LoRA layers
-        lora_alpha=256,  # Scaling factor
+        r=16,  # Rank of the LoRA layers
+        lora_alpha=32,  # Scaling factor
         lora_dropout=0.1,  # Dropout for LoRA
-        bias="none",  # No bias in LoRA layers
+        bias="none",  # Don't train original bias
         task_type="CAUSAL_LM",
     )
     peft_model = get_peft_model(model_loader.model, lora_config)
@@ -307,8 +307,7 @@ def train(model_type: ModelType, model_index: int, push_to_hub: bool = True) -> 
 if __name__ == "__main__":
     # Train all model types and sizes except gemma and qwen
     for m_type in ModelType:
-        for i in range(len(MODELS_DICT[m_type])):
-            # Don't fine-tune gemma and qwen
-            if m_type == ModelType.DECODER and i >= 2:
-                break
-            train(m_type, i)
+        for i, model_settings in enumerate(MODELS_DICT[m_type]):
+            if model_settings.is_fine_tuning:
+                print(f"Training {m_type} model: {model_settings}")
+                train(m_type, i)

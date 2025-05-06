@@ -50,28 +50,48 @@ class ModelSettings:
     """
     Model specific settings for the Hugging Face models.
 
-    :param model_name: The name of the model to be used.
+    :param base_model_name: The name/repo path to the HuggingFace model.
+    :param peft_model_name: The HuggingFace PEFT model repo path. If None, the local trained peft will be used if is_trained is True.
     :param use_4bit_quant: Whether to load the model using 4-bit quantization.
+    :param is_fine_tuning: Whether the model is going to be fine-tuned or not.
+
     :param training_batch_size: The batch size to be used during training.
     :param training_num_epochs: The number of epochs to train the model.
     :param training_learning_rate: The learning rate to be used during training.
     :param training_encoder_only_mask_values: Whether to ONLY mask out the values when training encoder models. If false, use random mlm.
     """
 
-    model_name: str
+    base_model_name: str
+    peft_model_name: None | str = None
     use_4bit_quant: bool = False
+    is_fine_tuning: bool = True
 
     training_batch_size: int = 1
     training_num_epochs: int = 20
-    training_learning_rate: float = 5e-5
+    training_learning_rate: float = 1e-4
     training_encoder_only_mask_values: bool = False
 
     def __str__(self) -> str:
         """
         Get the saved model name.
         """
+        if self.peft_model_name:
+            return self.peft_model_name
         if self.training_encoder_only_mask_values:
-            return self.model_name + "_mask_values"
+            return self.base_model_name + "_mask_values"
         if self.use_4bit_quant:
-            return self.model_name + "_4bit_quant"
-        return self.model_name
+            return self.base_model_name + "_4bit_quant"
+        return self.base_model_name
+
+    def __post_init__(self) -> None:
+        """
+        Post-initialization method to validate the model settings.
+        """
+        if self.training_batch_size < 1:
+            raise ValueError("Batch size must be at least 1.")
+        if self.training_num_epochs < 1:
+            raise ValueError("Number of epochs must be at least 1.")
+        if self.training_learning_rate <= 0:
+            raise ValueError("Learning rate must be greater than 0.")
+        if self.is_fine_tuning and self.peft_model_name:
+            raise ValueError("PEFT model repo name should not be set when fine-tuning.")

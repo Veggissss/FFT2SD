@@ -45,7 +45,7 @@ class ModelLoader:
         if is_trained:
             self.model_name = f"trained/{str(self.model_settings)}"
         else:
-            self.model_name = self.model_settings.model_name
+            self.model_name = self.model_settings.base_model_name
 
         # Load the model architecture specific handler
         self.strategy: BaseModelStrategy = {

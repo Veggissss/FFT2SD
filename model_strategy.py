@@ -22,7 +22,7 @@ from token_constraints import (
     TokenTypeConstraintProcessor,
     StopOnToken,
 )
-from config import JSON_START_MARKER, MODELS_DICT
+from config import JSON_START_MARKER
 from utils.file_loader import str_to_json
 from utils.data_classes import TokenOptions
 
@@ -47,7 +47,8 @@ class BaseModelStrategy:
         """
         # Load the corresponding model's tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_loader.model_name, trust_remote_code=True
+            (model_loader.model_settings.peft_model_name or model_loader.model_name),
+            trust_remote_code=True,
         )
 
     def generate(
@@ -252,21 +253,19 @@ class DecoderStrategy(BaseModelStrategy):
         # Load tokenizer
         super().load(model_loader)
 
-        q_config = None
         if model_loader.model_settings.use_4bit_quant:
             # Use 4-bit quantization
             q_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_compute_dtype=torch.float16,
             )
-            # Load the base model without "_peft" in the name
-            model_name = MODELS_DICT[model_loader.model_type][
-                model_loader.model_index
-            ].model_name
+            # Load the base HF model without "_peft" in the name
+            model_name = model_loader.model_settings.base_model_name
         else:
+            q_config = None
             model_name = model_loader.model_name
 
-        # Load the untrained base model.
+        # Load the base model.
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             quantization_config=q_config,
@@ -289,18 +288,30 @@ class DecoderStrategy(BaseModelStrategy):
         # Resize to fit the pad. If trained also fit other new tokens from the base model to match the peft model.
         model.resize_token_embeddings(len(self.tokenizer))
 
-        if model_loader.model_settings.use_4bit_quant and model_loader.is_trained:
+        if model_loader.model_settings.use_4bit_quant and (
+            model_loader.is_trained or model_loader.model_settings.peft_model_name
+        ):
+            # See to use PEFT model from HuggingFace or a locally fine-tuned PEFT model
+            if model_loader.model_settings.peft_model_name:
+                model_id = model_loader.model_settings.peft_model_name
+            else:
+                model_id = model_loader.model_name
+
             # Load the PEFT model
             is_trainable = False
             model = PeftModel.from_pretrained(
                 model,
-                model_loader.model_name,
+                model_id=model_id,
                 # NOTE: Don’t use low_cpu_mem_usage=True when creating a new PEFT adapter for training.
                 # https://huggingface.co/docs/peft/v0.15.0/en/package_reference/peft_model#peft.PeftModel.low_cpu_mem_usage
                 low_cpu_mem_usage=(not is_trainable),
                 is_trainable=is_trainable,
-                # ephemeral_gpu_offloading=True,
+                ephemeral_gpu_offloading=True,
             )
+            # Reduce latency by merging peft model with base model
+            if not is_trainable:
+                model.eval()
+                model.merge_and_unload()
 
         return model, self.tokenizer
 

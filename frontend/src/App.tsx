@@ -35,10 +35,6 @@ function App() {
     }
 
     const handleIsTrained = (checked: boolean) => {
-        if (modelType === "encoder") {
-            setIsTrained(true);
-            return;
-        }
         setIsTrained(checked);
     }
 

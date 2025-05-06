@@ -211,12 +211,15 @@ def test_masked_value():
 
 
 if __name__ == "__main__":
+    GENERATE_STRINGS = False
+
+    # Compare masking just values vs random mlm training
     # test_masked_value()
 
     for m_type in ModelType:
         token_options = TokenOptions()
         token_options.include_enums = m_type == ModelType.DECODER
-        # token_options.generate_strings = True
+        token_options.generate_strings = GENERATE_STRINGS
 
         # Test all models
         for i, model_setting in enumerate(MODELS_DICT[m_type]):
@@ -229,7 +232,7 @@ if __name__ == "__main__":
             )
 
             # Evaluate trained decoder norallm models as well
-            if "norallm" in model_setting.model_name:
+            if "norallm" in model_setting.base_model_name:
                 evaluate(
                     model_type=m_type,
                     model_index=i,
@@ -252,7 +255,7 @@ if __name__ == "__main__":
     # Trained Encoder-Decoder models
     visualize(
         model_type=ModelType.ENCODER_DECODER,
-        ignore_strings=True,
+        ignore_strings=(not GENERATE_STRINGS),
         included_model_names=[
             "trained/ltg/nort5-small",
             "trained/ltg/nort5-base",
@@ -264,7 +267,7 @@ if __name__ == "__main__":
     # Trained Small decoder models and all its variants tained and untrained with/without 4bit quantization
     visualize(
         model_type=ModelType.DECODER,
-        ignore_strings=True,
+        ignore_strings=(not GENERATE_STRINGS),
         included_model_names=[
             "norallm/normistral-7b-warm_4bit_quant",
             "norallm/normistral-7b-warm",
@@ -277,7 +280,7 @@ if __name__ == "__main__":
     # 0 shot test for larger untrained decoder models
     visualize(
         model_type=ModelType.DECODER,
-        ignore_strings=True,
+        ignore_strings=(not GENERATE_STRINGS),
         included_model_names=[
             "norallm/normistral-7b-warm",
             "google/gemma-3-27b-it",

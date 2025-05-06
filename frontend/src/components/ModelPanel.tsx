@@ -57,7 +57,7 @@ const ModelPanel = ({ modelType, onIsTrainedChange, onModelTypeChange, onModelSe
                         type="checkbox"
                         checked={isTrained}
                         onChange={(e) => onIsTrainedChange(e.target.checked)}
-                        disabled={isLoading || modelType === "encoder"}
+                        disabled={isLoading}
                     />
                     <span className="slider round"></span>
                 </label>

@@ -205,8 +205,10 @@ def load_model_endpoint():
     # Encoder models needs to be trained
     if model_type == ModelType.ENCODER:
         is_trained = True
+
     # Prevent trying to load local models that are not trained (e.g. Gemma and Qwen)
-    elif model_type == ModelType.DECODER and model_index >= 2:
+    model_settings = MODELS_DICT[model_type][model_index]
+    if not model_settings.is_fine_tuning:
         is_trained = False
 
     return jsonify({"message": load_model(model_type, model_index, is_trained)}), 200
