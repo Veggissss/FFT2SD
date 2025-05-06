@@ -112,7 +112,7 @@ def visualize(
     if ignore_strings:
         results = [entry for entry in results if entry.get("type") != "string"]
     if ignore_null:
-        results = [entry for entry in results if entry.get("y_true") != "null"]
+        results = [entry for entry in results if entry.get("y_true") is not None]
     # Filter out other model types
     results = [
         entry for entry in results if entry.get("model_type") == model_type.value
@@ -128,6 +128,7 @@ def visualize(
     if not results:
         print(f"No results found for {model_type.value}:\n{included_model_names}")
         return
+    print(f"Total results: {len(results)}")
 
     df = pd.DataFrame(results)
 
@@ -197,8 +198,8 @@ def test_masked_value():
     """
     Small test to compare value only vs random mlm training.
     """
-    evaluate(ModelType.ENCODER, 0, is_trained=True)
-    evaluate(ModelType.ENCODER, 1, is_trained=True)
+    # evaluate(ModelType.ENCODER, 0, is_trained=True)
+    # evaluate(ModelType.ENCODER, 1, is_trained=True)
     visualize(
         model_type=ModelType.ENCODER,
         ignore_strings=True,
