@@ -252,6 +252,7 @@ class DecoderStrategy(BaseModelStrategy):
     def load(self, model_loader: "ModelLoader") -> tuple[AutoModel, AutoTokenizer]:
         # Load tokenizer
         super().load(model_loader)
+        self.tokenizer.padding_side = "left"
 
         if model_loader.model_settings.use_4bit_quant:
             # Use 4-bit quantization
