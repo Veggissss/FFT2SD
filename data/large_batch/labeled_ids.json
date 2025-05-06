@@ -259,6 +259,14 @@
     },
     "158101158596068648": {
         "kliniske_opplysninger": true,
-        "makrobeskrivelse": true
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "4041957081995581497": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
     }
 }
