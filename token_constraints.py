@@ -112,9 +112,12 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
     ) -> list[int]:
         """Get the allowed tokens for value generation based on the last_token_id"""
         allowed_token_ids = []
-        last_token_id = last_token_ids[-1]
+        last_token_decoded = self.tokenizer.decode(
+            last_token_ids, skip_special_tokens=False
+        )[-1]
+
         # If the last token is not a quote, check for sub-tokens
-        if last_token_id is not self.quote_token_id:
+        if last_token_decoded != '"':
             if self.quote_token_id in last_token_ids:
                 # Reverse the list to find and find the last quote token index
                 quote_index = len(last_token_ids) - last_token_ids[::-1].index(
@@ -130,7 +133,8 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                     if isinstance(token, list):
                         continue
                     if token in last_token_ids:
-                        allowed_token_ids.append(self.quote_token_id)
+                        if self.quote_token_id not in allowed_token_ids:
+                            allowed_token_ids.append(self.quote_token_id)
                         self.state[batch_index] = GenerationState.GENERATING_VALUE
                         break
 
@@ -142,8 +146,9 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         else:
             # If a complete token is found and a closing quote is generated, allow the end bracket token
             if self.state[batch_index] == GenerationState.GENERATING_VALUE:
-                allowed_token_ids = [self.bracket_end_token_id]
                 self.state[batch_index] = None
+                allowed_token_ids = [self.bracket_end_token_id]
+                return allowed_token_ids
 
             # Allow first tokens in sub-token sequences and all other "full" tokens
             for item in self.allowed_token_ids_list[batch_index]:
