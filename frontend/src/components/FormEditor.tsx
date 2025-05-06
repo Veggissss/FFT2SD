@@ -1,21 +1,21 @@
-import { FormEditorProps } from '../types';
+import { FormEditorProps, TargetJsonItem } from '../types';
 import '../styles/FormEditor.css';
 
-const FormEditor = ({ targetJson, onFieldChange }: FormEditorProps) => {
-    if (!targetJson) return null;
+const FormEditor = ({ jsonList, currentJson, onFieldChange }: FormEditorProps) => {
+    if (!currentJson || !jsonList) return null;
 
-    const shouldShowField = (item: any, jsonList: any[]) => {
+    const shouldShowField = (item: TargetJsonItem, jsonItems: TargetJsonItem[]) => {
         const id = item.id;
 
         // Extract relevant values from jsonList
-        const getValue = (fieldId: number) => jsonList.find(j => j.id === fieldId)?.value;
+        const getValue = (fieldId: number) => jsonItems.find(j => j.id === fieldId)?.value ?? undefined;
 
-        const consideredRemoved: boolean | null | undefined = getValue(105);
-        const macroscopicLook: string | undefined = getValue(104)
-        const sampleMaterial: string | undefined = getValue(108);
-        const diagnosis: string = getValue(109);
-        const infiltrationDepth: string = getValue(113);
-        const haggittLevel: string = getValue(114);
+        const consideredRemoved = getValue(105) as boolean | undefined;
+        const macroscopicLook = getValue(104) as string | undefined;
+        const sampleMaterial = getValue(108) as string | undefined;
+        const diagnosis = getValue(109) as string | undefined;
+        const infiltrationDepth = getValue(113) as string | undefined;
+        const haggittLevel = getValue(114) as string | undefined;
 
         const isConditionMet = (arr: string[], value: string | undefined) => value === undefined || arr.includes(value ?? '');
 
@@ -73,10 +73,25 @@ const FormEditor = ({ targetJson, onFieldChange }: FormEditorProps) => {
         }
     };
 
+    // Get the current container ID being edited in form
+    const currentContainerId: number | undefined = currentJson.metadata_json.find((item) => item.field === 'Beholder-ID')?.value as number | undefined;
+    if (!currentContainerId) {
+        return null;
+    }
+
+    // Get a list of all properties from all reporting steps for the current container ID
+    // NOTE: This comes with the assumption that the same container ID is refering to the same sample.
+    const jsonItems: TargetJsonItem[] = []
+    for (let i = 0; i < jsonList.length; i++) {
+        const jsonItem = jsonList[i];
+        if (jsonItem.metadata_json.find(item => item.field === "Beholder-ID")?.value as number === currentContainerId) {
+            jsonItems.push(...jsonItem.target_json);
+        }
+    }
     return (
         <div className="form-container">
-            {targetJson.map((item, index) => (
-                shouldShowField(item, targetJson) && (
+            {currentJson.target_json.map((item, index) => (
+                shouldShowField(item, jsonItems) && (
                     <div key={index} className={`form-item ${item.type === 'boolean' ? 'boolean-input' : ''}`}>
                         <label>{item.field}</label>
                         {item.type === 'enum' ? (

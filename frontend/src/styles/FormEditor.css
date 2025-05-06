@@ -13,11 +13,17 @@
     min-width: 500px;
 }
 
-.form-item {
+.form-container select {
+    margin-top: 0;
     margin-bottom: 0;
+}
+
+.form-item {
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.1rem;
     width: 100%;
 }
 

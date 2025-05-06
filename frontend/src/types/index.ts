@@ -1,4 +1,5 @@
 export interface TargetJsonItem {
+    id: number;
     field: string;
     type: 'string' | 'int' | 'enum' | 'boolean';
     value: string | number | boolean | null;
@@ -45,6 +46,7 @@ export interface OutputPanelProps {
     outputText: string;
     onOutputChange: (value: string | undefined) => void;
     currentItem: JsonItem | null;
+    jsonList: JsonItem[];
     onFieldChange: (index: number, value: string | number | boolean | null) => void;
     currentIndex: number;
     totalItems: number;
@@ -57,7 +59,8 @@ export interface OutputPanelProps {
 }
 
 export interface FormEditorProps {
-    targetJson: TargetJsonItem[];
+    currentJson: JsonItem | null;
+    jsonList: JsonItem[];
     onFieldChange: (index: number, value: string | number | boolean | null) => void;
 }
 

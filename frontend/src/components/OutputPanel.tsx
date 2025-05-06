@@ -14,6 +14,7 @@ const OutputPanel = ({
     outputText,
     onOutputChange,
     currentItem,
+    jsonList,
     onFieldChange,
     currentIndex,
     totalItems,
@@ -74,7 +75,8 @@ const OutputPanel = ({
             <div className="editor-container">
                 {useFormInput ? (
                     <FormEditor
-                        targetJson={currentItem?.target_json || []}
+                        jsonList={jsonList}
+                        currentJson={currentItem}
                         onFieldChange={onFieldChange}
                     />
                 ) : (
@@ -96,6 +98,10 @@ const OutputPanel = ({
                         }}
                     />
                 )}
+            </div>
+            <div className="navigation-controls">
+                <h4>Report Type: {currentItem?.metadata_json.find(item => item.field === "Rapport type")?.value}</h4>
+                <h4>Container: {currentItem?.metadata_json.find(item => item.field === "Beholder-ID")?.value ?? ""}</h4>
             </div>
             <div className="navigation-controls">
                 <button

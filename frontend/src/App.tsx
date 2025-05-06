@@ -240,10 +240,11 @@ function App() {
                     onToggleEnumsChange={handleToggleEnums}
                     outputText={outputText}
                     onOutputChange={handleOutput}
+                    jsonList={jsonList}
                     currentItem={jsonList[currentIndex]}
+                    totalItems={jsonList.length}
                     onFieldChange={handleField}
                     currentIndex={currentIndex}
-                    totalItems={jsonList.length}
                     onPrevious={handlePrevious}
                     onNext={handleNext}
                     onCorrect={handleCorrect}
