@@ -175,9 +175,9 @@
     },
     "7512021964094965861": {
         "kliniske_opplysninger": true,
-        "diagnose": true,
         "makrobeskrivelse": true,
-        "mikrobeskrivelse": true
+        "mikrobeskrivelse": true,
+        "diagnose": true
     },
     "17311026849397511653": {
         "kliniske_opplysninger": true,
@@ -198,6 +198,66 @@
         "diagnose": true
     },
     "6413961462004858133": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "16773557482994809422": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "3228574827510190155": {
+        "diagnose": true,
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true
+    },
+    "17333424486755967049": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "4566027996611183382": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "4376362037771535365": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "17344951777140796842": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "5319701006554998513": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "3087919060322314278": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "16721148865913922760": {
+        "kliniske_opplysninger": true,
+        "makrobeskrivelse": true,
+        "mikrobeskrivelse": true,
+        "diagnose": true
+    },
+    "158101158596068648": {
         "kliniske_opplysninger": true,
         "makrobeskrivelse": true
     }

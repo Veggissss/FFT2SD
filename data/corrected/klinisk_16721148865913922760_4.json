@@ -1,0 +1,202 @@
+{
+    "input_text": "1-3 mindre  adonmatøse eller  sagtannede  polypper  NICE 1-2. Adenomer? sagtannede  polypper? dysplasi\n4: NICE 3 polypp, ca 3 mm i sigmoid 40 cm adenom Dysplasi?\n5 Stilket polypp i sigmoid ca 15 mm i  diameter, tynn stilk, fjernet med makroakopisk fri rand. Adenom?  NICE 2.\n\nAnatomisk lokalisasjon: \n1/5: ascendes\n2/5: transversum\n3/5: descendens\n4/5: sigmoideum\n5/5: sigmoideum\nRekvirent bekrefter at korrekt hastegrad er valgt\nEr prøven tatt i forbindels med tarmscreeningsprogrammet?: Ja",
+    "metadata_json": [
+        {
+            "enum": [
+                {
+                    "value": "klinisk"
+                },
+                {
+                    "value": "makroskopisk"
+                },
+                {
+                    "value": "mikroskopisk"
+                }
+            ],
+            "field": "Rapport type",
+            "id": 0,
+            "type": "enum",
+            "value": "klinisk"
+        },
+        {
+            "field": "Antall glass",
+            "id": 1,
+            "type": "int",
+            "unit": "stk",
+            "value": 5
+        },
+        {
+            "field": "Beholder-ID",
+            "id": 128,
+            "type": "int",
+            "value": 4
+        }
+    ],
+    "target_json": [
+        {
+            "enum": [
+                {
+                    "name": "tarmscreening",
+                    "value": "P06020"
+                }
+            ],
+            "field": "Prøvekategori",
+            "id": 100,
+            "type": "enum",
+            "value": "P06020"
+        },
+        {
+            "enum": [
+                {
+                    "name": "terminale ileum",
+                    "value": "T65520"
+                },
+                {
+                    "name": "coecum",
+                    "value": "T67100"
+                },
+                {
+                    "name": "colon ascendens",
+                    "value": "T67200"
+                },
+                {
+                    "name": "høyre colonfleksur",
+                    "value": "T67300"
+                },
+                {
+                    "name": "colon transversum",
+                    "value": "T67400"
+                },
+                {
+                    "name": "venstre colonfleksur",
+                    "value": "T67500"
+                },
+                {
+                    "name": "colon descendens",
+                    "value": "T67600"
+                },
+                {
+                    "name": "colon sigmoideum",
+                    "value": "T67700"
+                },
+                {
+                    "name": "rectosigmoid",
+                    "value": "T68200"
+                },
+                {
+                    "name": "rectum",
+                    "value": "T68000"
+                },
+                {
+                    "name": "anus",
+                    "value": "T69000"
+                },
+                {
+                    "name": "colon",
+                    "value": "T67000"
+                },
+                {
+                    "name": "colon og rectum",
+                    "value": "T67920"
+                }
+            ],
+            "field": "Lokasjon klinikk",
+            "id": 101,
+            "type": "enum",
+            "value": "T67700"
+        },
+        {
+            "field": "Diameter av lesjon",
+            "id": 102,
+            "type": "int",
+            "unit": "mm",
+            "value": 1
+        },
+        {
+            "enum": [
+                {
+                    "value": "Biopsitang"
+                },
+                {
+                    "value": "Kald slynge in toto"
+                },
+                {
+                    "value": "Kald slynge piecemeal"
+                },
+                {
+                    "value": "Diatermislynge in toto"
+                },
+                {
+                    "value": "Diatermislynge piecemeal"
+                },
+                {
+                    "value": "Endoskopisk submucosal disseksjon (ESD)"
+                },
+                {
+                    "value": "Endoskopisk mucosal reseksjon (EMR)"
+                },
+                {
+                    "value": "Annen metode"
+                }
+            ],
+            "field": "Uttaksmetode klinikk",
+            "id": 103,
+            "type": "enum",
+            "value": null
+        },
+        {
+            "enum": [
+                {
+                    "name": "Stilket",
+                    "value": "Ip"
+                },
+                {
+                    "name": "Høy bredbaset",
+                    "value": "Is"
+                },
+                {
+                    "name": "Lav bredbaset",
+                    "value": "IIa"
+                },
+                {
+                    "name": "Flat",
+                    "value": "IIb"
+                },
+                {
+                    "name": "Nedsunket",
+                    "value": "IIc"
+                },
+                {
+                    "name": "Nedsunket ulcerert",
+                    "value": "III"
+                },
+                {
+                    "name": "Ikke relevant",
+                    "value": null
+                }
+            ],
+            "field": "Makroskopisk utseende",
+            "id": 104,
+            "type": "enum",
+            "value": "Ip"
+        },
+        {
+            "field": "Vurdert komplett fjernet",
+            "id": 105,
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "field": "Mistanke om kreft",
+            "id": 130,
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "field": "Klinisk diagnose/problemstilling",
+            "id": 106,
+            "type": "string",
+            "value": null
+        }
+    ]
+}
