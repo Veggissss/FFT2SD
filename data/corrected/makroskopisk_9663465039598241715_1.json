@@ -126,8 +126,8 @@
             "value": "P13409"
         },
         {
+            "id": 129,
             "field": "Makroskopisk beskrivelse",
-            "id": 109,
             "type": "string",
             "value": "Polyppøs vevsbit, 5*3*2 mm."
         }

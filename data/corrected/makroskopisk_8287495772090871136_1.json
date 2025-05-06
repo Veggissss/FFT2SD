@@ -126,8 +126,8 @@
             "value": null
         },
         {
+            "id": 129,
             "field": "Makroskopisk beskrivelse",
-            "id": 109,
             "type": "string",
             "value": "Bredbaset polypp fra sigmoideum, 4*3*3 mm"
         }

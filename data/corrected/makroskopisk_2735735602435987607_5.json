@@ -126,8 +126,8 @@
             "value": null
         },
         {
+            "id": 129,
             "field": "Makroskopisk beskrivelse",
-            "id": 109,
             "type": "string",
             "value": "Sannsynlig stilket polypp, har bare mottatt polypphodet. Måler 8 x 5 x 7 mm."
         }

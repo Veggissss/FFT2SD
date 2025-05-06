@@ -126,8 +126,8 @@
             "value": null
         },
         {
+            "id": 129,
             "field": "Makroskopisk beskrivelse",
-            "id": 109,
             "type": "string",
             "value": "1 gryn i #5."
         }

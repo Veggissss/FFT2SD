@@ -126,8 +126,8 @@
             "value": "P13409"
         },
         {
+            "id": 129,
             "field": "Makroskopisk beskrivelse",
-            "id": 109,
             "type": "string",
             "value": "Stilken måler 2 mm. Polypphodet måler 11 x 10 mm. Seriesnittes."
         }

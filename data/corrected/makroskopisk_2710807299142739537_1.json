@@ -126,8 +126,8 @@
             "value": null
         },
         {
+            "id": 129,
             "field": "Makroskopisk beskrivelse",
-            "id": 109,
             "type": "string",
             "value": "måler cirka 3- 6 mm."
         }

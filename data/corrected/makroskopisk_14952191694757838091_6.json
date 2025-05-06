@@ -126,8 +126,8 @@
             "value": "P13409"
         },
         {
+            "id": 129,
             "field": "Makroskopisk beskrivelse",
-            "id": 109,
             "type": "string",
             "value": "3  gryn i #6"
         }
