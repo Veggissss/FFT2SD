@@ -8,13 +8,14 @@ import server
 # Testing script to fully label the complete unlabeled dataset
 # This could be used to quickly label the entire dataset using an (hopefully accurate) large model and use the dataset to fine tune smaller models
 if __name__ == "__main__":
-    model_type = ModelType.ENCODER_DECODER
-    model_index = 0
+    model_type = ModelType.DECODER
+    model_index = 2
     is_trained = False
     server.model_loader = ModelLoader(model_type, model_index, is_trained)
 
     output_path = Path("data/test_label_all/")
     unlabeled_dataset = load_json("data/large_batch/export_2025-03-17.json")
+    labeled_ids = load_json("data/large_batch/labeled_ids.json")
 
     # Map text to correct data model
     dataset_field_mapping = {
@@ -25,21 +26,38 @@ if __name__ == "__main__":
     }
 
     for unlabeled in unlabeled_dataset:
+        # Prevent labeling same as "ground truth"
+        report_id = unlabeled.get("id")
+        if report_id in labeled_ids:
+            print(f"Report ID {report_id} already labeled, skipping.")
+            continue
+
+        # Use text for every field in the dataset
         for field in DatasetField:
             if field.value not in unlabeled or field.value is None:
                 continue
 
-            report_id = unlabeled.get("id")
+            # Set token generation options
             report_type = dataset_field_mapping.get(field)
             token_options = TokenOptions(report_type=report_type)
+            token_options.include_enums = True  # Include enum values in the prompt
+            # token_options.generate_strings = True  # Generate string values in the output
+
             input_text = unlabeled[field.value]
-            reports = server.generate(input_text, report_type=report_type)
+            reports = server.generate(
+                input_text,
+                report_type=report_type,
+                token_options=token_options,
+                allow_metadata_null=True,
+            )
             if not reports:
                 print(f"No reports generated for input: {input_text}")
                 continue
+            print(f"Generated {len(reports)} reports for input: {input_text}")
 
             for report in reports:
                 # Save the generated report to a file
                 save_json(
                     report, output_path.joinpath(f"{field.value}_{report_id}.json")
                 )
+                print(f"Saved report for {field.value} with ID {report_id}")

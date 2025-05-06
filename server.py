@@ -61,6 +61,7 @@ def generate(
     report_type: ReportType = None,
     total_containers: int = None,
     token_options: TokenOptions = None,
+    allow_metadata_null: bool = False,
 ) -> list[dict] | None:
     """Function to generate structured data using the loaded model."""
 
@@ -73,8 +74,8 @@ def generate(
     # Determine report type if not provided
     if not report_type:
         filled_report = fill_json(
-            TemplateGeneration(input_text, CONTAINER_ID_MASK, [report_json]),
-            TokenOptions(allow_null=False),
+            TemplateGeneration(input_text, "1", [report_json]),
+            TokenOptions(allow_null=allow_metadata_null),
         )[0]
         report_type_str = filled_report.get("value", "")
         if (
@@ -89,15 +90,15 @@ def generate(
     if not total_containers:
         filled_container = fill_json(
             TemplateGeneration(input_text, CONTAINER_ID_MASK, [glass_amount_json]),
-            TokenOptions(allow_null=False),
+            TokenOptions(allow_null=allow_metadata_null),
         )[0]
         total_containers = filled_container.get("value")
         if not total_containers or not str(total_containers).isdigit():
-            print("ERROR: Could not parse the container count!")
+            print(f"ERROR: Could not parse the container count! ({total_containers})")
             return None
         total_containers = int(total_containers)
         if total_containers < 1 or total_containers > 10:
-            print("ERROR: container count out of range!")
+            print(f"ERROR: container count out of range! ({total_containers})")
             return None
 
     # Get the filled JSON for each container, 1 indexed

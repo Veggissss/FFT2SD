@@ -14,14 +14,18 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
         ModelSettings("ltg/norbert3-small", training_batch_size=16),
         ModelSettings("ltg/norbert3-base", training_batch_size=8),
         ModelSettings("ltg/norbert3-large", training_batch_size=4),
-        ModelSettings("Veggissss/ltg_norbert3-small_mask_values", is_fine_tuning=False), # Example on how to load fine-tuned model from huggingface.
+        #ModelSettings("Veggissss/ltg_norbert3-small_mask_values", is_fine_tuning=False), # Example on how to load fine-tuned model from huggingface.
     ],
     ModelType.DECODER: [
-        ModelSettings("norallm/normistral-7b-warm", peft_model_name="Veggissss/norallm_normistral-7b-warm_4bit_quant", use_4bit_quant=True, is_fine_tuning=False), # Example on how to load already fine-tuned PEFT model from huggingface.
-        ModelSettings("norallm/normistral-7b-warm", training_batch_size=2, training_learning_rate=3e-5, use_4bit_quant=True, training_num_epochs=1),
-        ModelSettings("norallm/normistral-7b-warm", training_batch_size=1, training_learning_rate=5e-5),
+        ModelSettings("norallm/normistral-7b-warm-instruct", training_batch_size=2, training_learning_rate=3e-5, use_4bit_quant=True, training_num_epochs=1),
+        ModelSettings("norallm/normistral-7b-warm-instruct", training_batch_size=1, training_learning_rate=5e-5),
         ModelSettings("google/gemma-3-27b-it", is_fine_tuning=False),
         ModelSettings("Qwen/Qwen3-32B", is_fine_tuning=False),
+        #ModelSettings("Qwen/Qwen3-4B", use_4bit_quant=True, is_fine_tuning=False),
+        #ModelSettings("google/gemma-3-1b-it", use_4bit_quant=True, is_fine_tuning=False),
+
+        # Example on how to load already fine-tuned PEFT model from huggingface:
+        #ModelSettings("norallm/normistral-7b-warm", peft_model_name="Veggissss/norallm_normistral-7b-warm_4bit_quant", use_4bit_quant=True, is_fine_tuning=False),
     ],
 }
 # fmt: on
@@ -30,7 +34,7 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
 DATA_MODEL_OUTPUT_FOLDER = "data_model/out"
 
 # Print out contstrained token probabilities and other debug information
-DEBUG_MODE_ENABLED = True  # TODO: Add propper logging
+DEBUG_MODE_ENABLED = False  # TODO: Add propper logging
 
 
 """
@@ -52,7 +56,7 @@ SYSTEM_PROMPT = (
     "Finn kun informasjon som gjelder glass nummer {container_id}.\n"
     "Ignorer all informasjon om andre glass.\n"
     'Fyll ut feltet "value" basert på denne informasjonen.\n'
-    'Hvis det ikke finnes en gyldig verdi, sett "value" til null.\n\n'
+    'Hvis det ikke finnes en gyldig verdi så sett "value" til null. (null er alltid en gyldig verdi.)\n\n'
     f"{JSON_START_MARKER}\n"
     "{template_json}"
 )
@@ -61,4 +65,9 @@ SYSTEM_PROMPT = (
 Used for masking out "Glass nummer X." in the input prompt.
 Only used for when asking for glass amount in training and inference.
 """
-CONTAINER_ID_MASK = "?"
+CONTAINER_ID_MASK = (
+    "ukjent – finn totalt antall glass nevnt i teksten. "
+    "Kan være uttrykt som 'x glass', 'prøve x', 'x:', der høyeste 'x' angir antall glass. "
+    "Hvis antall glass ikke er nevnt, sett verdien til 1. "
+    "Ignorer uttrykk som: 'x gryn', målinger som '1 x 2 mm', og 'i # x'."
+)

@@ -1,3 +1,4 @@
+import gc
 import torch
 
 from utils.file_loader import json_to_str
@@ -42,7 +43,7 @@ class ModelLoader:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Use either a trained local model or a Hugging Face model
-        if is_trained:
+        if is_trained and self.model_settings.is_fine_tuning:
             self.model_name = f"trained/{str(self.model_settings)}"
         else:
             self.model_name = self.model_settings.base_model_name
@@ -142,18 +143,19 @@ class ModelLoader:
         """
         Unload the model from memory.
         """
+        if hasattr(self, "tokenizer"):
+            del self.tokenizer
+        if hasattr(self, "strategy"):
+            del self.strategy
         if hasattr(self, "model"):
-            # Move model to CPU and delete it
             self.model.to("cpu")
             del self.model
 
-            # Clear PEFT adapters
-            if hasattr(self, "peft_model"):
-                print("Unloading PEFT model...")
-                del self.peft_model
-
-            # Clear CUDA cache
-            if torch.cuda.is_available():
+        # Clear CUDA cache
+        if torch.cuda.is_available():
+            with torch.no_grad():
                 torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+            gc.collect()
 
-            print(f"Model unloaded: {self.model_name}")
+        print(f"Model unloaded: {self.model_name}")

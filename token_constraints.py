@@ -325,6 +325,7 @@ def get_allowed_tokens(
             allowed_token_ids.append(null_token_id)
             print(f"Null token {null_token_id} is not a single token!")
 
+    non_single_tokens = []
     match token_type:
         case "int":
             for num in range(1, 100):
@@ -335,7 +336,7 @@ def get_allowed_tokens(
                     allowed_token_ids.append(token_ids[0])
                 else:
                     allowed_token_ids.append(token_ids)
-                    print(f"Integer token '{num}' is not a single token!")
+                    non_single_tokens.append(num)
         case "enum":
             if enums is None:
                 raise ValueError("Enums must be provided for enum token type.")
@@ -349,7 +350,7 @@ def get_allowed_tokens(
                     allowed_token_ids.append(token_ids[0])
                 else:
                     allowed_token_ids.append(token_ids)
-                    print(f"Enum token '{enum_str}' is not a single token!")
+                    non_single_tokens.append(enum_str)
         case "boolean":
             for bool_val in ["true", "false"]:
                 token_ids = tokenizer.encode(bool_val, add_special_tokens=False)
@@ -357,5 +358,8 @@ def get_allowed_tokens(
                     allowed_token_ids.append(token_ids[0])
                 else:
                     allowed_token_ids.append(token_ids)
-                    print(f"Boolean token '{bool_val}' is not a single token!")
+                    non_single_tokens.append(bool_val)
+    if DEBUG_MODE_ENABLED and non_single_tokens:
+        print(f"Non-single tokens for {token_type}:\n{non_single_tokens}")
+
     return allowed_token_ids
