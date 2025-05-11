@@ -190,7 +190,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
         """
         Args:
         input_ids [batch_size, sequence_length]
-        scores shape [batch_size, config.vocab_size]
+        logits scores shape [batch_size, config.vocab_size]
         """
         batch_size = scores.shape[0]
         for i in range(batch_size):
@@ -209,7 +209,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
 
                     # Generate first quote token and wait for value
                     self.state[i] = GenerationState.AWAIT_VALUE
-                    scores[i] = add_score_mask(scores[i], [self.quote_token_id])
+                    scores[i] = add_logits_mask(scores[i], [self.quote_token_id])
                 case GenerationState.AWAIT_VALUE | GenerationState.GENERATING_VALUE:
                     # Allow unrestricted tokens for string type when enabled
                     if self._is_string_type_enabled(i):
@@ -220,7 +220,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                     allowed_token_ids = self._get_allowed_tokens_for_value(
                         i, last_token_ids
                     )
-                    scores[i] = add_score_mask(scores[i], allowed_token_ids)
+                    scores[i] = add_logits_mask(scores[i], allowed_token_ids)
                     scores[i] = reduce_null_bias(
                         self.tokenizer, scores[i], threshold=self.reduce_null_bias
                     )
@@ -232,54 +232,58 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                         )
 
                 case GenerationState.AWAIT_BRACKET_END:
-                    scores[i] = add_score_mask(scores[i], [self.bracket_end_token_id])
+                    scores[i] = add_logits_mask(scores[i], [self.bracket_end_token_id])
                     self.state[i] = None
 
                 case _:
                     # Stopping criteria should stop the generation
-                    scores[i] = add_score_mask(scores[i], [self.tokenizer.unk_token_id])
+                    scores[i] = add_logits_mask(
+                        scores[i], [self.tokenizer.unk_token_id]
+                    )
         return scores
 
 
-def add_score_mask(
-    vocab_scores: torch.FloatTensor, allowed_ids: list[int] | int
+def add_logits_mask(
+    vocab_logits: torch.FloatTensor, allowed_ids: list[int]
 ) -> torch.FloatTensor:
     """
-    Apply a mask to the scores based on the allowed token IDs.
-    args:
-        vocab_scores: Tensor of token scores [vocab_size]
-        allowed_ids: List of allowed token IDs or a single token ID
+    Apply a mask to the logits based on the allowed token IDs.
+    Args:
+        vocab_logits: Logits for each token in the vocabulary [vocab_size]
+        allowed_ids: List of allowed token IDs
+    Returns:
+        Masked logits where disallowed tokens are set to -inf.
     """
-    mask = torch.full_like(vocab_scores, float("-inf"))
+    mask = torch.full_like(vocab_logits, float("-inf"))
     mask[allowed_ids] = 0
-    return vocab_scores + mask
+    return vocab_logits + mask
 
 
 def reduce_null_bias(
-    tokenizer: AutoTokenizer, vocab_scores: torch.FloatTensor, threshold: float = 0.8
+    tokenizer: AutoTokenizer, vocab_logits: torch.FloatTensor, threshold: float = 0.8
 ) -> torch.FloatTensor:
     """Reduce the null token chance if its probability is below a certain threshold."""
     if threshold <= 0.0 or threshold >= 1.0:
-        return vocab_scores
+        return vocab_logits
 
     null_token_id = tokenizer.encode("null", add_special_tokens=False)[0]
-    probs = torch.nn.functional.softmax(vocab_scores, dim=-1)
+    probs = torch.nn.functional.softmax(vocab_logits, dim=-1)
     null_probs = probs[null_token_id]
 
     # Reduce by the set treshold probability
     # If the treshhold is 0.8(80% chance), the null token will be reduced by 80% of its probability
     if null_probs < threshold:
-        vocab_scores[null_token_id] -= math.log(1 / (1 - threshold))
+        vocab_logits[null_token_id] -= math.log(1 / (1 - threshold))
 
-    new_probs = torch.nn.functional.softmax(vocab_scores, dim=-1)
+    new_probs = torch.nn.functional.softmax(vocab_logits, dim=-1)
     new_null_probs = new_probs[null_token_id]
     print(f"Null token probability: {new_null_probs:.4f} | Original: {null_probs:.4f}")
-    return vocab_scores
+    return vocab_logits
 
 
 def log_token_probabilities(
     tokenizer: AutoTokenizer,
-    vocab_scores: torch.FloatTensor,
+    vocab_logits: torch.FloatTensor,
     allowed_token_ids: list[int],
     limit: int = 5,
 ):
@@ -288,8 +292,8 @@ def log_token_probabilities(
     """
     if not DEBUG_MODE_ENABLED:
         return
-    # Convert scores to probabilities
-    probs = torch.nn.functional.softmax(vocab_scores, dim=-1)
+    # Convert logits to probabilities
+    probs = torch.nn.functional.softmax(vocab_logits, dim=-1)
 
     # Get probabilities for allowed tokens and create (token_id, prob) pairs
     token_probs = [(token_id, probs[token_id].item()) for token_id in allowed_token_ids]

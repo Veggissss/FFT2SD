@@ -18,7 +18,7 @@ from token_constraints import (
     get_allowed_tokens,
     log_token_probabilities,
     reduce_null_bias,
-    add_score_mask,
+    add_logits_mask,
     TokenTypeConstraintProcessor,
     StopOnToken,
 )
@@ -390,7 +390,7 @@ class EncoderStrategy(BaseModelStrategy):
         assert all(batch_indices.bincount() == 1), "Max 1 mask!"
 
         # Get logits for the masked token [batch_size, vocab_size]
-        masked_scores = logits[batch_indices, token_indices]
+        masked_logits = logits[batch_indices, token_indices]
 
         # Prepare allowed token IDs for the batch
         allowed_token_ids_batch = self.get_template_allowed_tokens(
@@ -398,23 +398,25 @@ class EncoderStrategy(BaseModelStrategy):
         )
 
         # Apply masking and collect predictions
-        masked_scores_masked = []
+        masked_logits_list = []
         for i in range(batch_size):
-            masked_score = add_score_mask(masked_scores[i], allowed_token_ids_batch[i])
-            masked_score = reduce_null_bias(
-                self.tokenizer, masked_score, token_options.reduce_null_bias
+            masked_logits = add_logits_mask(
+                masked_logits[i], allowed_token_ids_batch[i]
+            )
+            masked_logits = reduce_null_bias(
+                self.tokenizer, masked_logits, token_options.reduce_null_bias
             )
             log_token_probabilities(
-                model_loader.tokenizer, masked_score, allowed_token_ids_batch[i]
+                model_loader.tokenizer, masked_logits, allowed_token_ids_batch[i]
             )
-            masked_scores_masked.append(masked_score)
+            masked_logits_list.append(masked_logits)
 
-        # Stack masked scores and get predicted tokens [batch_size, vocab_size]
-        masked_scores_stacked = torch.stack(masked_scores_masked, dim=0)
+        # Stack masked logits and get predicted tokens [batch_size, vocab_size]
+        masked_logits_stacked = torch.stack(masked_logits_list, dim=0)
 
         # Replace masks with predicted tokens [batch_size]
         input_ids[batch_indices, token_indices] = torch.argmax(
-            masked_scores_stacked, dim=1
+            masked_logits_stacked, dim=1
         )
 
         # Decode the entire batch
