@@ -1,0 +1,333 @@
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 544.87 121.07996">
+  <defs>
+    <style>
+      .cls-1, .cls-27, .cls-7 {
+        fill: none;
+      }
+
+      .cls-2 {
+        clip-path: url(#clip-path);
+      }
+
+      .cls-3 {
+        isolation: isolate;
+      }
+
+      .cls-4 {
+        clip-path: url(#clip-path-2);
+      }
+
+      .cls-5 {
+        clip-path: url(#clip-path-3);
+      }
+
+      .cls-6 {
+        fill: #2b2c3e;
+      }
+
+      .cls-7 {
+        stroke: #475872;
+      }
+
+      .cls-27, .cls-7 {
+        stroke-width: 0.7px;
+      }
+
+      .cls-8 {
+        clip-path: url(#clip-path-4);
+      }
+
+      .cls-9 {
+        font-size: 7.35px;
+        fill: #faa81a;
+      }
+
+      .cls-15, .cls-16, .cls-21, .cls-9 {
+        font-family: RobotoMono-Medium, Roboto Mono;
+      }
+
+      .cls-10 {
+        opacity: 0.102;
+      }
+
+      .cls-11 {
+        fill: #4f545c;
+        opacity: 0.4784;
+      }
+
+      .cls-12 {
+        clip-path: url(#clip-path-6);
+      }
+
+      .cls-13, .cls-16 {
+        fill: #dcddde;
+      }
+
+      .cls-14 {
+        clip-path: url(#clip-path-8);
+      }
+
+      .cls-15, .cls-16, .cls-21 {
+        font-size: 6.3px;
+      }
+
+      .cls-15 {
+        fill: #59b8ff;
+      }
+
+      .cls-17 {
+        clip-path: url(#clip-path-9);
+      }
+
+      .cls-18 {
+        clip-path: url(#clip-path-11);
+      }
+
+      .cls-19 {
+        clip-path: url(#clip-path-13);
+      }
+
+      .cls-20 {
+        clip-path: url(#clip-path-15);
+      }
+
+      .cls-21 {
+        fill: #46c46e;
+      }
+
+      .cls-22 {
+        clip-path: url(#clip-path-17);
+      }
+
+      .cls-23 {
+        clip-path: url(#clip-path-18);
+      }
+
+      .cls-24 {
+        clip-path: url(#clip-path-19);
+      }
+
+      .cls-25 {
+        clip-path: url(#clip-path-21);
+      }
+
+      .cls-26 {
+        clip-path: url(#clip-path-22);
+      }
+
+      .cls-27 {
+        stroke: #485a74;
+      }
+
+      .cls-28 {
+        clip-path: url(#clip-path-24);
+      }
+
+      .cls-29 {
+        fill: #485a74;
+      }
+
+      .cls-30 {
+        clip-path: url(#clip-path-26);
+      }
+
+      .cls-31 {
+        clip-path: url(#clip-path-28);
+      }
+
+      .cls-32 {
+        clip-path: url(#clip-path-30);
+      }
+
+      .cls-33 {
+        clip-path: url(#clip-path-32);
+      }
+    </style>
+    <clipPath id="clip-path">
+      <rect class="cls-1" x="-164.69334" y="-108.38" width="852.38663" height="1656.75"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect class="cls-1" x="-54.14333" y="0.69995" width="596.15997" height="118.80005"/>
+    </clipPath>
+    <clipPath id="clip-path-3">
+      <rect class="cls-1" x="-54.38332" y="0.45996" width="596.63995" height="119.28003"/>
+    </clipPath>
+    <clipPath id="clip-path-4">
+      <rect class="cls-1" x="1.73167" y="49.6449" width="83.47498" height="21"/>
+    </clipPath>
+    <clipPath id="clip-path-6">
+      <rect class="cls-1" x="70.50664" y="55.41992" width="9.45001" height="9.45007"/>
+    </clipPath>
+    <clipPath id="clip-path-8">
+      <rect class="cls-1" x="142.95665" y="7.6449" width="87.67499" height="9.45007"/>
+    </clipPath>
+    <clipPath id="clip-path-9">
+      <rect class="cls-1" x="142.95665" y="17.09497" width="87.67499" height="9.44995"/>
+    </clipPath>
+    <clipPath id="clip-path-11">
+      <rect class="cls-1" x="272.63164" y="6.4375" width="66.67505" height="21"/>
+    </clipPath>
+    <clipPath id="clip-path-13">
+      <rect class="cls-1" x="324.60667" y="12.2124" width="9.45001" height="9.45007"/>
+    </clipPath>
+    <clipPath id="clip-path-15">
+      <rect class="cls-1" x="376.05669" y="6.4375" width="165.375" height="21"/>
+    </clipPath>
+    <clipPath id="clip-path-17">
+      <rect class="cls-1" x="142.95665" y="46.17993" width="87.67499" height="9.45007"/>
+    </clipPath>
+    <clipPath id="clip-path-18">
+      <rect class="cls-1" x="142.95665" y="55.63" width="87.67499" height="9.44995"/>
+    </clipPath>
+    <clipPath id="clip-path-19">
+      <rect class="cls-1" x="142.95665" y="65.07996" width="87.67499" height="9.44995"/>
+    </clipPath>
+    <clipPath id="clip-path-21">
+      <rect class="cls-1" x="142.95665" y="94.05994" width="83.47504" height="9.45007"/>
+    </clipPath>
+    <clipPath id="clip-path-22">
+      <rect class="cls-1" x="142.95665" y="103.51001" width="83.47504" height="9.44995"/>
+    </clipPath>
+    <clipPath id="clip-path-24">
+      <rect class="cls-1" x="132.10667" y="14.13745" width="5.60004" height="5.59998"/>
+    </clipPath>
+    <clipPath id="clip-path-26">
+      <rect class="cls-1" x="132.10667" y="57.34497" width="5.60004" height="5.59998"/>
+    </clipPath>
+    <clipPath id="clip-path-28">
+      <rect class="cls-1" x="132.10667" y="100.55249" width="5.60004" height="5.59998"/>
+    </clipPath>
+    <clipPath id="clip-path-30">
+      <rect class="cls-1" x="267.03166" y="14.13745" width="5.59998" height="5.59998"/>
+    </clipPath>
+    <clipPath id="clip-path-32">
+      <rect class="cls-1" x="370.45659" y="14.13745" width="5.60004" height="5.59998"/>
+    </clipPath>
+  </defs>
+  <title>metadata</title>
+  <g class="cls-2">
+    <g class="cls-3">
+      <g class="cls-4">
+        <g class="cls-5">
+          <path class="cls-6" d="M2.78166,49.6449h81.375a1.04993,1.04993,0,0,1,1.05,1.05v18.9a1.04975,1.04975,0,0,1-1.05,1.04993H2.78166a1.04987,1.04987,0,0,1-1.05-1.04993v-18.9a1.05009,1.05009,0,0,1,1.05-1.05Z"/>
+          <path class="cls-7" d="M2.78166,49.6449h81.375a1.04993,1.04993,0,0,1,1.05,1.05v18.9a1.04975,1.04975,0,0,1-1.05,1.04993H2.78166a1.04987,1.04987,0,0,1-1.05-1.04993v-18.9a1.05009,1.05009,0,0,1,1.05-1.05Z"/>
+        </g>
+        <g class="cls-8">
+          <text class="cls-9" transform="translate(20.57428 63.29468)">metadata</text>
+        </g>
+        <g class="cls-8">
+          <rect class="cls-10" x="64.20665" y="49.6449" width="21" height="21"/>
+          <rect class="cls-11" x="64.20665" y="49.6449" width="0.52502" height="21"/>
+        </g>
+        <g class="cls-12">
+          <path class="cls-13" d="M76.409,60.5387V59.35742h2.7602V58.57H76.409V57.38867l-1.571,1.575Zm-2.35461.39367H71.29424V61.72h2.76019v1.18115l1.571-1.575-1.571-1.57495Z"/>
+        </g>
+        <g class="cls-5">
+          <path class="cls-6" d="M138.75664,2.91992h96.07507A1.05012,1.05012,0,0,1,235.88164,3.97V29.90491a1.05012,1.05012,0,0,1-1.04993,1.05H138.75664a1.05012,1.05012,0,0,1-1.05-1.05V3.97a1.05011,1.05011,0,0,1,1.05-1.05005Z"/>
+          <path class="cls-7" d="M138.75664,2.91992h96.07507A1.05012,1.05012,0,0,1,235.88164,3.97V29.90491a1.05012,1.05012,0,0,1-1.04993,1.05H138.75664a1.05012,1.05012,0,0,1-1.05-1.05V3.97a1.05011,1.05011,0,0,1,1.05-1.05005Z"/>
+        </g>
+        <g class="cls-14">
+          <text class="cls-15" transform="translate(142.95709 14.46997)">field</text>
+          <text class="cls-15" transform="translate(161.8653 14.46997)">:</text>
+          <text class="cls-15" transform="translate(165.64655 14.46997)"> </text>
+          <text class="cls-16" transform="translate(169.4278 14.46997)">&quot;Rapport type&quot;</text>
+        </g>
+        <g class="cls-17">
+          <text class="cls-15" transform="translate(142.95709 23.91968)">type</text>
+          <text class="cls-15" transform="translate(158.08307 23.91968)">:</text>
+          <text class="cls-15" transform="translate(161.8653 23.91968)"> </text>
+          <text class="cls-16" transform="translate(165.64655 23.91968)">&quot;enum&quot;</text>
+        </g>
+        <g class="cls-5">
+          <path class="cls-6" d="M273.68169,6.4375h64.575a1.05011,1.05011,0,0,1,1.05,1.04993v18.9a1.05012,1.05012,0,0,1-1.05,1.05H273.68169a1.05008,1.05008,0,0,1-1.05-1.05v-18.9a1.04972,1.04972,0,0,1,1.05-1.04993Z"/>
+          <path class="cls-7" d="M273.68169,6.4375h64.575a1.05011,1.05011,0,0,1,1.05,1.04993v18.9a1.05012,1.05012,0,0,1-1.05,1.05H273.68169a1.05008,1.05008,0,0,1-1.05-1.05v-18.9a1.04972,1.04972,0,0,1,1.05-1.04993Z"/>
+        </g>
+        <g class="cls-18">
+          <text class="cls-9" transform="translate(291.89264 20.08765)">enum</text>
+        </g>
+        <g class="cls-18">
+          <rect class="cls-10" x="318.30669" y="6.4375" width="21" height="21"/>
+          <rect class="cls-11" x="318.30669" y="6.4375" width="0.52502" height="21"/>
+        </g>
+        <g class="cls-19">
+          <path class="cls-13" d="M330.509,17.33118V16.1499h2.76019v-.78747H330.509V14.18115L328.938,15.75623Zm-2.35462.3938h-2.76019v.78747h2.76019v1.18128l1.57111-1.57508L328.1544,16.5437Z"/>
+        </g>
+        <g class="cls-5">
+          <path class="cls-6" d="M377.10667,6.4375h163.275a1.05047,1.05047,0,0,1,1.05005,1.04993v18.9a1.05012,1.05012,0,0,1-1.05005,1.05h-163.275a1.0499,1.0499,0,0,1-1.05-1.05v-18.9a1.04964,1.04964,0,0,1,1.05-1.04993Z"/>
+          <path class="cls-7" d="M377.10667,6.4375h163.275a1.05047,1.05047,0,0,1,1.05005,1.04993v18.9a1.05012,1.05012,0,0,1-1.05005,1.05h-163.275a1.0499,1.0499,0,0,1-1.05-1.05v-18.9a1.04964,1.04964,0,0,1,1.05-1.04993Z"/>
+        </g>
+        <g class="cls-20">
+          <text class="cls-21" transform="translate(392.57819 19.56226)">klinisk, makroskopisk, mikroskopisk</text>
+        </g>
+        <g class="cls-5">
+          <path class="cls-6" d="M138.75664,41.455h96.07507a1.05011,1.05011,0,0,1,1.04993,1.05V77.78491a1.05012,1.05012,0,0,1-1.04993,1.05H138.75664a1.05011,1.05011,0,0,1-1.05-1.05V42.505a1.05008,1.05008,0,0,1,1.05-1.05Z"/>
+          <path class="cls-7" d="M138.75664,41.455h96.07507a1.05011,1.05011,0,0,1,1.04993,1.05V77.78491a1.05012,1.05012,0,0,1-1.04993,1.05H138.75664a1.05011,1.05011,0,0,1-1.05-1.05V42.505a1.05008,1.05008,0,0,1,1.05-1.05Z"/>
+        </g>
+        <g class="cls-22">
+          <text class="cls-15" transform="translate(142.95709 53.00513)">field</text>
+          <text class="cls-15" transform="translate(161.8653 53.00513)">:</text>
+          <text class="cls-15" transform="translate(165.64655 53.00513)"> </text>
+          <text class="cls-16" transform="translate(169.4278 53.00513)">&quot;Antall glass&quot;</text>
+        </g>
+        <g class="cls-23">
+          <text class="cls-15" transform="translate(142.95709 62.45483)">type</text>
+          <text class="cls-15" transform="translate(158.08307 62.45483)">:</text>
+          <text class="cls-15" transform="translate(161.8653 62.45483)"> </text>
+          <text class="cls-16" transform="translate(165.64655 62.45483)">&quot;int&quot;</text>
+        </g>
+        <g class="cls-24">
+          <text class="cls-15" transform="translate(142.95709 71.90503)">unit</text>
+          <text class="cls-15" transform="translate(158.08307 71.90503)">:</text>
+          <text class="cls-15" transform="translate(161.8653 71.90503)"> </text>
+          <text class="cls-16" transform="translate(165.64655 71.90503)">&quot;stk&quot;</text>
+        </g>
+        <g class="cls-5">
+          <path class="cls-6" d="M138.75664,89.335h91.875a1.05011,1.05011,0,0,1,1.05,1.05V116.32a1.05012,1.05012,0,0,1-1.05,1.05h-91.875a1.05012,1.05012,0,0,1-1.05-1.05V90.385a1.05011,1.05011,0,0,1,1.05-1.05Z"/>
+          <path class="cls-7" d="M138.75664,89.335h91.875a1.05011,1.05011,0,0,1,1.05,1.05V116.32a1.05012,1.05012,0,0,1-1.05,1.05h-91.875a1.05012,1.05012,0,0,1-1.05-1.05V90.385a1.05011,1.05011,0,0,1,1.05-1.05Z"/>
+        </g>
+        <g class="cls-25">
+          <text class="cls-15" transform="translate(142.95709 100.88501)">field</text>
+          <text class="cls-15" transform="translate(161.8653 100.88501)">:</text>
+          <text class="cls-15" transform="translate(165.64655 100.88501)"> </text>
+          <text class="cls-16" transform="translate(169.4278 100.88501)">&quot;Beholder-ID&quot;</text>
+        </g>
+        <g class="cls-26">
+          <text class="cls-15" transform="translate(142.95709 110.33472)">type</text>
+          <text class="cls-15" transform="translate(158.08307 110.33472)">:</text>
+          <text class="cls-15" transform="translate(161.8653 110.33472)"> </text>
+          <text class="cls-16" transform="translate(165.64655 110.33472)">&quot;int&quot;</text>
+        </g>
+        <g class="cls-5">
+          <path class="cls-27" d="M85.20665,54.8949h4.37506c4.37494,0,13.125,0,17.49994-6.32617s4.375-18.97876,8.75006-25.30506,13.125-6.32617,17.49994-6.32617h4.375"/>
+        </g>
+        <g class="cls-28">
+          <polyline class="cls-29" points="132.107 14.137 137.707 16.938 132.107 19.737"/>
+        </g>
+        <g class="cls-5">
+          <line class="cls-27" x1="85.20665" y1="60.1449" x2="137.70665" y2="60.1449"/>
+        </g>
+        <g class="cls-30">
+          <polyline class="cls-29" points="132.107 57.345 137.707 60.145 132.107 62.945"/>
+        </g>
+        <g class="cls-5">
+          <path class="cls-27" d="M85.20665,65.3949h4.37506c4.37494,0,13.125,0,17.49994,6.32629s4.375,18.97876,8.75006,25.30506,13.125,6.32617,17.49994,6.32617h4.375"/>
+        </g>
+        <g class="cls-31">
+          <polyline class="cls-29" points="132.107 100.552 137.707 103.352 132.107 106.152"/>
+        </g>
+        <g class="cls-5">
+          <line class="cls-27" x1="235.88164" y1="16.9375" x2="272.63164" y2="16.9375"/>
+        </g>
+        <g class="cls-32">
+          <polyline class="cls-29" points="267.032 14.137 272.632 16.938 267.032 19.737"/>
+        </g>
+        <g class="cls-5">
+          <line class="cls-27" x1="339.30669" y1="16.9375" x2="376.05669" y2="16.9375"/>
+        </g>
+        <g class="cls-33">
+          <polyline class="cls-29" points="370.457 14.137 376.057 16.938 370.457 19.737"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
