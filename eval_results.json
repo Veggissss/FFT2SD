@@ -12,7 +12,7 @@
     {
         "file": "klinisk_12419737770694541532_1.json",
         "report_type": "KLINISK",
-        "model_name": "norallm/normistral-7b-warm",
+        "model_name": "norallm/normistral-7b-warm_4bit_quant",
         "model_type": "decoder",
         "type": "enum",
         "y_true": "T65520",
@@ -22,7 +22,7 @@
     {
         "file": "klinisk_12419737770694541532_1.json",
         "report_type": "KLINISK",
-        "model_name": "norallm/normistral-7b-warm",
+        "model_name": "trained/norallm/normistral-7b-warm_4bit_quant",
         "model_type": "decoder",
         "type": "int",
         "y_true": null,
@@ -32,7 +32,7 @@
     {
         "file": "klinisk_12419737770694541532_1.json",
         "report_type": "KLINISK",
-        "model_name": "norallm/normistral-7b-warm",
+        "model_name": "trained/norallm/normistral-7b-warm",
         "model_type": "decoder",
         "type": "enum",
         "y_true": "Biopsitang",
@@ -42,7 +42,7 @@
     {
         "file": "klinisk_12419737770694541532_1.json",
         "report_type": "KLINISK",
-        "model_name": "norallm/normistral-7b-warm",
+        "model_name": "trained/norallm/normistral-7b-warm_4bit_quant",
         "model_type": "decoder",
         "type": "enum",
         "y_true": "Ikke relevant",
@@ -62,7 +62,7 @@
     {
         "file": "klinisk_12419737770694541532_1.json",
         "report_type": "KLINISK",
-        "model_name": "norallm/normistral-7b-warm",
+        "model_name": "google/gemma-3-27b-it",
         "model_type": "decoder",
         "type": "boolean",
         "y_true": false,
@@ -92,7 +92,7 @@
     {
         "file": "klinisk_12419737770694541532_2.json",
         "report_type": "KLINISK",
-        "model_name": "norallm/normistral-7b-warm",
+        "model_name": "Qwen/Qwen3-32B",
         "model_type": "decoder",
         "type": "enum",
         "y_true": "T67200",
@@ -194,6 +194,56 @@
         "report_type": "KLINISK",
         "model_name": "norallm/normistral-7b-warm",
         "model_type": "decoder",
+        "type": "enum",
+        "y_true": "Biopsitang",
+        "y_pred": null,
+        "accuracy": 0
+    },
+    {
+        "file": "klinisk_12419737770694541532_3.json",
+        "report_type": "KLINISK",
+        "model_name": "trained/ltg/nort5-base",
+        "model_type": "encoder_decoder",
+        "type": "enum",
+        "y_true": "Biopsitang",
+        "y_pred": null,
+        "accuracy": 0
+    },
+    {
+        "file": "klinisk_12419737770694541532_3.json",
+        "report_type": "KLINISK",
+        "model_name": "trained/ltg/nort5-large",
+        "model_type": "encoder_decoder",
+        "type": "enum",
+        "y_true": "Biopsitang",
+        "y_pred": null,
+        "accuracy": 0
+    },
+    {
+        "file": "klinisk_12419737770694541532_3.json",
+        "report_type": "KLINISK",
+        "model_name": "trained/ltg/nort5-large",
+        "model_type": "encoder_decoder",
+        "type": "enum",
+        "y_true": "Biopsitang",
+        "y_pred": null,
+        "accuracy": 0
+    },
+    {
+        "file": "klinisk_12419737770694541532_3.json",
+        "report_type": "KLINISK",
+        "model_name": "trained/ltg/norbert3-base",
+        "model_type": "encoder",
+        "type": "enum",
+        "y_true": "Biopsitang",
+        "y_pred": null,
+        "accuracy": 0
+    },
+    {
+        "file": "klinisk_12419737770694541532_3.json",
+        "report_type": "KLINISK",
+        "model_name": "trained/ltg/norbert3-large",
+        "model_type": "encoder",
         "type": "enum",
         "y_true": "Biopsitang",
         "y_pred": null,

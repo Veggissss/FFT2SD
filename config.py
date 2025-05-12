@@ -17,7 +17,7 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
         #ModelSettings("Veggissss/ltg_norbert3-small_mask_values", is_fine_tuning=False), # Example on how to load fine-tuned model from huggingface.
     ],
     ModelType.DECODER: [
-        ModelSettings("norallm/normistral-7b-warm-instruct", training_batch_size=2, training_learning_rate=3e-5, use_4bit_quant=True, training_num_epochs=1),
+        ModelSettings("norallm/normistral-7b-warm-instruct", training_batch_size=2, training_learning_rate=3e-5, use_4bit_quant=True),
         ModelSettings("norallm/normistral-7b-warm-instruct", training_batch_size=1, training_learning_rate=5e-5),
         ModelSettings("google/gemma-3-27b-it", is_fine_tuning=False),
         ModelSettings("Qwen/Qwen3-32B", is_fine_tuning=False),

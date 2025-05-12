@@ -47,7 +47,6 @@ def evaluate(
             value_type = target_item.get("type", None)
             y_true = target_item.get("value")
             y_pred = predicted_item.get("value")
-            correct = y_true == y_pred
 
             per_file_stats.append(
                 {
@@ -58,7 +57,6 @@ def evaluate(
                     "type": value_type,
                     "y_true": y_true,
                     "y_pred": y_pred,
-                    "accuracy": int(correct),
                 }
             )
 
@@ -131,44 +129,57 @@ def visualize(
     print(f"Total results: {len(results)}")
 
     df = pd.DataFrame(results)
+    df["y_true"] = df["y_true"].astype(str)
+    df["y_pred"] = df["y_pred"].astype(str)
 
-    # Accuracy by Report Type
-    report_summary = (
-        df.groupby(["report_type", "model_name"])["accuracy"].mean().unstack()
+    f1_score_metrics = []
+    for (model, typ), group in df.groupby(["model_name", "type"]):
+        f1 = f1_score(
+            group["y_true"], group["y_pred"], average="weighted", zero_division=0
+        )
+        f1_score_metrics.append(
+            {"model_name": model, "label": f"type:{typ}", "f1_score": f1}
+        )
+
+    for (model, rpt), group in df.groupby(["model_name", "report_type"]):
+        f1 = f1_score(
+            group["y_true"], group["y_pred"], average="weighted", zero_division=0
+        )
+        f1_score_metrics.append(
+            {"model_name": model, "label": f"report:{rpt}", "f1_score": f1}
+        )
+
+    plot_df = pd.DataFrame(f1_score_metrics)
+    pivot_df = plot_df.pivot(index="model_name", columns="label", values="f1_score")
+
+    ax = pivot_df.plot(kind="bar", figsize=(15, 6))
+    add_bar_labels(ax)
+    plt.title(
+        f"F1 Scores by Report Type and Data Type ({model_type.value}{', null ignored' if ignore_null else ''})"
     )
-    ax = report_summary.plot(kind="bar", figsize=(12, 6))
-    add_bar_labels(ax)
-    plt.title(f"Accuracy by Report Type ({model_type.value})")
-    plt.xlabel("Report Type")
-    plt.ylabel("Average Accuracy")
+    plt.xlabel("Model Name")
+    plt.ylabel("F1 Score")
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
-    plt.legend(title="Model Type")
+    plt.legend(title="Report / Type", bbox_to_anchor=(1, 1), loc="upper left")
     plt.tight_layout()
-    plt.savefig(output_dir.joinpath(f"accuracy_by_report_type_{model_type.value}.svg"))
-    print(f"Saved: accuracy_by_report_type_{model_type.value}.svg")
+    plt.savefig(
+        output_dir.joinpath(
+            f"f1_type_specific_{model_type.value}{'_null_ignored' if ignore_null else ''}.svg"
+        )
+    )
+    print(
+        f"Saved: f1_combined_{model_type.value}{'_null_ignored' if ignore_null else ''}.svg"
+    )
 
-    # Accuracy by Value Type
-    type_summary = df.groupby(["type", "model_name"])["accuracy"].mean().unstack()
-    ax = type_summary.plot(kind="bar", figsize=(12, 6))
-    add_bar_labels(ax)
-    plt.title(f"Accuracy by Value Type ({model_type.value})")
-    plt.xlabel("Value Type")
-    plt.ylabel("Average Accuracy")
-    plt.ylim(0, 1)
-    plt.xticks(rotation=0)
-    plt.legend(title="Model Name")
-    plt.tight_layout()
-    plt.savefig(output_dir.joinpath(f"accuracy_by_value_type_{model_type.value}.svg"))
-    print(f"Saved: accuracy_by_value_type_{model_type.value}.svg")
-
-    # Precision / Recall / F1 per Model Type
+    # Accuracy, Precision, Recall, F1
     metrics = []
     for model in df["model_name"].unique():
         model_df = df[df["model_name"] == model]
-        y_true = model_df["y_true"].astype(str)
-        y_pred = model_df["y_pred"].astype(str)
+        y_true = model_df["y_true"]
+        y_pred = model_df["y_pred"]
 
+        accuracy = (y_true == y_pred).mean()
         precision = precision_score(y_true, y_pred, average="weighted", zero_division=0)
         recall = recall_score(y_true, y_pred, average="weighted", zero_division=0)
         f1 = f1_score(y_true, y_pred, average="weighted", zero_division=0)
@@ -176,6 +187,7 @@ def visualize(
         metrics.append(
             {
                 "model_name": model,
+                "accuracy": accuracy,
                 "precision": precision,
                 "recall": recall,
                 "f1_score": f1,
@@ -183,44 +195,32 @@ def visualize(
         )
 
     metrics_df = pd.DataFrame(metrics).set_index("model_name")
-    ax = metrics_df.plot(kind="bar", figsize=(12, 6))
+    ax = metrics_df.plot(kind="bar", figsize=(15, 6))
     add_bar_labels(ax)
-    plt.title(f"Precision, Recall, and F1 Score per Model Type ({model_type.value})")
+    plt.title(
+        f"Accuracy, Precision, Recall, and F1 by Model ({model_type.value}{', null_ignored' if ignore_null else ''})"
+    )
+    plt.xlabel("Model Name")
     plt.ylabel("Score")
+    plt.legend(title="Metric", bbox_to_anchor=(1, 1), loc="upper left")
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
     plt.tight_layout()
-    plt.savefig(output_dir.joinpath(f"precision_recall_f1_{model_type.value}.svg"))
-    print(f"Saved: precision_recall_f1_{model_type.value}.svg")
-
-
-def test_masked_value():
-    """
-    Small test to compare value only vs random mlm training.
-    """
-    # evaluate(ModelType.ENCODER, 0, is_trained=True)
-    # evaluate(ModelType.ENCODER, 1, is_trained=True)
-    visualize(
-        model_type=ModelType.ENCODER,
-        ignore_strings=True,
-        included_model_names=[
-            "trained/ltg/norbert3-small_mask_values",
-            "trained/ltg/norbert3-small",
-        ],
-        output_dir=Path("./figures/eval/value_training"),
+    path_metrics = output_dir.joinpath(
+        f"overall_metrics_{model_type.value}{'_null_ignored' if ignore_null else ''}.svg"
     )
+    plt.savefig(path_metrics)
+    print(f"Saved: {path_metrics}")
 
 
-if __name__ == "__main__":
-    GENERATE_STRINGS = False
-
-    # Compare masking just values vs random mlm training
-    # test_masked_value()
-
+def evaluate_all_models(generate_strings: bool = False):
+    """
+    Evaluate all models in the config file. (Except)
+    """
     for m_type in ModelType:
         token_options = TokenOptions()
         token_options.include_enums = m_type == ModelType.DECODER
-        token_options.generate_strings = GENERATE_STRINGS
+        token_options.generate_strings = generate_strings
 
         # Test all models
         for i, model_setting in enumerate(MODELS_DICT[m_type]):
@@ -241,10 +241,36 @@ if __name__ == "__main__":
                     token_options=token_options,
                 )
 
+
+if __name__ == "__main__":
+    EVALUATE_ALL_MODELS = False
+
+    # Set to True to ignore null values in evaluation
+    IGNORE_NULL = False
+
+    # Speed up evaluation by not generating string values
+    GENERATE_STRINGS = False
+
+    if EVALUATE_ALL_MODELS:
+        evaluate_all_models(GENERATE_STRINGS)
+
+    # Compare masking just values vs random mlm training
+    visualize(
+        model_type=ModelType.ENCODER,
+        ignore_strings=True,
+        ignore_null=IGNORE_NULL,
+        included_model_names=[
+            "trained/ltg/norbert3-small_mask_values",
+            "trained/ltg/norbert3-small",
+        ],
+        output_dir=Path("./figures/eval/value_training"),
+    )
+
     # Trained Encoder
     visualize(
         model_type=ModelType.ENCODER,
         ignore_strings=True,
+        ignore_null=IGNORE_NULL,
         included_model_names=[
             "trained/ltg/norbert3-small",
             "trained/ltg/norbert3-base",
@@ -257,6 +283,7 @@ if __name__ == "__main__":
     visualize(
         model_type=ModelType.ENCODER_DECODER,
         ignore_strings=(not GENERATE_STRINGS),
+        ignore_null=IGNORE_NULL,
         included_model_names=[
             "trained/ltg/nort5-small",
             "trained/ltg/nort5-base",
@@ -269,6 +296,7 @@ if __name__ == "__main__":
     visualize(
         model_type=ModelType.DECODER,
         ignore_strings=(not GENERATE_STRINGS),
+        ignore_null=IGNORE_NULL,
         included_model_names=[
             "norallm/normistral-7b-warm_4bit_quant",
             "norallm/normistral-7b-warm",
@@ -282,6 +310,7 @@ if __name__ == "__main__":
     visualize(
         model_type=ModelType.DECODER,
         ignore_strings=(not GENERATE_STRINGS),
+        ignore_null=IGNORE_NULL,
         included_model_names=[
             "norallm/normistral-7b-warm",
             "google/gemma-3-27b-it",
