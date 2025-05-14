@@ -67,7 +67,7 @@ class ModelSettings:
     is_fine_tuning: bool = True
 
     training_batch_size: int = 1
-    training_num_epochs: int = 20
+    training_num_epochs: int = 10
     training_learning_rate: float = 1e-4
     training_encoder_only_mask_values: bool = False
 

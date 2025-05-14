@@ -5,21 +5,21 @@ from utils.data_classes import ModelSettings
 # Definitions of Hugging Face models
 MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
     ModelType.ENCODER_DECODER: [
-        ModelSettings("ltg/nort5-small", training_batch_size=16),
-        ModelSettings("ltg/nort5-base", training_batch_size=8),
-        ModelSettings("ltg/nort5-large", training_batch_size=1),
+        ModelSettings("ltg/nort5-small", training_batch_size=32, training_learning_rate=5e-4),
+        ModelSettings("ltg/nort5-base", training_batch_size=16, training_learning_rate=3e-4),
+        ModelSettings("ltg/nort5-large", training_batch_size=2, training_learning_rate=1e-4),
     ],
     ModelType.ENCODER: [
-        ModelSettings("ltg/norbert3-small", training_batch_size=16, training_learning_rate=5e-5, training_encoder_only_mask_values=True),
-        ModelSettings("ltg/norbert3-small", training_batch_size=16),
-        ModelSettings("ltg/norbert3-base", training_batch_size=8),
-        ModelSettings("ltg/norbert3-large", training_batch_size=4),
+        ModelSettings("ltg/norbert3-small", training_batch_size=32, training_learning_rate=5e-4, training_encoder_only_mask_values=True),
+        ModelSettings("ltg/norbert3-small", training_batch_size=32, training_learning_rate=5e-4),
+        ModelSettings("ltg/norbert3-base", training_batch_size=16, training_learning_rate=3e-4),
+        ModelSettings("ltg/norbert3-large", training_batch_size=8, training_learning_rate=1e-4),
         # Example on how to load fine-tuned model from huggingface.
         #ModelSettings("Veggissss/ltg_norbert3-small_mask_values", is_fine_tuning=False), 
     ],
     ModelType.DECODER: [
-        ModelSettings("norallm/normistral-7b-warm", training_batch_size=2, training_learning_rate=3e-5, use_4bit_quant=True),
-        ModelSettings("norallm/normistral-7b-warm", training_batch_size=1, training_learning_rate=5e-5),
+        ModelSettings("norallm/normistral-7b-warm", training_batch_size=4, training_learning_rate=3e-4, use_4bit_quant=True),
+        ModelSettings("norallm/normistral-7b-warm", training_batch_size=2, training_learning_rate=2e-5),
         ModelSettings("google/gemma-3-27b-it", is_fine_tuning=False),
         ModelSettings("Qwen/Qwen3-32B", is_fine_tuning=False),
 
