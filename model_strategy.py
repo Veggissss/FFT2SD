@@ -168,6 +168,57 @@ class BaseModelStrategy:
 
         return allowed_token_ids_list
 
+    def _get_peft_config(
+        self, model_loader: "ModelLoader"
+    ) -> tuple[str, BitsAndBytesConfig | None]:
+        # If not using quant, return the model name and None
+        if not model_loader.model_settings.use_4bit_quant:
+            return model_loader.model_name, None
+
+        # Load the base HF model without "_peft" in the name
+        model_name = model_loader.model_settings.base_model_name
+
+        # Use 4-bit quantization
+        q_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+        )
+        return model_name, q_config
+
+    def _load_peft_model(
+        self, model_loader: "ModelLoader", model: AutoModel
+    ) -> AutoModel | PeftModel:
+        # Resize to fit the pad. If trained also fit other new tokens from the base model to match the peft model.
+        model.resize_token_embeddings(len(self.tokenizer))
+
+        # If not using PEFT, return the model
+        if not model_loader.model_settings.use_4bit_quant:
+            return model
+
+        if model_loader.is_trained or model_loader.model_settings.peft_model_name:
+            # See to use PEFT model from HuggingFace or a locally fine-tuned PEFT model
+            if model_loader.model_settings.peft_model_name:
+                model_id = model_loader.model_settings.peft_model_name
+            else:
+                model_id = model_loader.model_name
+
+            # Load the PEFT model
+            is_trainable = False
+            model = PeftModel.from_pretrained(
+                model,
+                model_id=model_id,
+                # NOTE: Don’t use low_cpu_mem_usage=True when creating a new PEFT adapter for training.
+                # https://huggingface.co/docs/peft/v0.15.0/en/package_reference/peft_model#peft.PeftModel.low_cpu_mem_usage
+                low_cpu_mem_usage=(not is_trainable),
+                is_trainable=is_trainable,
+                ephemeral_gpu_offloading=True,
+            )
+            # Reduce latency by merging peft model with base model
+            if not is_trainable:
+                model.eval()
+                model.merge_and_unload()
+        return model
+
 
 class EncoderDecoderStrategy(BaseModelStrategy):
     """
@@ -179,12 +230,18 @@ class EncoderDecoderStrategy(BaseModelStrategy):
         # Load tokenizer
         super().load(model_loader)
 
+        # Get possible PEFT config and base model
+        model_name, q_config = self._get_peft_config(model_loader)
+
         model = AutoModelForSeq2SeqLM.from_pretrained(
-            model_loader.model_name, trust_remote_code=True
+            model_name,
+            quantization_config=q_config,
+            trust_remote_code=True,
         )
         model.to(model_loader.device)
 
-        return model, self.tokenizer
+        # Load possible PEFT model
+        return self._load_peft_model(model_loader, model), self.tokenizer
 
     def generate(
         self,
@@ -254,17 +311,8 @@ class DecoderStrategy(BaseModelStrategy):
         super().load(model_loader)
         self.tokenizer.padding_side = "left"
 
-        if model_loader.model_settings.use_4bit_quant:
-            # Use 4-bit quantization
-            q_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_compute_dtype=torch.float16,
-            )
-            # Load the base HF model without "_peft" in the name
-            model_name = model_loader.model_settings.base_model_name
-        else:
-            q_config = None
-            model_name = model_loader.model_name
+        # Get possible PEFT config and base model
+        model_name, q_config = self._get_peft_config(model_loader)
 
         # Load the base model.
         model = AutoModelForCausalLM.from_pretrained(
@@ -286,35 +334,8 @@ class DecoderStrategy(BaseModelStrategy):
         else:
             print(f"Using existing pad token: {self.tokenizer.pad_token}")
 
-        # Resize to fit the pad. If trained also fit other new tokens from the base model to match the peft model.
-        model.resize_token_embeddings(len(self.tokenizer))
-
-        if model_loader.model_settings.use_4bit_quant and (
-            model_loader.is_trained or model_loader.model_settings.peft_model_name
-        ):
-            # See to use PEFT model from HuggingFace or a locally fine-tuned PEFT model
-            if model_loader.model_settings.peft_model_name:
-                model_id = model_loader.model_settings.peft_model_name
-            else:
-                model_id = model_loader.model_name
-
-            # Load the PEFT model
-            is_trainable = False
-            model = PeftModel.from_pretrained(
-                model,
-                model_id=model_id,
-                # NOTE: Don’t use low_cpu_mem_usage=True when creating a new PEFT adapter for training.
-                # https://huggingface.co/docs/peft/v0.15.0/en/package_reference/peft_model#peft.PeftModel.low_cpu_mem_usage
-                low_cpu_mem_usage=(not is_trainable),
-                is_trainable=is_trainable,
-                ephemeral_gpu_offloading=True,
-            )
-            # Reduce latency by merging peft model with base model
-            if not is_trainable:
-                model.eval()
-                model.merge_and_unload()
-
-        return model, self.tokenizer
+        # Load possible PEFT model
+        return self._load_peft_model(model_loader, model), self.tokenizer
 
     def generate(
         self,
@@ -357,13 +378,19 @@ class EncoderStrategy(BaseModelStrategy):
         # Load tokenizer
         super().load(model_loader)
 
+        # Get possible PEFT config and base model
+        model_name, q_config = self._get_peft_config(model_loader)
+
         # Encoder model
         model = AutoModelForMaskedLM.from_pretrained(
-            model_loader.model_name, trust_remote_code=True
+            model_name,
+            quantization_config=q_config,
+            trust_remote_code=True,
         )
         model.to(model_loader.device)
 
-        return model, self.tokenizer
+        # Load possible PEFT model
+        return self._load_peft_model(model_loader, model), self.tokenizer
 
     def generate(
         self,

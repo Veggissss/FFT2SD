@@ -283,7 +283,7 @@ def train(model_type: ModelType, model_index: int, push_to_hub: bool = True) -> 
     dataset.batch(batch_size=batch_size)
 
     # Quantized models can't be trained directly.
-    if model_loader.model_type == ModelType.DECODER:
+    if model_loader.model_settings.use_4bit_quant:
         model_loader.model = apply_peft(model_loader)
 
     # Add new tokens if the model is not trained.
