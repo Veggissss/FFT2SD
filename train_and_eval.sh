@@ -1,5 +1,5 @@
 #!/bin/bash
-# Train+Eval for unix
+# Label+Train+Eval for unix
 echo "Creating venv"
 python3 -m venv venv
 

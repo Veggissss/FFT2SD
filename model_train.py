@@ -1,4 +1,5 @@
 from dotenv import dotenv_values
+import torch
 from peft import LoraConfig, get_peft_model, PeftModel
 from transformers import (
     Trainer,
@@ -12,10 +13,9 @@ from transformers import (
 from transformers.data.data_collator import DataCollatorMixin
 from datasets import Dataset
 from model_loader import ModelLoader
-from config import JSON_START_MARKER, MODELS_DICT
-from utils.enums import ModelType
 from dataset_loader import DatasetLoader
-import torch
+from utils.enums import ModelType
+from config import JSON_START_MARKER, MODELS_DICT
 
 
 class DataCollatorForMaskedValueTokens(DataCollatorMixin):
@@ -169,7 +169,7 @@ def train_model(
         print("Pushing to hub...")
         trainer.push_to_hub("test")
     else:
-        print("No .env file found. Pushing to hub skipped.")
+        print("Pushing to hub skipped.")
 
 
 def apply_peft(model_loader: ModelLoader) -> PeftModel:
@@ -207,13 +207,14 @@ def add_tokens_to_tokenizer(model_loader: ModelLoader, enums: list[str]) -> None
 
     # NOTE: Fix for: "CUDA Assertion `t >= 0 && t < n_classes` failed" for the ltg encoder and encoder-decoder models
     # The Classifier does not get resized when calling model.resize_token_embeddings() so needs to be manually re-initialized
-    if model_loader.model_type == ModelType.ENCODER:
-        model_loader.model.classifier.__init__(
-            model_loader.model.config,
-            model_loader.model.embedding.word_embedding.weight,
-        )
-    elif model_loader.model_type == ModelType.ENCODER_DECODER:
-        model_loader.model.classifier.__init__(model_loader.model.config)
+    if "ltg" in model_loader.model_settings.base_model_name:
+        if model_loader.model_type == ModelType.ENCODER:
+            model_loader.model.classifier.__init__(
+                model_loader.model.config,
+                model_loader.model.embedding.word_embedding.weight,
+            )
+        elif model_loader.model_type == ModelType.ENCODER_DECODER:
+            model_loader.model.classifier.__init__(model_loader.model.config)
 
 
 def reinitialize_weights(module):
@@ -237,6 +238,9 @@ def train(model_type: ModelType, model_index: int, push_to_hub: bool = True) -> 
     env_config: dict = dotenv_values(".env")
     hf_token = env_config.get("HUGGINGFACE_SECRET_TOKEN", None)
     hf_username = env_config.get("HUGGINGFACE_USERNAME", None)
+    if hf_token is None or hf_username is None:
+        push_to_hub = False
+        print("Missing Hugging Face token or username in .env file.")
 
     # Replace the old repo slash to make a valid repo name
     hf_model_id = f"{hf_username}/{str(model_loader.model_settings).replace('/', '_')}"

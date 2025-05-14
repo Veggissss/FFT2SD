@@ -1,5 +1,5 @@
 
-:: Train+Eval for windows
+:: Label+Train+Eval for windows
 echo "Creating venv" &^
 python -m venv venv &^
 
