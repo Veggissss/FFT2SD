@@ -13,7 +13,7 @@ if __name__ == "__main__":
     is_trained = False
     server.model_loader = ModelLoader(model_type, model_index, is_trained)
 
-    output_path = Path("data/test_label_all/")
+    output_path = Path("data/auto_label/")
     unlabeled_dataset = load_json("data/large_batch/export_2025-03-17.json")
     labeled_ids = load_json("data/large_batch/labeled_ids.json")
 

@@ -163,14 +163,11 @@ def visualize(
     plt.xticks(rotation=0)
     plt.legend(title="Report / Type", bbox_to_anchor=(1, 1), loc="upper left")
     plt.tight_layout()
-    plt.savefig(
-        output_dir.joinpath(
-            f"f1_type_specific_{model_type.value}{'_null_ignored' if ignore_null else ''}.svg"
-        )
+    path_types = output_dir.joinpath(
+        f"f1_type_specific_{model_type.value}{'_null_ignored' if ignore_null else ''}.svg"
     )
-    print(
-        f"Saved: f1_combined_{model_type.value}{'_null_ignored' if ignore_null else ''}.svg"
-    )
+    plt.savefig(path_types)
+    print(f"Saved: {path_types}")
 
     # Accuracy, Precision, Recall, F1
     metrics = []
@@ -242,23 +239,12 @@ def evaluate_all_models(generate_strings: bool = False):
                 )
 
 
-if __name__ == "__main__":
-    EVALUATE_ALL_MODELS = False
-
-    # Set to True to ignore null values in evaluation
-    IGNORE_NULL = False
-
-    # Speed up evaluation by not generating string values
-    GENERATE_STRINGS = False
-
-    if EVALUATE_ALL_MODELS:
-        evaluate_all_models(GENERATE_STRINGS)
-
+def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
     # Compare masking just values vs random mlm training
     visualize(
         model_type=ModelType.ENCODER,
         ignore_strings=True,
-        ignore_null=IGNORE_NULL,
+        ignore_null=ignore_null,
         included_model_names=[
             "trained/ltg/norbert3-small_mask_values",
             "trained/ltg/norbert3-small",
@@ -270,7 +256,7 @@ if __name__ == "__main__":
     visualize(
         model_type=ModelType.ENCODER,
         ignore_strings=True,
-        ignore_null=IGNORE_NULL,
+        ignore_null=ignore_null,
         included_model_names=[
             "trained/ltg/norbert3-small",
             "trained/ltg/norbert3-base",
@@ -282,8 +268,8 @@ if __name__ == "__main__":
     # Trained Encoder-Decoder models
     visualize(
         model_type=ModelType.ENCODER_DECODER,
-        ignore_strings=(not GENERATE_STRINGS),
-        ignore_null=IGNORE_NULL,
+        ignore_strings=(not generate_strings),
+        ignore_null=ignore_null,
         included_model_names=[
             "trained/ltg/nort5-small",
             "trained/ltg/nort5-base",
@@ -295,8 +281,8 @@ if __name__ == "__main__":
     # Trained Small decoder models and all its variants tained and untrained with/without 4bit quantization
     visualize(
         model_type=ModelType.DECODER,
-        ignore_strings=(not GENERATE_STRINGS),
-        ignore_null=IGNORE_NULL,
+        ignore_strings=(not generate_strings),
+        ignore_null=ignore_null,
         included_model_names=[
             "norallm/normistral-7b-warm_4bit_quant",
             "norallm/normistral-7b-warm",
@@ -309,8 +295,8 @@ if __name__ == "__main__":
     # 0 shot test for larger untrained decoder models
     visualize(
         model_type=ModelType.DECODER,
-        ignore_strings=(not GENERATE_STRINGS),
-        ignore_null=IGNORE_NULL,
+        ignore_strings=(not generate_strings),
+        ignore_null=ignore_null,
         included_model_names=[
             "norallm/normistral-7b-warm",
             "google/gemma-3-27b-it",
@@ -318,3 +304,14 @@ if __name__ == "__main__":
         ],
         output_dir=Path("./figures/eval/0_shot"),
     )
+
+
+if __name__ == "__main__":
+    # Speed up evaluation by not generating string values
+    GENERATE_STRINGS = False
+
+    # evaluate_all_models(GENERATE_STRINGS)
+
+    # Visualize results with both null and ignored null
+    visualize_all(True, GENERATE_STRINGS)
+    visualize_all(False, GENERATE_STRINGS)

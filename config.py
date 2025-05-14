@@ -14,15 +14,14 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
         ModelSettings("ltg/norbert3-small", training_batch_size=16),
         ModelSettings("ltg/norbert3-base", training_batch_size=8),
         ModelSettings("ltg/norbert3-large", training_batch_size=4),
-        #ModelSettings("Veggissss/ltg_norbert3-small_mask_values", is_fine_tuning=False), # Example on how to load fine-tuned model from huggingface.
+        # Example on how to load fine-tuned model from huggingface.
+        #ModelSettings("Veggissss/ltg_norbert3-small_mask_values", is_fine_tuning=False), 
     ],
     ModelType.DECODER: [
         ModelSettings("norallm/normistral-7b-warm-instruct", training_batch_size=2, training_learning_rate=3e-5, use_4bit_quant=True),
         ModelSettings("norallm/normistral-7b-warm-instruct", training_batch_size=1, training_learning_rate=5e-5),
         ModelSettings("google/gemma-3-27b-it", is_fine_tuning=False),
         ModelSettings("Qwen/Qwen3-32B", is_fine_tuning=False),
-        #ModelSettings("Qwen/Qwen3-4B", use_4bit_quant=True, is_fine_tuning=False),
-        #ModelSettings("google/gemma-3-1b-it", use_4bit_quant=True, is_fine_tuning=False),
 
         # Example on how to load already fine-tuned PEFT model from huggingface:
         #ModelSettings("norallm/normistral-7b-warm", peft_model_name="Veggissss/norallm_normistral-7b-warm_4bit_quant", use_4bit_quant=True, is_fine_tuning=False),
@@ -56,7 +55,7 @@ SYSTEM_PROMPT = (
     "Finn kun informasjon som gjelder glass nummer {container_id}.\n"
     "Ignorer all informasjon om andre glass.\n"
     'Fyll ut feltet "value" basert på denne informasjonen.\n'
-    'Hvis det ikke finnes en gyldig verdi så sett "value" til null. (null er alltid en gyldig verdi.)\n\n'
+    'Hvis det ikke finnes en gyldig verdi så sett "value" til null.\n'
     f"{JSON_START_MARKER}\n"
     "{template_json}"
 )
