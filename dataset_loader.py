@@ -175,6 +175,7 @@ class DatasetLoader:
                     prompt = enum_dict["value"]
 
                 correct_enum = enum_dict["value"]
+                target_entry["value"] = correct_enum
 
                 if "enum" in template_entry:
                     del template_entry["enum"]
@@ -182,12 +183,12 @@ class DatasetLoader:
                     del target_entry["enum"]
 
                 self._add_prompt_entry(
-                    dataset_entries,
-                    prompt,
-                    "1",
-                    correct_enum,
-                    target_entry,
-                    template_entry,
+                    dataset_dict=dataset_entries,
+                    input_text=prompt,
+                    container_id="1",
+                    correct_value=correct_enum,
+                    target_entry=target_entry,
+                    template_entry=template_entry,
                 )
 
         return dataset_entries

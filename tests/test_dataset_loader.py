@@ -2,6 +2,7 @@ import pytest
 import json
 from dataset_loader import DatasetLoader
 from utils.enums import ModelType
+from config import JSON_START_MARKER
 
 # Test data path
 DATA_PATH = "data/test_data"
@@ -72,6 +73,24 @@ def test_dataset_loader_encoder_decoder():
 
     print(dataset["input"][0])
     print(dataset["output"][0])
+
+
+def test_process_enum_file():
+    # Test with empty dataset path
+    dataset_path = "tests/temp/empty"
+    dataset_loader = DatasetLoader(ModelType.ENCODER)
+    enum_dataset, enums = dataset_loader.create_dataset(
+        dataset_path, include_enums=False
+    )
+    assert len(enums) == 0
+    assert len(enum_dataset["input"]) != 0
+    assert len(enum_dataset["output"]) != 0
+
+    assert len(enum_dataset["output"]) == len(enum_dataset["input"])
+
+    # Should use enum values as correct values
+    assert not "null" in str(enum_dataset["input"][0]).split(JSON_START_MARKER)[1]
+    assert "null" in str(enum_dataset["output"][0]).split(JSON_START_MARKER)[1]
 
 
 if __name__ == "__main__":

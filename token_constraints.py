@@ -246,7 +246,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
 
 
 def add_logits_filter_mask(
-    vocab_logits: torch.FloatTensor, allowed_ids: list[int] | int
+    vocab_logits: torch.FloatTensor, allowed_ids: list[int]
 ) -> torch.FloatTensor:
     """
     Apply a filtering mask to the logits based on the allowed token IDs.
