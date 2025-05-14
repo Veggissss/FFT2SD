@@ -398,25 +398,22 @@ class EncoderStrategy(BaseModelStrategy):
         )
 
         # Apply masking and collect predictions
-        masked_logits_list = []
         for i in range(batch_size):
-            masked_logits = add_logits_filter_mask(
+            batch_masked_logits[i] = add_logits_filter_mask(
                 batch_masked_logits[i], allowed_token_ids_batch[i]
             )
-            masked_logits = reduce_null_bias(
-                self.tokenizer, masked_logits, token_options.reduce_null_bias
+            batch_masked_logits[i] = reduce_null_bias(
+                self.tokenizer, batch_masked_logits[i], token_options.reduce_null_bias
             )
             log_token_probabilities(
-                model_loader.tokenizer, masked_logits, allowed_token_ids_batch[i]
+                model_loader.tokenizer,
+                batch_masked_logits[i],
+                allowed_token_ids_batch[i],
             )
-            masked_logits_list.append(masked_logits)
-
-        # Stack masked logits and get predicted tokens [batch_size, vocab_size]
-        masked_logits_stacked = torch.stack(masked_logits_list, dim=0)
 
         # Replace masks with predicted tokens [batch_size]
         input_ids[batch_indices, token_indices] = torch.argmax(
-            masked_logits_stacked, dim=1
+            batch_masked_logits, dim=1
         )
 
         # Decode the entire batch
