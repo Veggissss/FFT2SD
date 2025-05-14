@@ -30,6 +30,11 @@ def evaluate(
     files = list(data_dir.glob("*.json"))
     per_file_stats = []
 
+    # Get full model name with possible train prefix and settings suffixes
+    full_model_name = str(server.model_loader.model_settings)
+    if is_trained:
+        full_model_name = f"trained/{str(server.model_loader.model_settings)}"
+
     for file_path in files:
         data = load_json(file_path)
         input_text = data["input_text"]
@@ -52,7 +57,7 @@ def evaluate(
                 {
                     "file": file_path.name,
                     "report_type": report_type.name,
-                    "model_name": server.model_loader.model_name,
+                    "model_name": full_model_name,
                     "model_type": model_type.value,
                     "type": value_type,
                     "y_true": y_true,
@@ -67,7 +72,7 @@ def evaluate(
             existing = [
                 entry
                 for entry in existing
-                if entry.get("model_name") != server.model_loader.model_name
+                if entry.get("model_name") != full_model_name
             ]
             per_file_stats = existing + per_file_stats
 
@@ -310,7 +315,7 @@ if __name__ == "__main__":
     # Speed up evaluation by not generating string values
     GENERATE_STRINGS = False
 
-    # evaluate_all_models(GENERATE_STRINGS)
+    evaluate_all_models(GENERATE_STRINGS)
 
     # Visualize results with both null and ignored null
     visualize_all(True, GENERATE_STRINGS)
