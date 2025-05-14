@@ -20,8 +20,8 @@ class ModelLoader:
         model_type (ModelType): The type of model architecture (encoder, decoder, encoder-decoder).
         model_index (int): The index of the model settings to use from the `config.py` model dictionary. (Generaly increasing model size with index)
         is_trained (bool): Flag indicating if the model is fine-tuned and is saved locally.
-        base_model_name (str): The name of the model to load from Hugging Face or local path.
-    NOTE: Either `model_index` or `base_model_name` should be provided.
+        load_model_name (str): The full name of the model to load from Hugging Face or local path with possible suffixes.
+    NOTE: Either `model_index` or `load_model_name` should be provided.
     Attributes:
         model_settings: The settings for the model, including its name and other specific configs.
         model_name (str): The name of the model/path to local if is_trained.
@@ -36,11 +36,11 @@ class ModelLoader:
         model_type: ModelType,
         model_index: None | int = None,
         is_trained: bool = True,
-        base_model_name: None | str = None,
+        load_model_name: None | str = None,
     ):
         self.model_type = model_type
-        if base_model_name is not None:
-            self.model_index = self.get_model_index(base_model_name)
+        if load_model_name is not None:
+            self.model_index = self.get_model_index(load_model_name)
         elif model_index is not None:
             self.model_index = model_index
         else:
@@ -169,16 +169,16 @@ class ModelLoader:
 
         print(f"Model unloaded: {self.model_name}")
 
-    def get_model_index(self, base_model_name: str) -> int | None:
+    def get_model_index(self, model_name: str) -> int | None:
         """
-        Find the index of a model with the given base_model_name in the list for the specified ModelType.
+        Find the index of a model with the given model_name in the list for the specified ModelType.
         Args:
             model_type: The type of model to search in (ENCODER_DECODER, ENCODER, or DECODER).
-            base_model_name: The name of the base model to find.
+            model_name: The name of the model to find, might include special quant such as "_4bit_quant".
         Returns:
             The index of the first matching model or None if not found.
         """
         for i, model_settings in enumerate(MODELS_DICT[self.model_type]):
-            if model_settings.base_model_name == base_model_name:
+            if str(model_settings) == model_name:
                 return i
         return None

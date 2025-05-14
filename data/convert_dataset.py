@@ -37,5 +37,5 @@ def convert_jsons_to_jsonl(input_dir, output_file):
 
 
 if __name__ == "__main__":
-    convert_jsons_to_jsonl("data/corrected/", "data/dataset-train.jsonl")
-    # convert_jsons_to_jsonl("data/corrected/eval/", "data/dataset-eval.jsonl")
+    convert_jsons_to_jsonl("data/corrected/", "data/dataset-eval.jsonl")
+    convert_jsons_to_jsonl("data/auto_labeled/", "data/dataset-train.jsonl")
