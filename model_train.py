@@ -229,7 +229,7 @@ def train(model_type: ModelType, model_index: int, push_to_hub: bool = True) -> 
     :param model_type: Model type to train.
     """
     model_loader = ModelLoader(model_type, model_index, is_trained=False)
-    dataset_dir = "data/auto_label/"
+    dataset_dir = "data/auto_labeled/"
     output_dir = f"trained/{str(model_loader.model_settings)}"
     print(f"Saving trained model to: {output_dir}")
 

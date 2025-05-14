@@ -18,7 +18,7 @@ from token_constraints import (
     get_allowed_tokens,
     log_token_probabilities,
     reduce_null_bias,
-    add_logits_mask,
+    add_logits_filter_mask,
     TokenTypeConstraintProcessor,
     StopOnToken,
 )
@@ -390,7 +390,7 @@ class EncoderStrategy(BaseModelStrategy):
         assert all(batch_indices.bincount() == 1), "Max 1 mask!"
 
         # Get logits for the masked token [batch_size, vocab_size]
-        masked_logits = logits[batch_indices, token_indices]
+        batch_masked_logits = logits[batch_indices, token_indices]
 
         # Prepare allowed token IDs for the batch
         allowed_token_ids_batch = self.get_template_allowed_tokens(
@@ -400,8 +400,8 @@ class EncoderStrategy(BaseModelStrategy):
         # Apply masking and collect predictions
         masked_logits_list = []
         for i in range(batch_size):
-            masked_logits = add_logits_mask(
-                masked_logits[i], allowed_token_ids_batch[i]
+            masked_logits = add_logits_filter_mask(
+                batch_masked_logits[i], allowed_token_ids_batch[i]
             )
             masked_logits = reduce_null_bias(
                 self.tokenizer, masked_logits, token_options.reduce_null_bias

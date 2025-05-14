@@ -8,12 +8,13 @@ import server
 # Testing script to fully label the complete unlabeled dataset
 # This could be used to quickly label the entire dataset using an (hopefully accurate) large model and use the dataset to fine tune smaller models
 if __name__ == "__main__":
-    model_type = ModelType.DECODER
-    model_index = 2
-    is_trained = False
-    server.model_loader = ModelLoader(model_type, model_index, is_trained)
+    BASE_MODEL_NAME = "google/gemma-3-27b-it"
 
-    output_path = Path("data/auto_label/")
+    server.model_loader = ModelLoader(
+        model_type=ModelType.DECODER, is_trained=False, base_model_name=BASE_MODEL_NAME
+    )
+
+    output_path = Path("data/auto_labeled/")
     unlabeled_dataset = load_json("data/large_batch/export_2025-03-17.json")
     labeled_ids = load_json("data/large_batch/labeled_ids.json")
 

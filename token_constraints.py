@@ -209,7 +209,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
 
                     # Generate first quote token and wait for value
                     self.state[i] = GenerationState.AWAIT_VALUE
-                    scores[i] = add_logits_mask(scores[i], [self.quote_token_id])
+                    scores[i] = add_logits_filter_mask(scores[i], [self.quote_token_id])
                 case GenerationState.AWAIT_VALUE | GenerationState.GENERATING_VALUE:
                     # Allow unrestricted tokens for string type when enabled
                     if self._is_string_type_enabled(i):
@@ -220,7 +220,7 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                     allowed_token_ids = self._get_allowed_tokens_for_value(
                         i, last_token_ids
                     )
-                    scores[i] = add_logits_mask(scores[i], allowed_token_ids)
+                    scores[i] = add_logits_filter_mask(scores[i], allowed_token_ids)
                     scores[i] = reduce_null_bias(
                         self.tokenizer, scores[i], threshold=self.reduce_null_bias
                     )
@@ -232,22 +232,24 @@ class TokenTypeConstraintProcessor(LogitsProcessor):
                         )
 
                 case GenerationState.AWAIT_BRACKET_END:
-                    scores[i] = add_logits_mask(scores[i], [self.bracket_end_token_id])
+                    scores[i] = add_logits_filter_mask(
+                        scores[i], [self.bracket_end_token_id]
+                    )
                     self.state[i] = None
 
                 case _:
                     # Stopping criteria should stop the generation
-                    scores[i] = add_logits_mask(
+                    scores[i] = add_logits_filter_mask(
                         scores[i], [self.tokenizer.unk_token_id]
                     )
         return scores
 
 
-def add_logits_mask(
-    vocab_logits: torch.FloatTensor, allowed_ids: list[int]
+def add_logits_filter_mask(
+    vocab_logits: torch.FloatTensor, allowed_ids: list[int] | int
 ) -> torch.FloatTensor:
     """
-    Apply a mask to the logits based on the allowed token IDs.
+    Apply a filtering mask to the logits based on the allowed token IDs.
     Args:
         vocab_logits: Logits for each token in the vocabulary [vocab_size]
         allowed_ids: List of allowed token IDs

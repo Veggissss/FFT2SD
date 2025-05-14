@@ -46,7 +46,9 @@ class ModelLoader:
         else:
             raise ValueError("Either model_index or model_name must be provided.")
         self.is_trained = is_trained
-        self.model_settings: ModelSettings = MODELS_DICT[model_type][model_index]
+        self.model_settings: ModelSettings = MODELS_DICT[self.model_type][
+            self.model_index
+        ]
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Use either a trained local model or a Hugging Face model
