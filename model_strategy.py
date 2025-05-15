@@ -171,19 +171,29 @@ class BaseModelStrategy:
     def _get_peft_config(
         self, model_loader: "ModelLoader"
     ) -> tuple[str, BitsAndBytesConfig | None]:
+        if model_loader.model_settings.use_4bit_quant:
+            # Load the base HF model without "_peft" in the name
+            model_name = model_loader.model_settings.base_model_name
+
+            # Use 4-bit quantization
+            q_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.float16,
+            )
+            return model_name, q_config
+        elif model_loader.model_settings.use_8bit_quant:
+            # Load the base HF model without "_peft" in the name
+            model_name = model_loader.model_settings.base_model_name
+
+            # Use 8-bit quantization
+            q_config = BitsAndBytesConfig(
+                load_in_8bit=True,
+            )
+            return model_name, q_config
+        
         # If not using quant, return the model name and None
-        if not model_loader.model_settings.use_4bit_quant:
-            return model_loader.model_name, None
+        return model_loader.model_name, None
 
-        # Load the base HF model without "_peft" in the name
-        model_name = model_loader.model_settings.base_model_name
-
-        # Use 4-bit quantization
-        q_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.float16,
-        )
-        return model_name, q_config
 
     def _load_peft_model(
         self, model_loader: "ModelLoader", model: AutoModel

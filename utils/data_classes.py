@@ -53,6 +53,7 @@ class ModelSettings:
     :param base_model_name: The name/repo path to the HuggingFace model.
     :param peft_model_name: The HuggingFace PEFT model repo path. If None, the local trained peft will be used if is_trained is True.
     :param use_4bit_quant: Whether to load the model using 4-bit quantization.
+    :param use_8bit_quant: Whether to load the model using 8-bit quantization.
     :param is_fine_tuning: Whether the model is going to be fine-tuned or not.
 
     :param training_batch_size: The batch size to be used during training.
@@ -64,6 +65,7 @@ class ModelSettings:
     base_model_name: str
     peft_model_name: None | str = None
     use_4bit_quant: bool = False
+    use_8bit_quant: bool = False
     is_fine_tuning: bool = True
 
     training_batch_size: int = 1
@@ -81,6 +83,8 @@ class ModelSettings:
             return self.base_model_name + "_mask_values"
         if self.use_4bit_quant:
             return self.base_model_name + "_4bit_quant"
+        if self.use_8bit_quant:
+            return self.base_model_name + "_8bit_quant"
         return self.base_model_name
 
     def __post_init__(self) -> None:
