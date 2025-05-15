@@ -19,7 +19,7 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
     ],
     ModelType.DECODER: [
         ModelSettings("norallm/normistral-7b-warm", training_batch_size=4, training_learning_rate=3e-4, use_4bit_quant=True),
-        ModelSettings("norallm/normistral-7b-warm", training_batch_size=2, training_learning_rate=2e-5),
+        ModelSettings("norallm/normistral-7b-warm", is_fine_tuning=False),
         ModelSettings("google/gemma-3-27b-it", is_fine_tuning=False),
         ModelSettings("Qwen/Qwen3-32B", is_fine_tuning=False),
 
