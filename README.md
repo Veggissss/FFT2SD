@@ -53,6 +53,13 @@ master-project.wip.exe.zip.lib.rar
 
 ### Installation:
 
+Prerequisites:
+1. Install [Python](https://www.python.org/downloads/)
+2. Install [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
+    - Unix: `curl https://sh.rustup.rs -sSf | sh
+`
+    - Win: https://win.rustup.rs/
+
 Setup virtual env
 1. `python -m venv venv`
 
