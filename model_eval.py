@@ -12,8 +12,9 @@ import server
 
 
 def evaluate(
-    model_type: ModelType,
-    model_index: int = 0,
+    model_type: ModelType = None,
+    model_index: int = None,
+    load_model_name: str = None,
     is_trained: bool = True,
     data_dir: Path = Path("data/corrected"),
     output_path: Path = Path("./eval_results.json"),
@@ -23,9 +24,20 @@ def evaluate(
     Runs evaluation on all labeled JSON files
     Saves per-file metrics to a JSON file for each model_type.
     """
+    assert (
+        model_type is not None
+        and model_index is not None
+        or load_model_name is not None
+    ), "Either model_type and model_index or load_model_name must be provided."
+
     if server.model_loader:
         server.model_loader.unload_model()
-    server.model_loader = ModelLoader(model_type, model_index, is_trained)
+    server.model_loader = ModelLoader(
+        model_type=model_type,
+        model_index=model_index,
+        is_trained=is_trained,
+        load_model_name=load_model_name,
+    )
 
     files = list(data_dir.glob("*.json"))
     per_file_stats = []

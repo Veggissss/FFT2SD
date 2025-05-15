@@ -9,7 +9,6 @@ import server
 # This could be used to quickly label the entire dataset using an (hopefully accurate) large model and use the dataset to fine tune smaller models
 if __name__ == "__main__":
     server.model_loader = ModelLoader(
-        model_type=ModelType.DECODER,
         is_trained=False,
         load_model_name="google/gemma-3-27b-it",
     )

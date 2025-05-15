@@ -33,18 +33,18 @@ class ModelLoader:
 
     def __init__(
         self,
-        model_type: ModelType,
+        model_type: ModelType = None,
         model_index: None | int = None,
         is_trained: bool = True,
         load_model_name: None | str = None,
     ):
-        self.model_type = model_type
         if load_model_name is not None:
-            self.model_index = self.get_model_index(load_model_name)
-        elif model_index is not None:
+            self.model_type, self.model_index = self.get_model_index(load_model_name)
+        elif model_type is not None and model_index is not None:
+            self.model_type = model_type
             self.model_index = model_index
         else:
-            raise ValueError("Either model_index or model_name must be provided.")
+            raise ValueError("Either (model_index and model_type) or (model_name) must be provided.")
         self.is_trained = is_trained
         self.model_settings: ModelSettings = MODELS_DICT[self.model_type][
             self.model_index
@@ -52,7 +52,7 @@ class ModelLoader:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Use either a trained local model or a Hugging Face model
-        if is_trained and self.model_settings.is_fine_tuning:
+        if self.is_trained and self.model_settings.is_fine_tuning:
             self.model_name = f"trained/{str(self.model_settings)}"
         else:
             self.model_name = self.model_settings.base_model_name
@@ -62,7 +62,7 @@ class ModelLoader:
             ModelType.ENCODER_DECODER: EncoderDecoderStrategy,
             ModelType.DECODER: DecoderStrategy,
             ModelType.ENCODER: EncoderStrategy,
-        }[model_type]()
+        }[self.model_type]()
 
         # Load model with corresponding tokenizer
         self.model, self.tokenizer = self.strategy.load(self)
@@ -169,16 +169,16 @@ class ModelLoader:
 
         print(f"Model unloaded: {self.model_name}")
 
-    def get_model_index(self, model_name: str) -> int | None:
+    def get_model_index(self, model_name: str) -> tuple[ModelType, int] | None:
         """
-        Find the index of a model with the given model_name in the list for the specified ModelType.
+        Find the model type and index for the given model_name in the MODELS_DICT.
         Args:
-            model_type: The type of model to search in (ENCODER_DECODER, ENCODER, or DECODER).
             model_name: The name of the model to find, might include special quant such as "_4bit_quant".
         Returns:
-            The index of the first matching model or None if not found.
+            A tuple containing the model type and index if found, otherwise None.
         """
-        for i, model_settings in enumerate(MODELS_DICT[self.model_type]):
-            if str(model_settings) == model_name:
-                return i
+        for model_type, models in MODELS_DICT.items():
+            for i, model_settings in enumerate(models):
+                if str(model_settings) == model_name:
+                    return model_type, i
         return None
