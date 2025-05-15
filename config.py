@@ -20,8 +20,8 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
     ModelType.DECODER: [
         ModelSettings("norallm/normistral-7b-warm", training_batch_size=4, training_learning_rate=3e-4, use_4bit_quant=True),
         ModelSettings("norallm/normistral-7b-warm", is_fine_tuning=False),
-        ModelSettings("google/gemma-3-27b-it", is_fine_tuning=False),
-        ModelSettings("Qwen/Qwen3-32B", is_fine_tuning=False),
+        ModelSettings("google/gemma-3-12b-it", is_fine_tuning=False),
+        #ModelSettings("Qwen/Qwen3-32B-FP8", is_fine_tuning=False),
 
         # Example on how to load already fine-tuned PEFT model from huggingface:
         #ModelSettings("norallm/normistral-7b-warm", peft_model_name="Veggissss/norallm_normistral-7b-warm_4bit_quant", use_4bit_quant=True, is_fine_tuning=False),

@@ -323,12 +323,27 @@ def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
     )
 
 
+def evaluate_single_model(load_model_name: str, generate_strings: bool = False):
+    token_options = TokenOptions()
+    token_options.include_enums = True
+    token_options.generate_strings = generate_strings
+
+    # All decoder models are evaluated untrained (0-shot), the rest are trained
+    evaluate(
+        load_model_name=load_model_name,
+        is_trained=False,
+        token_options=token_options,
+    )
+
+
 if __name__ == "__main__":
     # Speed up evaluation by not generating string values
     GENERATE_STRINGS = False
 
-    evaluate_all_models(GENERATE_STRINGS)
+    # evaluate_all_models(GENERATE_STRINGS)
+
+    evaluate_single_model("google/gemma-3-12b-it", GENERATE_STRINGS)
 
     # Visualize results with both null and ignored null
-    visualize_all(True, GENERATE_STRINGS)
-    visualize_all(False, GENERATE_STRINGS)
+    # visualize_all(True, GENERATE_STRINGS)
+    # visualize_all(False, GENERATE_STRINGS)

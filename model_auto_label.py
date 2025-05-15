@@ -10,7 +10,7 @@ import server
 if __name__ == "__main__":
     server.model_loader = ModelLoader(
         is_trained=False,
-        load_model_name="google/gemma-3-27b-it",
+        load_model_name="google/gemma-3-12b-it",
     )
 
     output_path = Path("data/auto_labeled/")
