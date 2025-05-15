@@ -340,10 +340,9 @@ if __name__ == "__main__":
     # Speed up evaluation by not generating string values
     GENERATE_STRINGS = False
 
-    # evaluate_all_models(GENERATE_STRINGS)
-
-    evaluate_single_model("google/gemma-3-12b-it", GENERATE_STRINGS)
+    #evaluate_single_model("google/gemma-3-12b-it", GENERATE_STRINGS)
+    evaluate_all_models(GENERATE_STRINGS)
 
     # Visualize results with both null and ignored null
-    # visualize_all(True, GENERATE_STRINGS)
-    # visualize_all(False, GENERATE_STRINGS)
+    visualize_all(True, GENERATE_STRINGS)
+    visualize_all(False, GENERATE_STRINGS)

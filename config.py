@@ -1,5 +1,10 @@
+from dotenv import dotenv_values
 from utils.enums import ModelType
 from utils.data_classes import ModelSettings
+
+env_config: dict = dotenv_values(".env")
+hf_username = env_config.get("HUGGINGFACE_USERNAME", None)
+hf_token = env_config.get("HUGGINGFACE_SECRET_TOKEN", None)
 
 # fmt: off
 # Definitions of Hugging Face models

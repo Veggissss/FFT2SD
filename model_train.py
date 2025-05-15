@@ -1,4 +1,3 @@
-from dotenv import dotenv_values
 import torch
 from peft import LoraConfig, get_peft_model, PeftModel
 from transformers import (
@@ -15,7 +14,7 @@ from datasets import Dataset
 from model_loader import ModelLoader
 from dataset_loader import DatasetLoader
 from utils.enums import ModelType
-from config import JSON_START_MARKER, MODELS_DICT
+from config import JSON_START_MARKER, MODELS_DICT, hf_token, hf_username
 
 
 class DataCollatorForMaskedValueTokens(DataCollatorMixin):
@@ -235,9 +234,6 @@ def train(model_type: ModelType, model_index: int, push_to_hub: bool = True) -> 
     print(f"Saving trained model to: {output_dir}")
 
     # Huggingface token and repo path
-    env_config: dict = dotenv_values(".env")
-    hf_token = env_config.get("HUGGINGFACE_SECRET_TOKEN", None)
-    hf_username = env_config.get("HUGGINGFACE_USERNAME", None)
     if hf_token is None or hf_username is None:
         push_to_hub = False
         print("Missing Hugging Face token or username in .env file.")

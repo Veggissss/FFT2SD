@@ -1,6 +1,6 @@
 from pathlib import Path
 from utils.file_loader import save_json, load_json
-from utils.enums import ModelType, ReportType, DatasetField
+from utils.enums import ReportType, DatasetField
 from utils.data_classes import TokenOptions
 from model_loader import ModelLoader
 import server
@@ -10,7 +10,8 @@ import server
 if __name__ == "__main__":
     server.model_loader = ModelLoader(
         is_trained=False,
-        load_model_name="google/gemma-3-12b-it",
+        # Must match one of the models in config.py:
+        load_model_name="google/gemma-3-12b-it", 
     )
 
     output_path = Path("data/auto_labeled/")

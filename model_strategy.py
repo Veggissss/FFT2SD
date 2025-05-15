@@ -22,7 +22,7 @@ from token_constraints import (
     TokenTypeConstraintProcessor,
     StopOnToken,
 )
-from config import JSON_START_MARKER
+from config import JSON_START_MARKER, hf_token
 from utils.file_loader import str_to_json
 from utils.data_classes import TokenOptions
 
@@ -49,6 +49,7 @@ class BaseModelStrategy:
         self.tokenizer = AutoTokenizer.from_pretrained(
             (model_loader.model_settings.peft_model_name or model_loader.model_name),
             trust_remote_code=True,
+            token=hf_token,
         )
 
     def generate(
@@ -222,6 +223,7 @@ class BaseModelStrategy:
                 low_cpu_mem_usage=(not is_trainable),
                 is_trainable=is_trainable,
                 ephemeral_gpu_offloading=True,
+                token=hf_token,
             )
             # Reduce latency by merging peft model with base model
             if not is_trainable:
@@ -247,6 +249,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
             model_name,
             quantization_config=q_config,
             trust_remote_code=True,
+            token=hf_token,            
         )
         model.to(model_loader.device)
 
@@ -329,6 +332,7 @@ class DecoderStrategy(BaseModelStrategy):
             model_name,
             quantization_config=q_config,
             device_map="auto",
+            token=hf_token,
         )
 
         if (
@@ -395,6 +399,7 @@ class EncoderStrategy(BaseModelStrategy):
         model = AutoModelForMaskedLM.from_pretrained(
             model_name,
             quantization_config=q_config,
+            token=hf_token,
             trust_remote_code=True,
         )
         model.to(model_loader.device)
