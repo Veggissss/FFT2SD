@@ -234,8 +234,8 @@ def evaluate_all_models(generate_strings: bool = False):
                 token_options=token_options,
             )
 
-            # Evaluate trained decoder norallm models as well
-            if "norallm" in model_setting.base_model_name:
+            # Evaluate trained decoder norallm model as well
+            if "norallm/normistral-7b-warm_4bit_quant" in model_setting.base_model_name:
                 evaluate(
                     model_type=m_type,
                     model_index=i,
@@ -292,7 +292,7 @@ def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
             "norallm/normistral-7b-warm_4bit_quant",
             "norallm/normistral-7b-warm",
             "trained/norallm/normistral-7b-warm_4bit_quant",
-            "trained/norallm/normistral-7b-warm",
+            # "trained/norallm/normistral-7b-warm",
         ],
         output_dir=Path("./figures/eval/decoder"),
     )
