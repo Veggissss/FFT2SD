@@ -47,7 +47,9 @@ def evaluate(
     if is_trained:
         full_model_name = f"trained/{str(server.model_loader.model_settings)}"
 
-    for file_path in files:
+    for i, file_path in enumerate(files):
+        if i % 10 == 0:
+            print(f"Evaluating {((i + 1)/len(files))*100:.2f}%")
         data = load_json(file_path)
         input_text = data["input_text"]
         target = data["target_json"]
@@ -70,7 +72,7 @@ def evaluate(
                     "file": file_path.name,
                     "report_type": report_type.name,
                     "model_name": full_model_name,
-                    "model_type": model_type.value,
+                    "model_type": server.model_loader.model_type.value,
                     "type": value_type,
                     "y_true": y_true,
                     "y_pred": y_pred,
@@ -172,7 +174,7 @@ def visualize(
     ax = pivot_df.plot(kind="bar", figsize=(15, 6))
     add_bar_labels(ax)
     plt.title(
-        f"F1 Scores by Report Type and Data Type ({model_type.value}{', null ignored' if ignore_null else ''})"
+        f"Weighted Average F1 Scores by Report Type and Data Type ({model_type.value}{', null ignored' if ignore_null else ''})"
     )
     plt.xlabel("Model Name")
     plt.ylabel("F1 Score")
@@ -180,11 +182,12 @@ def visualize(
     plt.xticks(rotation=0)
     plt.legend(title="Report / Type", bbox_to_anchor=(1, 1), loc="upper left")
     plt.tight_layout()
-    path_types = output_dir.joinpath(
-        f"f1_type_specific_{model_type.value}{'_null_ignored' if ignore_null else ''}.svg"
+    save_figure(
+        plt,
+        output_dir.joinpath(
+            f"f1_type_specific_{model_type.value}{'_null_ignored' if ignore_null else ''}"
+        ),
     )
-    plt.savefig(path_types)
-    print(f"Saved: {path_types}")
 
     # Accuracy, Precision, Recall, F1
     metrics = []
@@ -212,7 +215,7 @@ def visualize(
     ax = metrics_df.plot(kind="bar", figsize=(15, 6))
     add_bar_labels(ax)
     plt.title(
-        f"Accuracy, Precision, Recall, and F1 by Model ({model_type.value}{', null_ignored' if ignore_null else ''})"
+        f"Weighted Average Accuracy, Precision, Recall, and F1 by Model ({model_type.value}{', null_ignored' if ignore_null else ''})"
     )
     plt.xlabel("Model Name")
     plt.ylabel("Score")
@@ -220,11 +223,21 @@ def visualize(
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
     plt.tight_layout()
-    path_metrics = output_dir.joinpath(
-        f"overall_metrics_{model_type.value}{'_null_ignored' if ignore_null else ''}.svg"
+    save_figure(
+        plt,
+        output_dir.joinpath(
+            f"overall_metrics_{model_type.value}{'_null_ignored' if ignore_null else ''}"
+        ),
     )
-    plt.savefig(path_metrics)
-    print(f"Saved: {path_metrics}")
+
+
+def save_figure(plt, path: Path):
+    """
+    Save the figure as both an SVG and an EPS file.
+    """
+    plt.savefig(path.with_suffix(".svg"), format="svg")
+    plt.savefig(path.with_suffix(".eps"), format="eps")
+    print(f"Saved figure to {path}")
 
 
 def evaluate_all_models(generate_strings: bool = False):
@@ -257,6 +270,9 @@ def evaluate_all_models(generate_strings: bool = False):
 
 
 def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
+    """
+    Visualize all models in the config file.
+    """
     # Compare masking just values vs random mlm training
     visualize(
         model_type=ModelType.ENCODER,
@@ -304,7 +320,6 @@ def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
             "norallm/normistral-7b-warm_4bit_quant",
             "norallm/normistral-7b-warm",
             "trained/norallm/normistral-7b-warm_4bit_quant",
-            # "trained/norallm/normistral-7b-warm",
         ],
         output_dir=Path("./figures/eval/decoder"),
     )
@@ -316,14 +331,17 @@ def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
         ignore_null=ignore_null,
         included_model_names=[
             "norallm/normistral-7b-warm",
-            "google/gemma-3-27b-it",
-            "Qwen/Qwen3-32B",
+            "google/gemma-3-1b-it",
+            "google/gemma-3-4b-it",
         ],
         output_dir=Path("./figures/eval/0_shot"),
     )
 
 
 def evaluate_single_model(load_model_name: str, generate_strings: bool = False):
+    """
+    Evaluate a single model with the specified name.
+    """
     token_options = TokenOptions()
     token_options.include_enums = True
     token_options.generate_strings = generate_strings
@@ -340,7 +358,7 @@ if __name__ == "__main__":
     # Speed up evaluation by not generating string values
     GENERATE_STRINGS = False
 
-    #evaluate_single_model("google/gemma-3-12b-it", GENERATE_STRINGS)
+    # evaluate_single_model("google/gemma-3-1b-it", GENERATE_STRINGS)
     evaluate_all_models(GENERATE_STRINGS)
 
     # Visualize results with both null and ignored null
