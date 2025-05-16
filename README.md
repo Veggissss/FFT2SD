@@ -4,24 +4,31 @@
 master-project.wip.exe.zip.lib.rar
 
 ## Project Structure Overview
+<details>
+<summary>
+Root
+</summary>
+
+- **config.py**: Definitions of the used HuggingFace models. *Change the `MODELS_DICT` if you want to eval or train a different HuggingFace model.*
 - **model_loader.py**: ModelLoader class for managing loading and generating output from the models.
 - **model_strategy.py**: Containing model architecture specific logic for encoder, decoder and encoder-decoder models.
 - **dataset_loader.py**: Loads the labeled JSON data, creates a prompt for every field in the JSON and stores it as a *HuggingFace Dataset*. Also finds all the unique enum definitions in the dataset which will be added as separate tokens.
 - **model_train.py**: Training script that adds enum definitions as new tokens and trains/fine-tunes the models based on their architecture.
 - **server.py**: Simple Flask API for using the models with POST requests. Request paths for "/load_model" and "/generate".
 - **tests/**: Folder containing *pytest* unit tests
+
 <details>
 <summary><b>data/</b>: Dataset labeling</summary>
-
 * **batch/**: The full unlabeled text data real world pathology reports. ***##WIP##***
 * **labeled_data/**: The fully labeled data from *batch* in separated JSON form. ***##WIP##***
 * **example_batch/**: Small sample of pathology reports (missing 'klinisk' info).
 * **test_data/**: The labeled test data from *example_batch*, used for initial development.
 * **label_data.py** Simple data labeling program that takes user input and generates training data.
+* **auto_labeled**: The rest of the dataset marked by an LLM.
 </details>
 
 <details>
-<summary><b>data_model/</b>: Data Model creation based on the <a href="#data-model">pathology spreadsheet</a></summary>
+<summary><b>data_model/</b>: Data Model creation based on the <a href="/data_model/strukturert-rekvisisjon-og-svarrapport-for-patologirapportering-0.76.xlsx">pathology spreadsheet</a></summary>
 
 * **generate_data_model.py**: Fill in each model *struct* where every entry gets a *null* "value" field and enum definitions are filled in using the enum.
 * **struct/**: Containing all the base field for every report type and metadata with reference strings to enums such as *"REF_ENUM;Lokasjon"*.
@@ -33,43 +40,104 @@ master-project.wip.exe.zip.lib.rar
 <details>
 <summary><b>utils/</b>: Decoupled configurations, definitions and help functions.</summary>
 
-- **config.py**: Constant definitions, including the definition of the used HuggingFace models. *Change the MODELS_DICT if you want to train a different HuggingFace model.*
 - **enums.py**: Containing enum definitions mappings for model and report type.
 - **token_constraints.py**: Generation constraints for stopping auto regressive models and finding allowed unmask tokens for the encoder model.
 - **file_loader.py**: Helping functions for handling JSON and text files.
 </details>
+</details>
 
-### Libraries
-- LLM:
-    1. [*torch (cuda)*](https://pytorch.org/get-started/locally/)
-    2. [*Transformers*](https://pypi.org/project/transformers/)
-    3. [*datasets*](https://pypi.org/project/datasets/)
-    4. [*accelerate*](https://pypi.org/project/accelerate/)
-    5. [*peft*](https://pypi.org/project/peft/)
-- Testing
-    1. [*pytest* for unit testing](https://pypi.org/project/pytest/)
-- REST API
-    - [*Flask*](https://pypi.org/project/Flask/)
+<details>
+<summary>
+Libraries
+</summary>
+<ul>
+  <li>LLM:
+    <ol>
+      <li><a href="https://pytorch.org/get-started/locally/" target="_blank"><em>torch (cuda)</em></a></li>
+      <li><a href="https://pypi.org/project/transformers/" target="_blank"><em>Transformers</em></a></li>
+      <li><a href="https://pypi.org/project/datasets/" target="_blank"><em>datasets</em></a></li>
+      <li><a href="https://pypi.org/project/accelerate/" target="_blank"><em>accelerate</em></a></li>
+      <li><a href="https://pypi.org/project/peft/" target="_blank"><em>peft</em></a></li>
+    </ol>
+  </li>
+  <li>Testing
+    <ol>
+      <li><a href="https://pypi.org/project/pytest/" target="_blank"><em>pytest</em> for unit testing</a></li>
+    </ol>
+  </li>
+  <li>REST API
+    <ul>
+      <li><a href="https://pypi.org/project/Flask/" target="_blank"><em>Flask</em></a></li>
+    </ul>
+  </li>
+</ul>
+</details>
 
-### Installation:
 
-Prerequisites:
+### Installation
+
+#### Prerequisites:
 1. Install [Python](https://www.python.org/downloads/)
 2. Install [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
     - Unix: `curl https://sh.rustup.rs -sSf | sh
 `
     - Win: https://win.rustup.rs/
 
-Setup virtual env
+Setup virtual env:
 1. `python -m venv venv`
 
     a. `venv\Scripts\activate` for Windows
     
     b. `source venv/bin/activate` for Unix
 
-Install dependencies
+Install dependencies:
 
-2. `pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu118 --extra-index-url https://pypi.org/simple` for CUDA for GPU support. Newer/other CUDA versions: `https://pytorch.org/get-started/locally/`.
+2. `pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu118 --extra-index-url https://pypi.org/simple` for CUDA for GPU support. Newer/other CUDA versions: `https://pytorch.org/get-started/locally/`
+
+#### Web app:
+
+Prerequisites:
+- [Node.js](https://nodejs.org/en)
+
+Configuration:
+- If hosting the API server on a seperate machine than the Web App, add an environment file `Frontend/.env`, with value:
+  VITE_API_BASE_URL=http(s)://API_SERVER_ADDRESS:PORT_NUMBER
+
+
+Install dependencies:
+- `cd Frontend`
+- `npm install`
+
+Host dev:
+- `npm run dev`
+- Run `python server.py` for LLM API Backend
+
+
+## How to Auto Label, Train and Evaluate:
+
+#### Configuration:
+To access features such as accepting terms of service, using private models, or publishing fine-tuned models to Hugging Face, you need to create a `.env` file containing your username and an [access token](https://huggingface.co/settings/tokens). 
+
+See [`example.env`](example.env) for the correct format.
+
+
+### Auto Script
+
+Use [train_and_eval.sh](train_and_eval.sh) to install requirements with CUDA Torch and Auto Label, Train and Eval all the models.
+
+#### Auto Label
+Use an LLM to auto label the remainder of the dataset:
+`python model_auto_label.py`
+
+You can change the model name
+The generated training dataset will be in `data/auto_labeled/`
+
+#### Train
+To train all the models marked as `is_fine_tuning` set to `True` and use the Auto labeled dataset as training data.
+
+
+#### Eval
+Will use the manually labeled dataset to evaluate all the models and create (eval_results.json)[eval_results.json] and figures placed in `figures/eval` 
 
 
 ## Structured Data Model
@@ -153,7 +221,6 @@ The constrainted `LogitsProcessor` also force closes the `"` and generates a `}`
 
 ### Encoder 
 - Masked learning
-- Differ from NER
 - Limitation: *Single token restriction*
 
 ### Decoder
