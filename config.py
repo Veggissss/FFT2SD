@@ -3,30 +3,31 @@ from utils.enums import ModelType
 from utils.data_classes import ModelSettings
 
 env_config: dict = dotenv_values(".env")
-hf_username = env_config.get("HUGGINGFACE_USERNAME", None)
-hf_token = env_config.get("HUGGINGFACE_SECRET_TOKEN", None)
+HF_USERNAME = env_config.get("HUGGINGFACE_USERNAME", None)
+HF_TOKEN = env_config.get("HUGGINGFACE_SECRET_TOKEN", None)
 
 # fmt: off
 # Definitions of Hugging Face models
 MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
     ModelType.ENCODER_DECODER: [
-        ModelSettings("ltg/nort5-small", training_batch_size=32, training_learning_rate=5e-4),
-        ModelSettings("ltg/nort5-base", training_batch_size=16, training_learning_rate=3e-4),
-        ModelSettings("ltg/nort5-large", training_batch_size=2, training_learning_rate=1e-4),
+        ModelSettings("ltg/nort5-small", training_batch_size=16, training_learning_rate=5e-4),
+        ModelSettings("ltg/nort5-base", training_batch_size=8, training_learning_rate=3e-4),
+        ModelSettings("ltg/nort5-large", training_batch_size=1, training_learning_rate=1e-4),
     ],
     ModelType.ENCODER: [
-        ModelSettings("ltg/norbert3-small", training_batch_size=32, training_learning_rate=5e-4, training_encoder_only_mask_values=True),
-        ModelSettings("ltg/norbert3-small", training_batch_size=32, training_learning_rate=5e-4),
-        ModelSettings("ltg/norbert3-base", training_batch_size=16, training_learning_rate=3e-4),
-        ModelSettings("ltg/norbert3-large", training_batch_size=8, training_learning_rate=1e-4),
+        ModelSettings("ltg/norbert3-small", training_batch_size=16, training_learning_rate=5e-4, training_encoder_only_mask_values=True),
+        ModelSettings("ltg/norbert3-small", training_batch_size=16, training_learning_rate=5e-4),
+        ModelSettings("ltg/norbert3-base", training_batch_size=8, training_learning_rate=3e-4),
+        ModelSettings("ltg/norbert3-large", training_batch_size=4, training_learning_rate=1e-4),
         # Example on how to load fine-tuned model from huggingface.
         #ModelSettings("Veggissss/ltg_norbert3-small_mask_values", is_fine_tuning=False), 
     ],
     ModelType.DECODER: [
-        ModelSettings("norallm/normistral-7b-warm", training_batch_size=4, training_learning_rate=3e-4, use_4bit_quant=True),
-        ModelSettings("norallm/normistral-7b-warm", is_fine_tuning=False),
-        ModelSettings("google/gemma-3-12b-it", is_fine_tuning=False),
-        #ModelSettings("Qwen/Qwen3-32B-FP8", is_fine_tuning=False),
+        ModelSettings("norallm/normistral-7b-warm", training_batch_size=2, training_learning_rate=3e-4, use_4bit_quant=True),
+        ModelSettings("norallm/normistral-7b-warm", is_fine_tuning=False, use_8bit_quant=True),
+        ModelSettings("google/gemma-3-1b-it", is_fine_tuning=False),
+        ModelSettings("google/gemma-3-4b-it", is_fine_tuning=False, use_4bit_quant=True),
+        ModelSettings("google/gemma-3-12b-it", is_fine_tuning=False, use_4bit_quant=True),
 
         # Example on how to load already fine-tuned PEFT model from huggingface:
         #ModelSettings("norallm/normistral-7b-warm", peft_model_name="Veggissss/norallm_normistral-7b-warm_4bit_quant", use_4bit_quant=True, is_fine_tuning=False),

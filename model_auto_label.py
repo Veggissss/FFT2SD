@@ -10,8 +10,8 @@ import server
 if __name__ == "__main__":
     server.model_loader = ModelLoader(
         is_trained=False,
-        # Must match one of the models in config.py:
-        load_model_name="google/gemma-3-12b-it", 
+        # Must match one of the models in config.py. (With included suffixes if quantized):
+        load_model_name="google/gemma-3-1b-it",
     )
 
     output_path = Path("data/auto_labeled/")
@@ -56,9 +56,10 @@ if __name__ == "__main__":
                 continue
             print(f"Generated {len(reports)} reports for input: {input_text}")
 
-            for report in reports:
+            for i, report in enumerate(reports):
                 # Save the generated report to a file
                 save_json(
-                    report, output_path.joinpath(f"{field.value}_{report_id}.json")
+                    report,
+                    output_path.joinpath(f"{report_type.value}_{report_id}_{i+1}.json"),
                 )
-                print(f"Saved report for {field.value} with ID {report_id}")
+                print(f"Saved report for {report_type.value} with ID {report_id}")

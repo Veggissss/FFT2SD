@@ -22,7 +22,7 @@ from token_constraints import (
     TokenTypeConstraintProcessor,
     StopOnToken,
 )
-from config import JSON_START_MARKER, hf_token
+from config import JSON_START_MARKER, HF_TOKEN
 from utils.file_loader import str_to_json
 from utils.data_classes import TokenOptions
 
@@ -49,7 +49,7 @@ class BaseModelStrategy:
         self.tokenizer = AutoTokenizer.from_pretrained(
             (model_loader.model_settings.peft_model_name or model_loader.model_name),
             trust_remote_code=True,
-            token=hf_token,
+            token=HF_TOKEN,
         )
 
     def generate(
@@ -182,19 +182,19 @@ class BaseModelStrategy:
                 bnb_4bit_compute_dtype=torch.float16,
             )
             return model_name, q_config
-        elif model_loader.model_settings.use_8bit_quant:
+        if model_loader.model_settings.use_8bit_quant:
             # Load the base HF model without "_peft" in the name
             model_name = model_loader.model_settings.base_model_name
 
             # Use 8-bit quantization
             q_config = BitsAndBytesConfig(
                 load_in_8bit=True,
+                llm_int8_enable_fp32_cpu_offload=True,
             )
             return model_name, q_config
-        
+
         # If not using quant, return the model name and None
         return model_loader.model_name, None
-
 
     def _load_peft_model(
         self, model_loader: "ModelLoader", model: AutoModel
@@ -223,7 +223,7 @@ class BaseModelStrategy:
                 low_cpu_mem_usage=(not is_trainable),
                 is_trainable=is_trainable,
                 ephemeral_gpu_offloading=True,
-                token=hf_token,
+                token=HF_TOKEN,
             )
             # Reduce latency by merging peft model with base model
             if not is_trainable:
@@ -249,7 +249,7 @@ class EncoderDecoderStrategy(BaseModelStrategy):
             model_name,
             quantization_config=q_config,
             trust_remote_code=True,
-            token=hf_token,            
+            token=HF_TOKEN,
         )
         model.to(model_loader.device)
 
@@ -332,7 +332,9 @@ class DecoderStrategy(BaseModelStrategy):
             model_name,
             quantization_config=q_config,
             device_map="auto",
-            token=hf_token,
+            token=HF_TOKEN,
+            # torch_dtype=torch.float32,  # Gemma quant fix: https://huggingface.co/google/gemma-3-4b-it/discussions/41
+            # trust_remote_code=True,
         )
 
         if (
@@ -399,7 +401,7 @@ class EncoderStrategy(BaseModelStrategy):
         model = AutoModelForMaskedLM.from_pretrained(
             model_name,
             quantization_config=q_config,
-            token=hf_token,
+            token=HF_TOKEN,
             trust_remote_code=True,
         )
         model.to(model_loader.device)

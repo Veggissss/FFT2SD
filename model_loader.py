@@ -44,7 +44,9 @@ class ModelLoader:
             self.model_type = model_type
             self.model_index = model_index
         else:
-            raise ValueError("Either (model_index and model_type) or (model_name) must be provided.")
+            raise ValueError(
+                "Either (model_index and model_type) or (model_name) must be provided."
+            )
         self.is_trained = is_trained
         self.model_settings: ModelSettings = MODELS_DICT[self.model_type][
             self.model_index

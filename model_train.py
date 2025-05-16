@@ -14,7 +14,7 @@ from datasets import Dataset
 from model_loader import ModelLoader
 from dataset_loader import DatasetLoader
 from utils.enums import ModelType
-from config import JSON_START_MARKER, MODELS_DICT, hf_token, hf_username
+from config import JSON_START_MARKER, MODELS_DICT, HF_TOKEN, HF_USERNAME
 
 
 class DataCollatorForMaskedValueTokens(DataCollatorMixin):
@@ -234,19 +234,19 @@ def train(model_type: ModelType, model_index: int, push_to_hub: bool = True) -> 
     print(f"Saving trained model to: {output_dir}")
 
     # Huggingface token and repo path
-    if hf_token is None or hf_username is None:
+    if HF_TOKEN is None or HF_USERNAME is None:
         push_to_hub = False
         print("Missing Hugging Face token or username in .env file.")
 
     # Replace the old repo slash to make a valid repo name
-    hf_model_id = f"{hf_username}/{str(model_loader.model_settings).replace('/', '_')}"
+    hf_model_id = f"{HF_USERNAME}/{str(model_loader.model_settings).replace('/', '_')}"
 
     # Define training args
     simulated_batch_size = 32
     batch_size = model_loader.model_settings.training_batch_size
     gradient_accumulation_steps = max(1, simulated_batch_size // batch_size)
     training_args = TrainingArguments(
-        hub_token=hf_token,
+        hub_token=HF_TOKEN,
         hub_model_id=hf_model_id,
         hub_private_repo=True,
         push_to_hub=push_to_hub,
