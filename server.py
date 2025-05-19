@@ -3,6 +3,7 @@ import os
 import copy
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from huggingface_hub.utils import HFValidationError
 
 from model_loader import ModelLoader
 from config import CONTAINER_ID_MASK, MODELS_DICT
@@ -25,17 +26,23 @@ LABELED_IDS_PATH = "data/large_batch/labeled_ids.json"
 CORRECTED_OUT_DIR = "data/corrected/"
 
 
-def load_model(model_type: ModelType, model_index: int, is_trained: bool) -> str:
+def load_model(model_type: ModelType, model_index: int, is_trained: bool) -> dict:
     """Function to load the specified LLM model based on type."""
     # Update the global model_loader variable
     global model_loader
     if model_loader:
         model_loader.unload_model()
 
-    model_loader = ModelLoader(model_type, model_index, is_trained)
-    model_loader.model.eval()
+    try:
+        model_loader = ModelLoader(model_type, model_index, is_trained)
+        model_loader.model.eval()
+    except HFValidationError as e:
+        print(f"ERROR: Failed to load model: {e}")
+        return jsonify({"error": "Failed to load model"}), 500
 
-    return f"Loaded model: {model_loader.model_name} | {model_type}"
+    return jsonify(
+        {"message": f"Loaded model: {model_loader.model_name} | {model_type}"}
+    )
 
 
 def fill_json(
@@ -212,7 +219,7 @@ def load_model_endpoint():
     if not model_settings.is_fine_tuning:
         is_trained = False
 
-    return jsonify({"message": load_model(model_type, model_index, is_trained)}), 200
+    return load_model(model_type, model_index, is_trained)
 
 
 @app.route("/generate", methods=["POST"])
