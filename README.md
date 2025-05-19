@@ -74,7 +74,7 @@ Libraries
     </ul>
   </li>
 </ul>
-
+</details>
 
 
 ## Installation
