@@ -93,9 +93,10 @@ const FormEditor = ({ jsonList, currentJson, onFieldChange }: FormEditorProps) =
             {currentJson.target_json.map((item, index) => (
                 shouldShowField(item, jsonItems) && (
                     <div key={index} className={`form-item ${item.type === 'boolean' ? 'boolean-input' : ''}`}>
-                        <label>{item.field}</label>
+                        <label htmlFor={`field-${item.id}`}>{item.field}</label>
                         {item.type === 'enum' ? (
                             <select
+                                id={`field-${item.id}`}
                                 value={item.value as string || ''}
                                 onChange={(e) => onFieldChange(index, e.target.value !== '' ? e.target.value : null)}
                             >
@@ -109,6 +110,7 @@ const FormEditor = ({ jsonList, currentJson, onFieldChange }: FormEditorProps) =
                             </select>
                         ) : item.type === 'int' ? (
                             <input
+                                id={`field-${item.id}`}
                                 type="number"
                                 min={1}
                                 value={item.value !== null && item.value !== undefined ? item.value as number : ''}
@@ -117,12 +119,14 @@ const FormEditor = ({ jsonList, currentJson, onFieldChange }: FormEditorProps) =
                             />
                         ) : item.type === 'boolean' ? (
                             <input
+                                id={`field-${item.id}`}
                                 type="checkbox"
                                 checked={item.value as boolean || false}
                                 onChange={(e) => onFieldChange(index, e.target.checked)}
                             />
                         ) : (
                             <input
+                                id={`field-${item.id}`}
                                 type="text"
                                 value={item.value as string || ''}
                                 onChange={(e) => onFieldChange(index, e.target.value)}

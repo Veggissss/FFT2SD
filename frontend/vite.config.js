@@ -12,7 +12,10 @@ export default ({ mode }) => {
     basePath = `/${baseUrl.split("/").pop()}/`;
   }
   return defineConfig({
-
+    test: {
+      environment: 'jsdom',
+      globals: true,
+    },
     plugins: [react()],
     base: basePath,
     resolve: {
