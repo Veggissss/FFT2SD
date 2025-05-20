@@ -11,7 +11,7 @@ if __name__ == "__main__":
     server.model_loader = ModelLoader(
         is_trained=False,
         # Must match one of the models in config.py. (With included suffixes if quantized):
-        load_model_name="google/gemma-3-1b-it",
+        load_model_name="google/gemma-3-4b-it",
     )
 
     output_path = Path("data/auto_labeled/")
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
         # Use text for every field in the dataset
         for field in DatasetField:
-            if field.value not in unlabeled or field.value is None:
+            if field.value not in unlabeled or unlabeled[field.value] is None:
                 continue
 
             # Set token generation options
@@ -50,6 +50,8 @@ if __name__ == "__main__":
                 report_type=report_type,
                 token_options=token_options,
                 allow_metadata_null=True,
+                # Save vram, but slow:
+                batch_size=1,
             )
             if not reports:
                 print(f"No reports generated for input: {input_text}")

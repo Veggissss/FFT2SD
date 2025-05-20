@@ -58,7 +58,7 @@ def evaluate(
         container_id = str(metadata[2]["value"])
 
         generated_report = server.generate_container(
-            input_text, report_type, container_id, metadata, token_options
+            input_text, report_type, container_id, metadata, token_options, batch_size=1
         )
         predicted = generated_report.get("target_json", [])
 
@@ -147,6 +147,9 @@ def visualize(
         return
     print(f"Total results: {len(results)}")
 
+    # Sort the list to get consistent ordering
+    results.sort(key=lambda x: x["model_name"])
+
     df = pd.DataFrame(results)
     df["y_true"] = df["y_true"].astype(str)
     df["y_pred"] = df["y_pred"].astype(str)
@@ -171,7 +174,7 @@ def visualize(
     plot_df = pd.DataFrame(f1_score_metrics)
     pivot_df = plot_df.pivot(index="model_name", columns="label", values="f1_score")
 
-    ax = pivot_df.plot(kind="bar", figsize=(15, 6))
+    ax = pivot_df.plot(kind="bar", figsize=(16, 6))
     add_bar_labels(ax)
     plt.title(
         f"Weighted Average F1 Scores by Report Type and Data Type ({model_type.value}{', null ignored' if ignore_null else ''})"
@@ -183,7 +186,6 @@ def visualize(
     plt.legend(title="Report / Type", bbox_to_anchor=(1, 1), loc="upper left")
     plt.tight_layout()
     save_figure(
-        plt,
         output_dir.joinpath(
             f"f1_type_specific_{model_type.value}{'_null_ignored' if ignore_null else ''}"
         ),
@@ -212,7 +214,7 @@ def visualize(
         )
 
     metrics_df = pd.DataFrame(metrics).set_index("model_name")
-    ax = metrics_df.plot(kind="bar", figsize=(15, 6))
+    ax = metrics_df.plot(kind="bar", figsize=(16, 6))
     add_bar_labels(ax)
     plt.title(
         f"Weighted Average Accuracy, Precision, Recall, and F1 by Model ({model_type.value}{', null_ignored' if ignore_null else ''})"
@@ -224,14 +226,13 @@ def visualize(
     plt.xticks(rotation=0)
     plt.tight_layout()
     save_figure(
-        plt,
         output_dir.joinpath(
             f"overall_metrics_{model_type.value}{'_null_ignored' if ignore_null else ''}"
         ),
     )
 
 
-def save_figure(plt, path: Path):
+def save_figure(path: Path):
     """
     Save the figure as both an SVG and an EPS file.
     """
@@ -330,9 +331,10 @@ def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
         ignore_strings=(not generate_strings),
         ignore_null=ignore_null,
         included_model_names=[
-            "norallm/normistral-7b-warm",
-            "google/gemma-3-1b-it",
             "google/gemma-3-4b-it",
+            "norallm/normistral-7b-warm_8bit_quant",
+            "norallm/normistral-7b-warm-instruct_8bit_quant",
+            "google/gemma-3-12b-it_4bit_quant",
         ],
         output_dir=Path("./figures/eval/0_shot"),
     )
@@ -358,8 +360,13 @@ if __name__ == "__main__":
     # Speed up evaluation by not generating string values
     GENERATE_STRINGS = False
 
-    # evaluate_single_model("google/gemma-3-1b-it", GENERATE_STRINGS)
-    evaluate_all_models(GENERATE_STRINGS)
+    # evaluate_single_model("google/gemma-3-4b-it", GENERATE_STRINGS)
+    # evaluate_single_model("norallm/normistral-7b-warm_8bit_quant", GENERATE_STRINGS)
+    # evaluate_single_model(
+    #    "norallm/normistral-7b-warm-instruct_8bit_quant", GENERATE_STRINGS
+    # )
+    # evaluate_single_model("google/gemma-3-12b-it_4bit_quant", GENERATE_STRINGS)
+    # evaluate_all_models(GENERATE_STRINGS)
 
     # Visualize results with both null and ignored null
     visualize_all(True, GENERATE_STRINGS)

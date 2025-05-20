@@ -333,7 +333,10 @@ class DecoderStrategy(BaseModelStrategy):
             quantization_config=q_config,
             device_map="auto",
             token=HF_TOKEN,
-            # torch_dtype=torch.float32,  # Gemma quant fix: https://huggingface.co/google/gemma-3-4b-it/discussions/41
+            # Gemma quant fix: https://huggingface.co/google/gemma-3-4b-it/discussions/41
+            torch_dtype=(
+                torch.bfloat16 if model_loader.device.type == "cuda" else torch.float16
+            ),
             # trust_remote_code=True,
         )
 

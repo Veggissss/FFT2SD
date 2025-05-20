@@ -69,6 +69,7 @@ def generate(
     total_containers: int = None,
     token_options: TokenOptions = None,
     allow_metadata_null: bool = False,
+    batch_size: int = None,
 ) -> list[dict] | None:
     """Function to generate structured data using the loaded model."""
 
@@ -122,6 +123,7 @@ def generate(
             str(container_id_int),
             copy.deepcopy(metadata_json),
             token_options,
+            batch_size=batch_size,
         )
 
         reports.append(generated_report)
@@ -135,6 +137,7 @@ def generate_container(
     container_id: str,
     metadata_json: list[dict],
     token_options: TokenOptions = None,
+    batch_size: int = None,
 ) -> dict:
     """Function to generate a single JSON for container_id."""
     # Load the generated JSON template based on the report type
@@ -151,7 +154,8 @@ def generate_container(
     # Process the template in batches to handle large templates
     # NOTE: If the len is always template_json then this can be simplified, as it seems to be within memory limits
     # For metadata/single queries it is important to set report_type to None
-    batch_size = len(template_json)
+    if batch_size is None:
+        batch_size = len(template_json)
     for i in range(0, len(template_json), batch_size):
         # Determine if caching should be used, only if the full template is used
         report_type = report_type if batch_size == len(template_json) else None
