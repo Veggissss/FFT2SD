@@ -133,7 +133,7 @@ def train_model(
                 mlm=False,
                 return_tensors="pt",
             )
-    training_data = training_data.train_test_split(test_size=0.1, seed=42)
+    training_data = training_data.train_test_split(test_size=0.2, seed=42, shuffle=True)
 
     # Stop training early
     early_stopping_callback = EarlyStoppingCallback(
@@ -166,7 +166,7 @@ def train_model(
     # Push fined tuned model to HF
     if trainer.args.push_to_hub:
         print("Pushing to hub...")
-        trainer.push_to_hub("test")
+        trainer.push_to_hub()
     else:
         print("Pushing to hub skipped.")
 
@@ -178,9 +178,9 @@ def apply_peft(model_loader: ModelLoader) -> PeftModel:
     # Configure LoRA
     lora_config = LoraConfig(
         r=16,  # Rank of the LoRA layers
-        lora_alpha=32,  # Scaling factor
+        lora_alpha=16,  # Scaling factor
         lora_dropout=0.1,  # Dropout for LoRA
-        bias="none",  # Don't train original bias
+        bias="lora_only",  # Only train LoRA bias
         task_type="CAUSAL_LM",
     )
     peft_model = get_peft_model(model_loader.model, lora_config)
@@ -261,10 +261,12 @@ def train(model_type: ModelType, model_index: int, push_to_hub: bool = True) -> 
         warmup_ratio=0.1,  # 10% warmup
         lr_scheduler_type="cosine",
         max_grad_norm=1.0,  # Limit max gradient
-        eval_strategy="epoch",
+        eval_strategy="steps",
+        eval_steps=100,
         logging_dir="./logs",
         logging_steps=10,
-        save_strategy="epoch",
+        save_strategy="steps",
+        save_steps=100,
         save_total_limit=3,
         load_best_model_at_end=True,
     )

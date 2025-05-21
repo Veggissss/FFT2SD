@@ -44,15 +44,14 @@ class DatasetLoader:
             dataset_dict["input"].extend(processed_data["input"])
             dataset_dict["output"].extend(processed_data["output"])
 
-        if not include_enums:
-            # Use enum definitions to create data pairs
-            for filename in filter(
-                lambda f: f.endswith(".json"), os.listdir(DATA_MODEL_OUTPUT_FOLDER)
-            ):
-                file_path = os.path.join(DATA_MODEL_OUTPUT_FOLDER, filename)
-                processed_data = self._process_enum_file(file_path)
-                dataset_dict["input"].extend(processed_data["input"])
-                dataset_dict["output"].extend(processed_data["output"])
+        # Use enum definitions to create data pairs
+        for filename in filter(
+            lambda f: f.endswith(".json"), os.listdir(DATA_MODEL_OUTPUT_FOLDER)
+        ):
+            file_path = os.path.join(DATA_MODEL_OUTPUT_FOLDER, filename)
+            processed_data = self._process_enum_file(file_path)
+            dataset_dict["input"].extend(processed_data["input"])
+            dataset_dict["output"].extend(processed_data["output"])
 
         self.dataset = Dataset.from_dict(dataset_dict)
         self.enums = enums
