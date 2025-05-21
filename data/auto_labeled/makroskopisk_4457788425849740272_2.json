@@ -1,0 +1,135 @@
+{
+    "input_text": "2 glass\n\n1: Fragmentert polypp 5x2x2 mm, alt i #1\n\n2: Lav, bredbaset polypp 5x2x1 mm, hel i #2",
+    "target_json": [
+        {
+            "id": 107,
+            "field": "Lokasjon patologi",
+            "type": "enum",
+            "enum": [
+                {
+                    "name": "terminale ileum",
+                    "value": "T65520"
+                },
+                {
+                    "name": "coecum",
+                    "value": "T67100"
+                },
+                {
+                    "name": "colon ascendens",
+                    "value": "T67200"
+                },
+                {
+                    "name": "høyre colonfleksur",
+                    "value": "T67300"
+                },
+                {
+                    "name": "colon transversum",
+                    "value": "T67400"
+                },
+                {
+                    "name": "venstre colonfleksur",
+                    "value": "T67500"
+                },
+                {
+                    "name": "colon descendens",
+                    "value": "T67600"
+                },
+                {
+                    "name": "colon sigmoideum",
+                    "value": "T67700"
+                },
+                {
+                    "name": "rectosigmoid",
+                    "value": "T68200"
+                },
+                {
+                    "name": "rectum",
+                    "value": "T68000"
+                },
+                {
+                    "name": "anus",
+                    "value": "T69000"
+                },
+                {
+                    "name": "colon",
+                    "value": "T67000"
+                },
+                {
+                    "name": "colon og rectum",
+                    "value": "T67920"
+                }
+            ],
+            "value": "T67100"
+        },
+        {
+            "id": 108,
+            "field": "Prøvemateriale",
+            "type": "enum",
+            "enum": [
+                {
+                    "name": "endoskopisk biopsi",
+                    "value": "P13400"
+                },
+                {
+                    "name": "endoskopisk slyngereseksjon",
+                    "value": "P13402"
+                },
+                {
+                    "name": "endoskopisk slyngereseksjon piecemeal",
+                    "value": "P13403"
+                },
+                {
+                    "name": "endoskopisk submucosal disseksjon",
+                    "value": "P13405"
+                },
+                {
+                    "name": "endoskopisk materiale, prosedyre ukjent",
+                    "value": "P13409"
+                },
+                {
+                    "name": "konsultasjonspreparat",
+                    "value": "P2070A"
+                }
+            ],
+            "value": "P13409"
+        },
+        {
+            "id": 129,
+            "field": "Makroskopisk beskrivelse",
+            "type": "string",
+            "value": null
+        }
+    ],
+    "metadata_json": [
+        {
+            "id": 0,
+            "field": "Rapport type",
+            "type": "enum",
+            "enum": [
+                {
+                    "value": "klinisk"
+                },
+                {
+                    "value": "makroskopisk"
+                },
+                {
+                    "value": "mikroskopisk"
+                }
+            ],
+            "value": "makroskopisk"
+        },
+        {
+            "id": 1,
+            "field": "Antall glass",
+            "type": "int",
+            "unit": "stk",
+            "value": 2
+        },
+        {
+            "id": 128,
+            "field": "Beholder-ID",
+            "type": "int",
+            "value": 2
+        }
+    ]
+}

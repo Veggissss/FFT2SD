@@ -1,0 +1,202 @@
+{
+    "input_text": "Polypper: Glass nr.: 1, Transversum, 1 mm, 0-ls høy bredbaset, Cancersuspekt = nei,  Komplett fjernet = ja,   Glass nr.: 2, Sigmoideum, 13 mm, 0-lp stilket, Cancersuspekt = nei,  Beskrivelse: NICE2\r\rAnatomisk lokalisasjon: \r1/2: transversum\r2/2: sigmoideum\rEr prøven tatt i forbindels med tarmscreeningsprogrammet?: Ja\r",
+    "target_json": [
+        {
+            "id": 100,
+            "field": "Prøvekategori",
+            "type": "enum",
+            "enum": [
+                {
+                    "name": "tarmscreening",
+                    "value": "P06020"
+                }
+            ],
+            "value": "P06020"
+        },
+        {
+            "id": 101,
+            "field": "Lokasjon klinikk",
+            "type": "enum",
+            "enum": [
+                {
+                    "name": "terminale ileum",
+                    "value": "T65520"
+                },
+                {
+                    "name": "coecum",
+                    "value": "T67100"
+                },
+                {
+                    "name": "colon ascendens",
+                    "value": "T67200"
+                },
+                {
+                    "name": "høyre colonfleksur",
+                    "value": "T67300"
+                },
+                {
+                    "name": "colon transversum",
+                    "value": "T67400"
+                },
+                {
+                    "name": "venstre colonfleksur",
+                    "value": "T67500"
+                },
+                {
+                    "name": "colon descendens",
+                    "value": "T67600"
+                },
+                {
+                    "name": "colon sigmoideum",
+                    "value": "T67700"
+                },
+                {
+                    "name": "rectosigmoid",
+                    "value": "T68200"
+                },
+                {
+                    "name": "rectum",
+                    "value": "T68000"
+                },
+                {
+                    "name": "anus",
+                    "value": "T69000"
+                },
+                {
+                    "name": "colon",
+                    "value": "T67000"
+                },
+                {
+                    "name": "colon og rectum",
+                    "value": "T67920"
+                }
+            ],
+            "value": "T67700"
+        },
+        {
+            "id": 102,
+            "field": "Diameter av lesjon",
+            "type": "int",
+            "unit": "mm",
+            "value": 13
+        },
+        {
+            "id": 103,
+            "field": "Uttaksmetode klinikk",
+            "type": "enum",
+            "enum": [
+                {
+                    "value": "Biopsitang"
+                },
+                {
+                    "value": "Kald slynge in toto"
+                },
+                {
+                    "value": "Kald slynge piecemeal"
+                },
+                {
+                    "value": "Diatermislynge in toto"
+                },
+                {
+                    "value": "Diatermislynge piecemeal"
+                },
+                {
+                    "value": "Endoskopisk submucosal disseksjon (ESD)"
+                },
+                {
+                    "value": "Endoskopisk mucosal reseksjon (EMR)"
+                },
+                {
+                    "value": "Annen metode"
+                }
+            ],
+            "value": null
+        },
+        {
+            "id": 104,
+            "field": "Makroskopisk utseende",
+            "type": "enum",
+            "enum": [
+                {
+                    "name": "Stilket",
+                    "value": "Ip"
+                },
+                {
+                    "name": "Høy bredbaset",
+                    "value": "Is"
+                },
+                {
+                    "name": "Lav bredbaset",
+                    "value": "IIa"
+                },
+                {
+                    "name": "Flat",
+                    "value": "IIb"
+                },
+                {
+                    "name": "Nedsunket",
+                    "value": "IIc"
+                },
+                {
+                    "name": "Nedsunket ulcerert",
+                    "value": "III"
+                },
+                {
+                    "name": "Ikke relevant",
+                    "value": null
+                }
+            ],
+            "value": null
+        },
+        {
+            "id": 105,
+            "field": "Vurdert komplett fjernet",
+            "type": "boolean",
+            "value": null
+        },
+        {
+            "id": 130,
+            "field": "Mistanke om kreft",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "id": 106,
+            "field": "Klinisk diagnose/problemstilling",
+            "type": "string",
+            "value": null
+        }
+    ],
+    "metadata_json": [
+        {
+            "id": 0,
+            "field": "Rapport type",
+            "type": "enum",
+            "enum": [
+                {
+                    "value": "klinisk"
+                },
+                {
+                    "value": "makroskopisk"
+                },
+                {
+                    "value": "mikroskopisk"
+                }
+            ],
+            "value": "klinisk"
+        },
+        {
+            "id": 1,
+            "field": "Antall glass",
+            "type": "int",
+            "unit": "stk",
+            "value": 2
+        },
+        {
+            "id": 128,
+            "field": "Beholder-ID",
+            "type": "int",
+            "value": 2
+        }
+    ]
+}

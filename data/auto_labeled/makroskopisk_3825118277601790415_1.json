@@ -1,0 +1,135 @@
+{
+    "input_text": "3 glass,\n1/3: annet: lav Bredbaset polypp, 11x7x2 mm, firedelt i #1 - #2.  Samt 3 små bredbasede polypper, 4+3+3 mm og polypøs vevsbit 11x2x2 mm, hel. Alt i #3.\n\n2/3: annet: Bredbaset polypp, 5x2x4 mm, todelt i #4\n\n3/3: annet: Bredbaset polypp, 10x3x4 mm, tredelt i #5. Samt stilket polypp,stilket ca 4 mm og polypphode 3x3 mm, i #6. ",
+    "target_json": [
+        {
+            "id": 107,
+            "field": "Lokasjon patologi",
+            "type": "enum",
+            "enum": [
+                {
+                    "name": "terminale ileum",
+                    "value": "T65520"
+                },
+                {
+                    "name": "coecum",
+                    "value": "T67100"
+                },
+                {
+                    "name": "colon ascendens",
+                    "value": "T67200"
+                },
+                {
+                    "name": "høyre colonfleksur",
+                    "value": "T67300"
+                },
+                {
+                    "name": "colon transversum",
+                    "value": "T67400"
+                },
+                {
+                    "name": "venstre colonfleksur",
+                    "value": "T67500"
+                },
+                {
+                    "name": "colon descendens",
+                    "value": "T67600"
+                },
+                {
+                    "name": "colon sigmoideum",
+                    "value": "T67700"
+                },
+                {
+                    "name": "rectosigmoid",
+                    "value": "T68200"
+                },
+                {
+                    "name": "rectum",
+                    "value": "T68000"
+                },
+                {
+                    "name": "anus",
+                    "value": "T69000"
+                },
+                {
+                    "name": "colon",
+                    "value": "T67000"
+                },
+                {
+                    "name": "colon og rectum",
+                    "value": "T67920"
+                }
+            ],
+            "value": "T67000"
+        },
+        {
+            "id": 108,
+            "field": "Prøvemateriale",
+            "type": "enum",
+            "enum": [
+                {
+                    "name": "endoskopisk biopsi",
+                    "value": "P13400"
+                },
+                {
+                    "name": "endoskopisk slyngereseksjon",
+                    "value": "P13402"
+                },
+                {
+                    "name": "endoskopisk slyngereseksjon piecemeal",
+                    "value": "P13403"
+                },
+                {
+                    "name": "endoskopisk submucosal disseksjon",
+                    "value": "P13405"
+                },
+                {
+                    "name": "endoskopisk materiale, prosedyre ukjent",
+                    "value": "P13409"
+                },
+                {
+                    "name": "konsultasjonspreparat",
+                    "value": "P2070A"
+                }
+            ],
+            "value": "P13400"
+        },
+        {
+            "id": 129,
+            "field": "Makroskopisk beskrivelse",
+            "type": "string",
+            "value": null
+        }
+    ],
+    "metadata_json": [
+        {
+            "id": 0,
+            "field": "Rapport type",
+            "type": "enum",
+            "enum": [
+                {
+                    "value": "klinisk"
+                },
+                {
+                    "value": "makroskopisk"
+                },
+                {
+                    "value": "mikroskopisk"
+                }
+            ],
+            "value": "makroskopisk"
+        },
+        {
+            "id": 1,
+            "field": "Antall glass",
+            "type": "int",
+            "unit": "stk",
+            "value": 1
+        },
+        {
+            "id": 128,
+            "field": "Beholder-ID",
+            "type": "int",
+            "value": 1
+        }
+    ]
+}

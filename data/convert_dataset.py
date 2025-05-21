@@ -36,6 +36,18 @@ def convert_jsons_to_jsonl(input_dir, output_file):
     )
 
 
+def convert_unlabeled_dataset_to_jsonl(output_path):
+    """
+    Convert the raw dataset to a .jsonl format
+    """
+    unlabeled_dataset = load_json("data/large_batch/export_2025-03-17.json")
+    with open(output_path, "w", encoding="utf-8") as f:
+        for json_data in unlabeled_dataset:
+            json.dump(json_data, f, ensure_ascii=False)
+            f.write("\n")
+
+
 if __name__ == "__main__":
     convert_jsons_to_jsonl("data/corrected/", "data/dataset-eval.jsonl")
     convert_jsons_to_jsonl("data/auto_labeled/", "data/dataset-train.jsonl")
+    convert_unlabeled_dataset_to_jsonl("data/dataset-unlabeled.jsonl")
