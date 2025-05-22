@@ -295,6 +295,9 @@ class EncoderDecoderStrategy(BaseModelStrategy):
             logits_processor=logits_processor,
             stopping_criteria=stopping_criteria,
         )
+        # Delete tensor to free up memory
+        del start_tokens
+
         return model_loader.tokenizer.batch_decode(output_ids, skip_special_tokens=True)
 
     def output_to_json(self, output_text: str, template_entry: dict) -> dict:

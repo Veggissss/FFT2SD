@@ -329,7 +329,8 @@ def get_allowed_tokens(
             allowed_token_ids.append(null_token_id[0])
         else:
             allowed_token_ids.append(null_token_id)
-            print(f"Null token {null_token_id} is not a single token!")
+            if DEBUG_MODE_ENABLED:
+                print(f"Null token {null_token_id} is not a single token!")
 
     non_single_tokens = []
     match token_type:

@@ -145,6 +145,10 @@ class ModelLoader:
             len(generation.original_template_json) == inputs["input_ids"].shape[0]
         ), "Batch size mismatch with template length!"
 
+        # Remove the input tensors to free up memory
+        del inputs
+        torch.cuda.empty_cache()
+
         # Format every model output text in the batch to JSON
         return self.strategy.outputs_to_json(
             output_texts, generation.original_template_json

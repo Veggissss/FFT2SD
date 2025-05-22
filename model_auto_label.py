@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 report_type=report_type,
                 token_options=token_options,
                 allow_metadata_null=True,
-                # Save vram, but slow:
+                # Save vram, but slow, set to None for faster generation:
                 batch_size=1,
             )
             if not reports:

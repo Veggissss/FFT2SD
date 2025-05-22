@@ -58,7 +58,12 @@ def evaluate(
         container_id = str(metadata[2]["value"])
 
         generated_report = server.generate_container(
-            input_text, report_type, container_id, metadata, token_options, batch_size=1
+            input_text,
+            report_type,
+            container_id,
+            metadata,
+            token_options,
+            batch_size=None,
         )
         predicted = generated_report.get("target_json", [])
 
@@ -174,7 +179,7 @@ def visualize(
     plot_df = pd.DataFrame(f1_score_metrics)
     pivot_df = plot_df.pivot(index="model_name", columns="label", values="f1_score")
 
-    ax = pivot_df.plot(kind="bar", figsize=(16, 6))
+    ax = pivot_df.plot(kind="bar", figsize=(14, 6))
     add_bar_labels(ax)
     plt.title(
         f"Weighted Average F1 Scores by Report Type and Data Type ({model_type.value}{', null ignored' if ignore_null else ''})"
@@ -183,7 +188,9 @@ def visualize(
     plt.ylabel("F1 Score")
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
-    plt.legend(title="Report / Type", bbox_to_anchor=(1, 1), loc="upper left")
+    plt.legend(
+        title="Report / Type", loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=2
+    )
     plt.tight_layout()
     save_figure(
         output_dir.joinpath(
@@ -214,14 +221,14 @@ def visualize(
         )
 
     metrics_df = pd.DataFrame(metrics).set_index("model_name")
-    ax = metrics_df.plot(kind="bar", figsize=(16, 6))
+    ax = metrics_df.plot(kind="bar", figsize=(14, 6))
     add_bar_labels(ax)
     plt.title(
         f"Weighted Average Accuracy, Precision, Recall, and F1 by Model ({model_type.value}{', null_ignored' if ignore_null else ''})"
     )
     plt.xlabel("Model Name")
     plt.ylabel("Score")
-    plt.legend(title="Metric", bbox_to_anchor=(1, 1), loc="upper left")
+    plt.legend(title="Metric", loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=2)
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
     plt.tight_layout()
@@ -282,19 +289,8 @@ def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
         included_model_names=[
             "trained/ltg/norbert3-small_mask_values",
             "trained/ltg/norbert3-small",
-        ],
-        output_dir=Path("./figures/eval/value_training"),
-    )
-
-    # Trained Encoder
-    visualize(
-        model_type=ModelType.ENCODER,
-        ignore_strings=True,
-        ignore_null=ignore_null,
-        included_model_names=[
-            "trained/ltg/norbert3-small",
+            "trained/ltg/norbert3-base_mask_values",
             "trained/ltg/norbert3-base",
-            "trained/ltg/norbert3-large",
         ],
         output_dir=Path("./figures/eval/encoder"),
     )
@@ -307,7 +303,8 @@ def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
         included_model_names=[
             "trained/ltg/nort5-small",
             "trained/ltg/nort5-base",
-            "trained/ltg/nort5-large",
+            "ltg/nort5-small",
+            "ltg/nort5-base",
         ],
         output_dir=Path("./figures/eval/encoder_decoder"),
     )
@@ -318,9 +315,9 @@ def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
         ignore_strings=(not generate_strings),
         ignore_null=ignore_null,
         included_model_names=[
-            "norallm/normistral-7b-warm_4bit_quant",
-            "norallm/normistral-7b-warm",
-            "trained/norallm/normistral-7b-warm_4bit_quant",
+            "norallm/normistral-7b-warm-instruct_8bit_quant",
+            "norallm/normistral-7b-warm-instruct_4bit_quant",
+            "trained/norallm/normistral-7b-warm-instruct_4bit_quant",
         ],
         output_dir=Path("./figures/eval/decoder"),
     )
@@ -340,18 +337,23 @@ def visualize_all(ignore_null: bool = True, generate_strings: bool = False):
     )
 
 
-def evaluate_single_model(load_model_name: str, generate_strings: bool = False):
+def evaluate_single_model(
+    load_model_name: str,
+    generate_strings: bool = False,
+    is_trained: bool = False,
+    include_enums: bool = True,
+):
     """
     Evaluate a single model with the specified name.
     """
     token_options = TokenOptions()
-    token_options.include_enums = True
+    token_options.include_enums = include_enums
     token_options.generate_strings = generate_strings
 
     # All decoder models are evaluated untrained (0-shot), the rest are trained
     evaluate(
         load_model_name=load_model_name,
-        is_trained=False,
+        is_trained=is_trained,
         token_options=token_options,
     )
 
@@ -360,13 +362,8 @@ if __name__ == "__main__":
     # Speed up evaluation by not generating string values
     GENERATE_STRINGS = False
 
-    # evaluate_single_model("google/gemma-3-4b-it", GENERATE_STRINGS)
-    # evaluate_single_model("norallm/normistral-7b-warm_8bit_quant", GENERATE_STRINGS)
-    # evaluate_single_model(
-    #    "norallm/normistral-7b-warm-instruct_8bit_quant", GENERATE_STRINGS
-    # )
-    # evaluate_single_model("google/gemma-3-12b-it_4bit_quant", GENERATE_STRINGS)
-    # evaluate_all_models(GENERATE_STRINGS)
+    # evaluate_single_model("norallm/normistral-7b-warm-instruct_4bit_quant",GENERATE_STRINGS,)
+    evaluate_all_models(GENERATE_STRINGS)
 
     # Visualize results with both null and ignored null
     visualize_all(True, GENERATE_STRINGS)
