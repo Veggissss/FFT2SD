@@ -283,9 +283,9 @@ def train(model_type: ModelType, model_index: int, push_to_hub: bool = True) -> 
     # Quantized models can't be trained directly.
     if model_loader.model_settings.use_4bit_quant:
         model_loader.model = apply_peft(model_loader)
-
-    # Add new tokens if the model is not trained.
-    if not model_loader.is_trained:
+    # Don't add new tokens to peft models
+    elif not model_loader.is_trained:
+        # Add new tokens if the model is not trained.
         add_tokens_to_tokenizer(model_loader, enums)
         print(f"Number of tokens in the tokenizer: {len(model_loader.tokenizer)}")
 

@@ -26,7 +26,7 @@ MODELS_DICT: dict[ModelType, list[ModelSettings]] = {
     ],
     ModelType.DECODER: [
         # Models to be fine-tuned:
-        ModelSettings("norallm/normistral-7b-warm-instruct", training_batch_size=1, training_learning_rate=3e-4, use_4bit_quant=True),
+        ModelSettings("norallm/normistral-7b-warm-instruct", training_batch_size=1, training_learning_rate=5e-4, use_4bit_quant=True, training_num_epochs=2),
 
         # Zero Shot Models:
         ModelSettings("google/gemma-3-4b-it", is_fine_tuning=False),
