@@ -123,7 +123,7 @@ def train_model(
                 data_collator = DataCollatorForLanguageModeling(
                     tokenizer=loader.tokenizer,
                     mlm=True,
-                    mlm_probability=0.4,
+                    mlm_probability=0.15,
                     return_tensors="pt",
                 )
         case ModelType.DECODER:
@@ -138,8 +138,6 @@ def train_model(
     # Stop training early
     early_stopping_callback = EarlyStoppingCallback(
         early_stopping_patience=2,
-        # Minimum eval improvement
-        early_stopping_threshold=0.01,
     )
 
     trainer = Trainer(
