@@ -181,7 +181,7 @@ def visualize(
     # Pivot to get labels on x-axis and model names as series
     pivot_df = plot_df.pivot(index="label", columns="model_name", values="f1_score")
 
-    ax = pivot_df.plot(kind="bar", figsize=(14, 6))
+    ax = pivot_df.plot(kind="bar", figsize=(14, 6), width=0.75)
     add_bar_labels(ax)
     plt.title(
         f"Weighted Average F1 Scores by Report Type and Data Type ({model_type.value}{', null ignored' if ignore_null else ''})"
@@ -190,7 +190,7 @@ def visualize(
     plt.ylabel("F1 Score")
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
-    plt.legend(title="Model", loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=3)
+    plt.legend(title="Model", loc="upper center", bbox_to_anchor=(0.5, -0.15))
     plt.tight_layout()
     save_figure(
         output_dir.joinpath(
@@ -230,14 +230,14 @@ def visualize(
     # Pivot so that x-axis is metric, and each model gets a separate bar in each group
     pivot_df = melted_df.pivot(index="metric", columns="model_name", values="score")
 
-    ax = pivot_df.plot(kind="bar", figsize=(14, 6))
+    ax = pivot_df.plot(kind="bar", figsize=(14, 6), width=0.75)
     add_bar_labels(ax)
     plt.title(
         f"Weighted Average Accuracy, Precision, Recall, and F1 by Model ({model_type.value}{', null_ignored' if ignore_null else ''})"
     )
     plt.xlabel("Metric")
     plt.ylabel("Score")
-    plt.legend(title="Model", loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=3)
+    plt.legend(title="Model", loc="upper center", bbox_to_anchor=(0.5, -0.15))
     plt.ylim(0, 1)
     plt.xticks(rotation=0)
     plt.tight_layout()
@@ -372,7 +372,7 @@ if __name__ == "__main__":
     GENERATE_STRINGS = False
 
     # evaluate_single_model("norallm/normistral-7b-warm-instruct_4bit_quant",GENERATE_STRINGS,)
-    # evaluate_all_models(GENERATE_STRINGS)
+    evaluate_all_models(GENERATE_STRINGS)
 
     # Visualize results with both null and ignored null
     visualize_all(True, GENERATE_STRINGS)
