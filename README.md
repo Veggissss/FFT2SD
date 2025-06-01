@@ -1,7 +1,21 @@
 # From Free-Text to Structured Data: Extracting Medical Information with Large Language Models
 
-## Abstract
-master-project.wip.exe.zip.lib.rar
+This project focuses on extracting structured medical data from pathology reports in the Norwegian colorectal cancer screening program.  
+It uses the HuggingFace library to allow for loading, fine-tuning and sharing of models with encoder, decoder and encoder-decoder architectures. 
+
+### Key Features
+- **Automatic labeling** using zero-shot language models  
+- **Fine-tuning** to train smaller models using the auto labeled dataset
+- **Evaluation** with visualizations using manually labeled data
+- **Web-based labeling interface** for domain experts
+
+A live demo of the labeling tool is available [here](https://veggissss.github.io/FFT2SD/).
+
+The published fine-tuned models used in this project can be found on HuggingFace [here](https://huggingface.co/collections/Veggissss/fft2sd-fine-tuned-models-682dd356b0ba237438b05ed1).
+
+[![Python Unit Tests](https://github.com/Veggissss/FFT2SD/actions/workflows/pytest.yml/badge.svg)](https://github.com/Veggissss/FFT2SD/actions/workflows/pytest.yml)
+[![Frontend Unit Tests](https://github.com/Veggissss/FFT2SD/actions/workflows/frontend-vitest.yml/badge.svg)](https://github.com/Veggissss/FFT2SD/actions/workflows/frontend-vitest.yml)
+[![Deploy demo site using mock data to GitHub Pages](https://github.com/Veggissss/FFT2SD/actions/workflows/deploy-mock-frontend-pages.yml/badge.svg)](https://github.com/Veggissss/FFT2SD/actions/workflows/deploy-mock-frontend-pages.yml)
 
 ## Project Structure Overview
 <details>
@@ -95,7 +109,9 @@ Setup virtual env:
 
 Install dependencies:
 
-2. `pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu118 --extra-index-url https://pypi.org/simple` for CUDA for GPU support. Newer/other CUDA versions: `https://pytorch.org/get-started/locally/`
+2. `pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu118 --extra-index-url https://pypi.org/simple`
+
+    Newer/other PyTorch CUDA versions: `https://pytorch.org/get-started/locally/`
 
 #### Web app:
 
@@ -158,8 +174,6 @@ This is a simplified figure where some enum values are grouped and "id" and "val
 ![UML of Structured Data Model](data_model/figure/data_model_figure.svg)
 
 ## Data Collection Process
-Data extraction will start after approval, early 2025.
-
 ![Data Collection](figures/LLM.Overview.drawio.svg)
 
 ## Data Labeling
@@ -221,25 +235,3 @@ This is done by setting the score values for the non allowed tokens to -inf, whe
 This `LogitsProcessor` triggers when the `value` field, a `:` and a `"` is generated.
 The constrainted `LogitsProcessor` also force closes the `"` and generates a `}` which will stop the generation due to the `StoppingCriteria`. (See `token_constraints.py` for full implementation)
 
-### Encoder 
-- Masked learning
-- Limitation: *Single token restriction*
-
-### Decoder
-- Casual learning
-- Prompt engineering; Starter tokens
-- Masked attention
-
-### Encoder-Decoder
-- Sequence to Sequence
-- Only output a single JSON field to save tokens.
-
-## Evaluation of Models
-- Separate from training
-- TODO: Evaluation metrics presented as graphical, tables etc.
-
-## Investigate
-- Encoder: 
-    * Extra label specific masked training
-    * One mask to many tokens. (String comments etc)
-- Create simple frontend UI to illustrate the use of the server.py API and to implement labeling correction (feedback loop).

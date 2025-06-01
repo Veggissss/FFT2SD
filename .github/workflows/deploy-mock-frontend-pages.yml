@@ -1,4 +1,4 @@
-name: Deploy demo site using mock data to GitHub Pages
+name: Deploy mock demo to GitHub Pages
 
 on:
   push:
